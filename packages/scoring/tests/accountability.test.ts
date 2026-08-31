@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { calculateHabitStreak, calculateTFKScore, localDate, mondayFor, type DailyScoreSignal } from '../src/index.ts';
+const day=(date:string,overrides:Partial<DailyScoreSignal>={}):DailyScoreSignal=>({date,calories:1800,calorieTarget:1800,protein:140,proteinTarget:140,water:2500,waterTarget:2500,habitCompleted:2,habitAvailable:2,checkedIn:true,...overrides});
+const week=Array.from({length:7},(_,index)=>day(`2026-08-${String(25+index).padStart(2,'0')}`));
+test('perfect seven-day consistency scores 100',()=>assert.equal(calculateTFKScore({days:week,progressLogged:true}).overall,100));
+test('zero behavior scores zero and never below zero',()=>{const score=calculateTFKScore({days:week.map((d)=>day(d.date,{calories:0,protein:0,water:0,habitCompleted:0,checkedIn:false})),progressLogged:false});assert.equal(score.overall,0);});
+test('scores partial habit adherence',()=>assert.equal(calculateTFKScore({days:week.map((d)=>day(d.date,{habitCompleted:1})),progressLogged:true}).breakdown.habits,15));
+test('nutrition uses calorie tolerance and protein threshold without rewarding under-eating',()=>{assert.equal(calculateTFKScore({days:[day('2026-08-31',{calories:1530,protein:119})],progressLogged:false}).breakdown.nutrition,30);assert.equal(calculateTFKScore({days:[day('2026-08-31',{calories:1000,protein:140})],progressLogged:false}).breakdown.nutrition,15);});
+test('hydration is proportional and capped',()=>{assert.equal(calculateTFKScore({days:[day('2026-08-31',{water:1250})],progressLogged:false}).breakdown.hydration,8);assert.equal(calculateTFKScore({days:[day('2026-08-31',{water:5000})],progressLogged:false}).breakdown.hydration,15);});
+test('check-in percentage and progress logging are transparent',()=>{const score=calculateTFKScore({days:[day('2026-08-30'),day('2026-08-31',{checkedIn:false})],progressLogged:true});assert.equal(score.breakdown.checkIns,8);assert.equal(score.breakdown.progress,10);});
+test('missing data does not fabricate credit and score stays within 0-100',()=>{assert.equal(calculateTFKScore({days:[],progressLogged:false}).overall,0);assert.ok(calculateTFKScore({days:week,progressLogged:true}).overall<=100);});
+test('streak stays alive through today when yesterday completed and tracks longest',()=>{const result=calculateHabitStreak('habit',['2026-08-27','2026-08-28','2026-08-29','2026-08-30'],'2026-08-31');assert.equal(result.current,4);assert.equal(result.longest,4);assert.equal(result.completion_rate,57);});
+test('local dates and Monday boundaries work in Manila, Chicago, and UTC',()=>{const instant=new Date('2026-08-31T20:00:00Z');assert.equal(localDate('Asia/Manila',instant),'2026-09-01');assert.equal(localDate('America/Chicago',instant),'2026-08-31');assert.equal(localDate('UTC',instant),'2026-08-31');assert.equal(mondayFor('2026-09-03'),'2026-08-31');});
