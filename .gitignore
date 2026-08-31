@@ -5,6 +5,7 @@ dist
 out
 coverage
 .turbo
+.vercel
 *.tsbuildinfo
 supabase/.temp
 .env

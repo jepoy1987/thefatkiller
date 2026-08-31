@@ -1,22 +1,15 @@
 import Link from 'next/link';
+import { AuthShell } from '../../components/layout/auth-shell';
+import { Alert } from '../../components/ui/alert';
+import { FormField, Input } from '../../components/ui/form';
+import { SubmitButton } from '../../components/forms/submit-button';
 import { forgotPassword } from '../../server/actions/auth';
 
 export default function ForgotPasswordPage({ searchParams }: { searchParams: { error?: string; message?: string } }) {
   return (
-    <main className="mx-auto flex min-h-screen max-w-md items-center justify-center p-6">
-      <div className="w-full rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-3xl font-bold">Reset password</h1>
-        <p className="mt-2 text-sm text-slate-600">Enter your email to receive a reset link.</p>
-        {searchParams.error && <p className="mt-4 text-sm text-red-700">{searchParams.error}</p>}
-        {searchParams.message && <p className="mt-4 text-sm text-green-700">{searchParams.message}</p>}
-        <form action={forgotPassword} className="mt-6 space-y-4">
-          <input name="email" required type="email" className="w-full rounded border px-3 py-2" placeholder="Email" />
-          <button className="w-full rounded bg-slate-900 px-4 py-2 text-white" type="submit">Send reset link</button>
-        </form>
-        <div className="mt-4 text-sm text-slate-600">
-          <Link href="/login">Back to log in</Link>
-        </div>
-      </div>
-    </main>
+    <AuthShell eyebrow="Account recovery" title="Reset your password" description="We’ll send a secure reset link to your account email." footer={<Link className="font-bold text-primary hover:underline" href="/login">Back to log in</Link>}>
+      <div className="grid gap-4">{searchParams.error ? <Alert variant="error">{searchParams.error}</Alert> : null}{searchParams.message ? <Alert variant="success">{searchParams.message}</Alert> : null}</div>
+      <form action={forgotPassword} className="mt-5 grid gap-5"><FormField id="reset-email" label="Email address"><Input id="reset-email" name="email" required autoComplete="email" type="email" placeholder="you@example.com" /></FormField><SubmitButton className="w-full" pendingLabel="Sending link…">Send reset link</SubmitButton></form>
+    </AuthShell>
   );
 }

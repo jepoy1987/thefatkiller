@@ -53,12 +53,12 @@ export const goalTargetsSchema = z.object({
   goal_weight: z.coerce.number().positive('Goal weight must be greater than zero.'),
   height: z.coerce.number().positive('Height must be greater than zero.'),
   activity_level: activityLevelSchema,
-  daily_calorie_target: z.coerce.number().int().positive('Calorie target must be greater than zero.'),
+  daily_calorie_target: z.coerce.number().int('Calories must be a whole number.').positive('Calorie target must be greater than zero.'),
   daily_protein_target: z.coerce.number().nonnegative('Protein target cannot be negative.'),
   daily_carbs_target: z.coerce.number().nonnegative('Carbohydrate target cannot be negative.'),
   daily_fat_target: z.coerce.number().nonnegative('Fat target cannot be negative.'),
   daily_water_target: z.coerce.number().positive('Water target must be greater than zero.'),
-  daily_step_target: z.coerce.number().int().nonnegative('Step target cannot be negative.'),
+  daily_step_target: z.coerce.number().int('Steps must be a whole number.').nonnegative('Step target cannot be negative.'),
 });
 
 export const onboardingSchema = z.object({

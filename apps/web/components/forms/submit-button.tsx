@@ -2,8 +2,9 @@
 
 import type { ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
+import { buttonStyles } from '../ui/button';
 
-export function SubmitButton({ children, className = 'rounded bg-slate-900 px-4 py-2 text-white', pendingLabel = 'Saving…' }: { children: ReactNode; className?: string; pendingLabel?: string }) {
+export function SubmitButton({ children, className, pendingLabel = 'Saving…' }: { children: ReactNode; className?: string; pendingLabel?: string }) {
   const { pending } = useFormStatus();
-  return <button className={className} type="submit" disabled={pending} aria-disabled={pending}>{pending ? pendingLabel : children}</button>;
+  return <button className={buttonStyles({ size: 'lg', className })} type="submit" disabled={pending} aria-disabled={pending}>{pending ? <><span className="size-2 animate-pulse rounded-full bg-current" aria-hidden="true" />{pendingLabel}</> : children}</button>;
 }

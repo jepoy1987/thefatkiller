@@ -4,6 +4,7 @@ import { loginSchema, signupSchema } from '@tfk/validation';
 import { redirect } from 'next/navigation';
 import { createClient } from '../../lib/supabase/server';
 import { requireUser } from '../../lib/data/session';
+import { getAppOrigin } from '../../lib/origin';
 import { formValue, redirectWithError } from './form';
 
 export async function login(data: FormData) {
@@ -17,14 +18,14 @@ export async function login(data: FormData) {
 export async function signup(data: FormData) {
   const parsed = signupSchema.safeParse({ email: formValue(data, 'email'), password: formValue(data, 'password') });
   if (!parsed.success) return redirectWithError('/signup', parsed.error.issues[0]?.message ?? 'Invalid signup');
-  const { error } = await createClient().auth.signUp({ ...parsed.data, options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001'}/auth/callback` } });
+  const { error } = await createClient().auth.signUp({ ...parsed.data, options: { emailRedirectTo: `${getAppOrigin()}/auth/callback` } });
   if (error) redirectWithError('/signup', error.message);
   redirect('/login?message=Check your email to confirm your account.');
 }
 
 export async function forgotPassword(data: FormData) {
   const email = formValue(data, 'email');
-  const { error } = await createClient().auth.resetPasswordForEmail(email, { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001'}/auth/callback?next=/settings/profile` });
+  const { error } = await createClient().auth.resetPasswordForEmail(email, { redirectTo: `${getAppOrigin()}/auth/callback?next=/settings/profile` });
   if (error) redirectWithError('/forgot-password', error.message);
   redirect('/forgot-password?message=If the account exists, a reset link has been sent.');
 }
