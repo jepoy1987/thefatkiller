@@ -20,3 +20,11 @@ test('formats imperial dashboard boundaries without changing canonical input', (
   assert.deepEqual(dashboard.targets.find((target) => target.key === 'water'), { key: 'water', label: 'Water', current: 0, target: 84.5, unit: 'fl oz' });
   assert.equal(goal.goal_weight, 82);
 });
+
+test('maps real nutrition totals into Today while steps remain zero', () => {
+  const dashboard = mapTodayDashboard(profile, goal, undefined, { calories: 1250.5, protein_g: 100.5, carbs_g: 120, fat_g: 44.25, water_ml: 1750 });
+  assert.equal(dashboard.targets.find((target) => target.key === 'calories')?.current, 1250.5);
+  assert.equal(dashboard.targets.find((target) => target.key === 'protein')?.current, 100.5);
+  assert.equal(dashboard.targets.find((target) => target.key === 'water')?.current, 1750);
+  assert.equal(dashboard.targets.find((target) => target.key === 'steps')?.current, 0);
+});
