@@ -3,12 +3,12 @@ import type { ReactNode } from 'react';
 import { logout } from '../../server/actions/auth';
 import { buttonStyles } from '../ui/button';
 
-type ActiveSection = 'today' | 'progress' | 'nutrition' | 'settings';
+type ActiveSection = 'today' | 'progress' | 'nutrition' | 'check-ins' | 'settings';
 const navigation = [
   { label: 'Today', href: '/dashboard', mark: 'T', key: 'today' },
   { label: 'Progress', href: '/progress', mark: 'P', key: 'progress' },
   { label: 'Nutrition', href: '/nutrition', mark: 'N', key: 'nutrition' },
-  { label: 'Check-Ins', href: null, mark: 'C', key: 'check-ins' },
+  { label: 'Check-Ins', href: '/check-ins', mark: 'C', key: 'check-ins' },
   { label: 'Reports', href: null, mark: 'R', key: 'reports' },
 ] as const;
 
