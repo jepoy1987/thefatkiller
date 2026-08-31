@@ -1,0 +1,20 @@
+{
+  "name": "tfk",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:types": "supabase gen types typescript --local --schema public > packages/types/src/database.ts",
+    "db:types:remote": "bash -lc 'test -n \"${SUPABASE_PROJECT_ID}\" || { echo \"SUPABASE_PROJECT_ID is required\"; exit 1; }; supabase gen types typescript --project-id \"${SUPABASE_PROJECT_ID}\" --schema public > packages/types/src/database.ts'",
+    "db:test": "supabase test db"
+  },
+  "devDependencies": {
+    "supabase": "2.39.2",
+    "turbo": "2.5.8",
+    "typescript": "5.6.3"
+  }
+}

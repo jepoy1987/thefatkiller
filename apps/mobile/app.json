@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "The Fat Killer",
+    "slug": "tfk",
+    "scheme": "tfk",
+    "version": "0.1.0",
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": { "typedRoutes": true }
+  }
+}

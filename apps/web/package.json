@@ -1,0 +1,38 @@
+{
+  "name": "@tfk/web",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0 --port 3001",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0 --port 3001",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test ./tests/**/*.test.js"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.4.2",
+    "@supabase/ssr": "0.5.2",
+    "@supabase/supabase-js": "2.57.4",
+    "@tfk/auth": "workspace:*",
+    "@tfk/config": "workspace:*",
+    "@tfk/types": "workspace:*",
+    "@tfk/validation": "workspace:*",
+    "clsx": "^2.1.1",
+    "next": "14.2.15",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-hook-form": "7.62.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "22.7.4",
+    "@types/react": "18.2.79",
+    "@types/react-dom": "18.2.25",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "eslint": "8.57.1",
+    "eslint-config-next": "14.2.15",
+    "typescript": "5.6.3"
+  }
+}

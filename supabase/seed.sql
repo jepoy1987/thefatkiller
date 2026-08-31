@@ -1,0 +1,1 @@
+-- Intentionally empty. Test identities live only in supabase/tests.
