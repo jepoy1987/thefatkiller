@@ -6,6 +6,21 @@
 - `app.thefatkiller.com` hosts the authenticated web app.
 - The mobile app uses the same Supabase project and the same user record.
 
+## Web-first delivery strategy
+
+The authenticated Next.js application is the primary product implementation
+environment. Feature delivery follows this order:
+
+1. implement the complete feature on web;
+2. complete web QA and approve the user flow;
+3. stabilize portable domain rules, types, and validation in shared packages;
+4. implement the approved daily-use experience in React Native afterward.
+
+Mobile is not abandoned. It remains the cross-platform authentication proof,
+the preserved Expo shell, and the future home for camera, notifications,
+offline support, native integrations, and focused daily-use UX. Product feature
+development is paused at Sprint 2 capability while the web product matures.
+
 ## Monorepo layout
 
 The repository uses pnpm workspaces and Turborepo so each application can share types, validation, configuration, and auth helpers without duplicating business contracts.
@@ -16,8 +31,13 @@ The repository uses pnpm workspaces and Turborepo so each application can share 
 - `@tfk/validation`: Zod validation for signup, login, profile, and onboarding flows.
 - `@tfk/config`: constant configuration and environment defaults that are safe for client code.
 - `@tfk/auth`: auth redirect logic and session-state helpers for platform-specific flows.
-- `@tfk/api`: minimal API contracts for future server integration.
-- `@tfk/scoring`: placeholder package reserved for Sprint 2+.
+- `@tfk/api`: portable API contracts and deterministic domain mappers, including
+  the platform-neutral Today Dashboard foundation.
+- `@tfk/scoring`: reserved for future shared scoring rules; no score exists yet.
+
+Next.js server actions, cookie handling, redirects, web data access, and React
+components stay inside `apps/web`. Shared packages contain only domain types,
+validation, conversion, and portable business rules.
 
 ## Supabase role
 
@@ -49,6 +69,32 @@ Measurements use a single canonical representation at rest:
 The profile's `unit_system` remains the user's primary preference. Web and
 mobile convert values only at their input and display boundaries, avoiding
 duplicate converted columns and rounding drift in the database.
+
+## Authenticated web structure
+
+- `app/`: small App Router entry points and route-specific status messages.
+- `components/`: reusable web primitives such as pending submit buttons.
+- `features/`: onboarding, goals, dashboard, and profile presentation.
+- `lib/data/`: RLS-preserving Supabase reads and RPC wrappers.
+- `server/actions/`: authenticated, validated server mutations grouped by domain.
+
+Route components do not assemble raw Supabase records. The dashboard loader
+maps profile and goal rows through the shared `mapTodayDashboard` function into
+a typed `TodayDashboardData` model. Current progress remains deterministically
+zero until future tracking modules are explicitly implemented.
+
+The web goal settings operation remains atomic through the existing
+`update_goal_settings` RPC, including unit preference and target updates.
+Profile identity settings are intentionally separate because they do not alter
+canonical goal measurements. No database migration is required for this
+refactor.
+
+## Mobile status
+
+- authentication implemented;
+- same Supabase backend and profile synchronization verified;
+- Sprint 2 onboarding and Today Dashboard prototype retained;
+- new feature implementation paused until corresponding web flows mature.
 
 ## Intended deployment structure
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { login } from '../actions';
+import { login } from '../../server/actions/auth';
 
 export default function LoginPage({ searchParams }: { searchParams: { error?: string; message?: string } }) {
   return (
