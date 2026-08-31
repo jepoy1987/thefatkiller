@@ -10,7 +10,9 @@ export function DashboardHeader({ name }: { name: string }) {
 }
 
 export function TargetCard({ target }: { target: DashboardTarget }) {
-  return <StatCard label={target.label} value={formatTarget(target)} helper="No activity logged yet. Tracking will be added in a future release." accent={<span className="rounded-full bg-muted px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Plan</span>} />;
+  const remaining = Math.max(target.target - target.current, 0);
+  const helper = target.current > target.target ? `${(target.current - target.target).toLocaleString()}${target.unit ? ` ${target.unit}` : ''} over target` : `${remaining.toLocaleString()}${target.unit ? ` ${target.unit}` : ''} remaining`;
+  return <StatCard label={target.label} value={formatTarget(target)} helper={helper} accent={<span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">Today</span>} />;
 }
 
 export function WeightGoalCard({ weightGoal }: Pick<TodayDashboardData, 'weightGoal'>) {

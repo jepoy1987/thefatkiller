@@ -26,6 +26,17 @@ export const progressPhotoTypeSchema = z.enum(['front', 'side', 'back', 'other']
 export const weightEntrySchema = z.object({ id: z.string().uuid().optional(), weight: z.coerce.number().positive('Weight must be greater than zero.'), recorded_at: z.string().min(1), notes: z.string().max(500).optional() });
 export const bodyMeasurementSchema = z.object({ id: z.string().uuid().optional(), measurement_type: measurementTypeSchema, value: z.coerce.number().nonnegative('Measurement cannot be negative.'), recorded_at: z.string().min(1), notes: z.string().max(500).optional() });
 export const progressPhotoSchema = z.object({ photo_type: progressPhotoTypeSchema, recorded_at: z.string().min(1), weight: z.union([z.literal(''), z.coerce.number().positive()]).optional(), notes: z.string().max(500).optional() });
+export const foodSourceSchema = z.enum(['manual', 'system', 'provider', 'barcode']);
+export const mealTypeSchema = z.enum(['breakfast', 'lunch', 'dinner', 'snack']);
+export const servingUnitSchema = z.enum(['g', 'ml', 'oz', 'cup', 'tbsp', 'tsp', 'piece', 'serving', 'other']);
+const nutritionNumber = z.coerce.number().nonnegative('Nutrition values cannot be negative.');
+export const foodSchema = z.object({ name: z.string().trim().min(1, 'Food name is required.').max(120), brand: z.string().trim().max(120).optional(), serving_size: z.coerce.number().positive('Serving size must be greater than zero.'), serving_unit: servingUnitSchema, calories: nutritionNumber, protein_g: nutritionNumber, carbs_g: nutritionNumber, fat_g: nutritionNumber, fiber_g: z.union([z.literal(''), nutritionNumber]).optional() });
+export const foodLogSchema = z.object({ food_id: z.string().uuid(), meal_type: mealTypeSchema, servings: z.coerce.number().positive('Servings must be greater than zero.'), logged_at: z.string().min(1, 'Log time is required.'), notes: z.string().max(500).optional() });
+export const quickAddSchema = z.object({ name: z.string().trim().min(1, 'Description is required.').max(120), meal_type: mealTypeSchema, calories: nutritionNumber, protein_g: nutritionNumber.default(0), carbs_g: nutritionNumber.default(0), fat_g: nutritionNumber.default(0), logged_at: z.string().min(1), notes: z.string().max(500).optional() });
+export const savedMealSchema = z.object({ name: z.string().trim().min(1, 'Meal name is required.').max(120), description: z.string().max(500).optional(), food_ids: z.array(z.string().uuid()).min(1, 'Choose at least one food.') });
+export const savedMealDetailsSchema = z.object({ id: z.string().uuid(), name: z.string().trim().min(1, 'Meal name is required.').max(120), description: z.string().max(500).optional() });
+export const waterLogSchema = z.object({ amount: z.coerce.number().positive('Water amount must be greater than zero.'), unit_system: unitSystemSchema, logged_at: z.string().min(1) });
+export const updateFoodLogSchema = z.object({ id: z.string().uuid(), meal_type: mealTypeSchema, servings: z.coerce.number().positive('Servings must be greater than zero.'), logged_at: z.string().min(1), notes: z.string().max(500).optional() });
 
 export const emailSchema = z.string().email();
 
@@ -90,3 +101,9 @@ export type OnboardingInput = z.infer<typeof onboardingSchema>;
 export type OnboardingBasicInput = OnboardingInput;
 export type GoalTargetsInput = z.infer<typeof goalTargetsSchema>;
 export type GoalSettingsInput = z.infer<typeof goalSettingsSchema>;
+export type FoodInput = z.infer<typeof foodSchema>;
+export type FoodLogInput = z.infer<typeof foodLogSchema>;
+export type QuickAddInput = z.infer<typeof quickAddSchema>;
+export type SavedMealInput = z.infer<typeof savedMealSchema>;
+export type SavedMealDetailsInput = z.infer<typeof savedMealDetailsSchema>;
+export type WaterLogInput = z.infer<typeof waterLogSchema>;
