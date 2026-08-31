@@ -1,10 +1,14 @@
+'use client';
+
 import type { Profile } from '@tfk/types';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { SubmitButton } from '../../components/forms/submit-button';
+import { Card, CardContent } from '../../components/ui/card';
+import { FormField, Input, Select } from '../../components/ui/form';
 import { activityOptions, goalTypeOptions, unitOptions } from '../goals/options';
 import { completeOnboarding } from '../../server/actions/onboarding';
 
-const fieldClass = 'rounded border border-slate-300 px-3 py-2';
 const targetFields = [
   { name: 'daily_calorie_target', label: 'Calories', placeholder: '1800', integer: true, allowZero: false },
   { name: 'daily_protein_target', label: 'Protein (g)', placeholder: '140', integer: false, allowZero: true },
@@ -15,23 +19,27 @@ const targetFields = [
 ] as const;
 
 function OnboardingStep({ number, title, children }: { number: number; title: string; children: ReactNode }) {
-  return <fieldset className="grid gap-4 rounded-xl border p-5"><legend className="px-2 font-semibold">{number} — {title}</legend>{children}</fieldset>;
+  return <Card><fieldset><legend className="sr-only">Step {number}: {title}</legend><div className="flex items-center gap-3 border-b px-5 py-4 sm:px-6"><span className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-black text-primary-foreground">{number}</span><h2 className="font-bold">{title}</h2></div><CardContent className="grid gap-5">{children}</CardContent></fieldset></Card>;
 }
 
 export function OnboardingForm({ profile }: { profile: Profile }) {
-  return <form action={completeOnboarding} className="mt-6 grid gap-6">
+  const [units, setUnits] = useState(profile.unit_system);
+  const weightUnit = units === 'imperial' ? 'lb' : 'kg';
+  const heightUnit = units === 'imperial' ? 'in' : 'cm';
+  const waterUnit = units === 'imperial' ? 'fl oz' : 'ml';
+  return <form action={completeOnboarding} className="mt-8 grid gap-5"><ol aria-label="Setup progress" className="grid grid-cols-4 gap-2">{['About you', 'Goal', 'Targets', 'Review'].map((label, index) => <li key={label} className="min-w-0"><span className="block h-1.5 rounded-full bg-primary" /><span className="mt-2 hidden truncate text-xs font-semibold text-muted-foreground sm:block">{index + 1}. {label}</span></li>)}</ol>
     <OnboardingStep number={1} title="About You">
-      <div className="grid gap-4 md:grid-cols-2"><input aria-label="First name" name="first_name" required defaultValue={profile.first_name ?? ''} className={fieldClass} placeholder="First name" /><input aria-label="Last name" name="last_name" required defaultValue={profile.last_name ?? ''} className={fieldClass} placeholder="Last name" /></div>
-      <input aria-label="Display name" name="display_name" required defaultValue={profile.display_name ?? ''} className={fieldClass} placeholder="Display name" />
-      <div className="grid gap-4 md:grid-cols-2"><label className="grid gap-1 text-sm">Date of birth<input name="date_of_birth" required defaultValue={profile.date_of_birth ?? ''} className={fieldClass} type="date" /></label><label className="grid gap-1 text-sm">Unit system<select name="unit_system" defaultValue={profile.unit_system} className={fieldClass}>{unitOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label></div>
+      <div className="grid gap-5 sm:grid-cols-2"><FormField id="first-name" label="First name"><Input id="first-name" name="first_name" required autoComplete="given-name" defaultValue={profile.first_name ?? ''} /></FormField><FormField id="last-name" label="Last name"><Input id="last-name" name="last_name" required autoComplete="family-name" defaultValue={profile.last_name ?? ''} /></FormField></div>
+      <FormField id="display-name" label="Display name" hint="This is how we’ll greet you across TFK."><Input id="display-name" name="display_name" required autoComplete="nickname" defaultValue={profile.display_name ?? ''} /></FormField>
+      <div className="grid gap-5 sm:grid-cols-2"><FormField id="date-of-birth" label="Date of birth"><Input id="date-of-birth" name="date_of_birth" required defaultValue={profile.date_of_birth ?? ''} type="date" /></FormField><FormField id="unit-system" label="Unit system" hint="Labels and saved values convert automatically."><Select id="unit-system" name="unit_system" value={units} onChange={(event) => setUnits(event.target.value as Profile['unit_system'])}>{unitOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></FormField></div>
     </OnboardingStep>
     <OnboardingStep number={2} title="Your Goal">
-      <label className="grid gap-1 text-sm">Goal type<select name="goal_type" defaultValue="lose_weight" className={fieldClass}>{goalTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-      <div className="grid gap-4 md:grid-cols-3"><label className="grid gap-1 text-sm">Starting weight<input name="starting_weight" required min="0.01" step="0.1" type="number" className={fieldClass} /></label><label className="grid gap-1 text-sm">Goal weight<input name="goal_weight" required min="0.01" step="0.1" type="number" className={fieldClass} /></label><label className="grid gap-1 text-sm">Height<input name="height" required min="0.01" step="0.1" type="number" className={fieldClass} /></label></div>
-      <label className="grid gap-1 text-sm">Activity level<select name="activity_level" defaultValue="moderately_active" className={fieldClass}>{activityOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+      <FormField id="goal-type" label="Goal type"><Select id="goal-type" name="goal_type" defaultValue="lose_weight">{goalTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></FormField>
+      <div className="grid gap-5 sm:grid-cols-3"><FormField id="starting-weight" label={`Starting weight (${weightUnit})`}><Input id="starting-weight" name="starting_weight" required min="0.01" step="0.1" type="number" inputMode="decimal" /></FormField><FormField id="goal-weight" label={`Goal weight (${weightUnit})`}><Input id="goal-weight" name="goal_weight" required min="0.01" step="0.1" type="number" inputMode="decimal" /></FormField><FormField id="height" label={`Height (${heightUnit})`}><Input id="height" name="height" required min="0.01" step="0.1" type="number" inputMode="decimal" /></FormField></div>
+      <FormField id="activity-level" label="Activity level" hint="Choose the option that best reflects a typical week."><Select id="activity-level" name="activity_level" defaultValue="moderately_active">{activityOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Select></FormField>
     </OnboardingStep>
-    <OnboardingStep number={3} title="Daily Targets"><div className="grid gap-4 md:grid-cols-2">{targetFields.map((target) => <label key={target.name} className="grid gap-1 text-sm">{target.label}<input name={target.name} required min={target.allowZero ? '0' : '0.01'} step={target.integer ? '1' : '0.1'} type="number" className={fieldClass} placeholder={target.placeholder} /></label>)}</div></OnboardingStep>
-    <section className="rounded-xl bg-slate-50 p-5"><h2 className="font-semibold">4 — Review</h2><p className="mt-1 text-sm text-slate-600">Submitting saves your profile and active targets together, then opens Today.</p></section>
-    <SubmitButton className="rounded bg-slate-900 px-4 py-3 font-semibold text-white" pendingLabel="Completing setup…">Complete setup</SubmitButton>
+    <OnboardingStep number={3} title="Daily Targets"><p className="text-sm leading-6 text-muted-foreground">Use the planning targets you already established. You can refine them later.</p><div className="grid gap-5 sm:grid-cols-2">{targetFields.map((target) => { const label = target.name === 'daily_water_target' ? `Water (${waterUnit})` : target.label; return <FormField key={target.name} id={target.name} label={label}><Input id={target.name} name={target.name} required min={target.allowZero ? '0' : '0.01'} step={target.integer ? '1' : '0.1'} type="number" inputMode="decimal" placeholder={target.placeholder} /></FormField>; })}</div></OnboardingStep>
+    <Card className="border-primary/20 bg-primary/5"><CardContent className="flex items-start gap-3"><span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-black text-primary-foreground">4</span><div><h2 className="font-bold">Review and continue</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">Submitting saves your profile and active targets together, then opens Today. These values support planning and are not medical advice.</p></div></CardContent></Card>
+    <SubmitButton className="w-full sm:w-fit sm:min-w-52" pendingLabel="Completing setup…">Complete setup</SubmitButton>
   </form>;
 }

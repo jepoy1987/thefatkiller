@@ -1,22 +1,15 @@
 import Link from 'next/link';
+import { AuthShell } from '../../components/layout/auth-shell';
+import { Alert } from '../../components/ui/alert';
+import { FormField, Input } from '../../components/ui/form';
+import { SubmitButton } from '../../components/forms/submit-button';
 import { signup } from '../../server/actions/auth';
 
 export default function SignupPage({ searchParams }: { searchParams: { error?: string } }) {
   return (
-    <main className="mx-auto flex min-h-screen max-w-md items-center justify-center p-6">
-      <div className="w-full rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-3xl font-bold">Create account</h1>
-        <p className="mt-2 text-sm text-slate-600">Start your TFK account.</p>
-        {searchParams.error && <p className="mt-4 text-sm text-red-700">{searchParams.error}</p>}
-        <form action={signup} className="mt-6 space-y-4">
-          <input name="email" required type="email" className="w-full rounded border px-3 py-2" placeholder="Email" />
-          <input name="password" required minLength={8} className="w-full rounded border px-3 py-2" type="password" placeholder="Password" />
-          <button className="w-full rounded bg-slate-900 px-4 py-2 text-white" type="submit">Create account</button>
-        </form>
-        <div className="mt-4 text-sm text-slate-600">
-          Already have an account? <Link href="/login">Log in</Link>
-        </div>
-      </div>
-    </main>
+    <AuthShell eyebrow="Start with clarity" title="Create your account" description="Set your daily targets once, then keep the plan simple." footer={<>Already have an account? <Link className="font-bold text-primary hover:underline" href="/login">Log in</Link></>}>
+      {searchParams.error ? <Alert variant="error">{searchParams.error}</Alert> : null}
+      <form action={signup} className="mt-5 grid gap-5"><FormField id="signup-email" label="Email address"><Input id="signup-email" name="email" required autoComplete="email" type="email" placeholder="you@example.com" /></FormField><FormField id="signup-password" label="Password" hint="Use at least 8 characters."><Input id="signup-password" name="password" required autoComplete="new-password" minLength={8} type="password" placeholder="Create a secure password" /></FormField><SubmitButton className="w-full" pendingLabel="Creating account…">Create account</SubmitButton></form>
+    </AuthShell>
   );
 }
