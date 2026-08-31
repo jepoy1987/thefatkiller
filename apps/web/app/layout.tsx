@@ -1,10 +1,14 @@
 import './globals.css';
 import type { Metadata } from 'next';
-export const metadata: Metadata = { title: 'TFK App', description: 'The Fat Killer app' };
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+
+export const metadata: Metadata = { title: 'TFK — Your plan, made clear', description: 'A focused daily plan for sustainable weight management.' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body>{children}</body>
     </html>
   );
