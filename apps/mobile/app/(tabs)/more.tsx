@@ -1,29 +1,22 @@
-import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
-import { profileSchema } from '@tfk/validation';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import type { UnitSystem } from '@tfk/types';
+import { goalSettingsSchema, waterFromMilliliters, waterToMilliliters, weightFromKilograms, weightToKilograms } from '@tfk/validation';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../providers/auth';
 
+const style = { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, padding: 12, marginTop: 10 } as const;
 export default function MoreScreen() {
-  const { session, profile, refreshProfile } = useAuth();
-  const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
-  const [message, setMessage] = useState('');
-  const save = async () => {
-    const parsed = profileSchema.pick({ display_name: true }).safeParse({ display_name: displayName });
-    if (!parsed.success || !session) return setMessage('Enter a valid display name.');
-    const { error } = await supabase.from('profiles').update(parsed.data).eq('id', session.user.id);
-    if (error) return setMessage(error.message);
-    await refreshProfile();
-    setMessage('Profile saved.');
-  };
-  return (
-    <View style={{ flex: 1, padding: 24, justifyContent: 'center' }}>
-      <Text style={{ fontSize: 28, fontWeight: '700' }}>Profile & settings</Text>
-      <Text style={{ marginTop: 12, color: '#475569' }}>{session?.user.email}</Text>
-      <TextInput value={displayName} onChangeText={setDisplayName} placeholder="Display name" style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, padding: 12, marginTop: 20 }} />
-      {!!message && <Text style={{ marginTop: 12 }}>{message}</Text>}
-      <Pressable onPress={save} style={{ backgroundColor: '#0f172a', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 16 }}><Text style={{ color: '#fff' }}>Save changes</Text></Pressable>
-      <Pressable onPress={() => supabase.auth.signOut()} style={{ padding: 14, alignItems: 'center', marginTop: 12 }}><Text>Log out</Text></Pressable>
-    </View>
-  );
+  const { session, profile, goal, refreshProfile } = useAuth(); const [message, setMessage] = useState('');
+  const [form, setForm] = useState({ display_name: '', unit_system: 'metric', goal_type: 'lose_weight', goal_weight: '', activity_level: 'moderately_active', daily_calorie_target: '', daily_protein_target: '', daily_carbs_target: '', daily_fat_target: '', daily_water_target: '', daily_step_target: '' });
+  useEffect(() => { if (profile && goal) setForm({ display_name: profile.display_name ?? '', unit_system: profile.unit_system, goal_type: goal.goal_type, goal_weight: String(weightFromKilograms(goal.goal_weight, profile.unit_system)), activity_level: goal.activity_level, daily_calorie_target: String(goal.daily_calorie_target), daily_protein_target: String(goal.daily_protein_target), daily_carbs_target: String(goal.daily_carbs_target), daily_fat_target: String(goal.daily_fat_target), daily_water_target: String(waterFromMilliliters(goal.daily_water_target, profile.unit_system)), daily_step_target: String(goal.daily_step_target) }); }, [profile, goal]);
+  const set = (key: keyof typeof form) => (value: string) => setForm((current) => ({ ...current, [key]: value }));
+  const changeUnits = (next: UnitSystem) => setForm((current) => {
+    const previous = current.unit_system as UnitSystem;
+    if (next === previous) return current;
+    return { ...current, unit_system: next, goal_weight: String(weightFromKilograms(weightToKilograms(Number(current.goal_weight), previous), next)), daily_water_target: String(waterFromMilliliters(waterToMilliliters(Number(current.daily_water_target), previous), next)) };
+  });
+  const save = async () => { const parsed = goalSettingsSchema.safeParse(form); if (!parsed.success || !session) return setMessage(parsed.success ? 'Sign in again.' : parsed.error.issues[0]?.message ?? 'Invalid settings'); const input = parsed.data; const profileResult = await supabase.from('profiles').update({ display_name: form.display_name }).eq('id', session.user.id); if (profileResult.error) return setMessage(profileResult.error.message); const { error } = await supabase.rpc('update_goal_settings', { p_unit_system: input.unit_system, p_goal_type: input.goal_type, p_goal_weight: weightToKilograms(input.goal_weight, input.unit_system), p_activity_level: input.activity_level, p_daily_calorie_target: input.daily_calorie_target, p_daily_protein_target: input.daily_protein_target, p_daily_carbs_target: input.daily_carbs_target, p_daily_fat_target: input.daily_fat_target, p_daily_water_target: waterToMilliliters(input.daily_water_target, input.unit_system), p_daily_step_target: input.daily_step_target }); if (error) return setMessage(error.message); await refreshProfile(); setMessage('Profile and goals saved.'); };
+  const fields: Array<[keyof typeof form,string]> = [['display_name','Display name'],['goal_weight','Goal weight'],['activity_level','Activity level'],['daily_calorie_target','Calories'],['daily_protein_target','Protein (g)'],['daily_carbs_target','Carbs (g)'],['daily_fat_target','Fat (g)'],['daily_water_target','Water'],['daily_step_target','Steps']];
+  return <ScrollView contentContainerStyle={{ padding: 24 }}><Text style={{ fontSize: 28, fontWeight: '700' }}>Profile & goals</Text><Text style={{ color: '#475569', marginTop: 8 }}>{session?.user.email}</Text><View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>{(['metric','imperial'] as const).map((unit) => <Pressable key={unit} onPress={() => changeUnits(unit)} style={{ padding: 10, borderRadius: 8, backgroundColor: form.unit_system === unit ? '#0f172a' : '#e2e8f0' }}><Text style={{ color: form.unit_system === unit ? '#fff' : '#0f172a' }}>{unit}</Text></Pressable>)}</View>{fields.map(([key,label]) => <TextInput key={key} value={form[key]} onChangeText={set(key)} placeholder={label} style={style} />)}<TextInput value={form.goal_type} onChangeText={set('goal_type')} placeholder="lose_weight, maintain_weight, gain_weight" style={style} />{!!message && <Text style={{ marginTop: 12 }}>{message}</Text>}<Pressable onPress={save} style={{ backgroundColor: '#0f172a', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 16 }}><Text style={{ color: '#fff' }}>Save changes</Text></Pressable><Pressable onPress={() => supabase.auth.signOut()} style={{ padding: 14, alignItems: 'center', marginTop: 12 }}><Text>Log out</Text></Pressable></ScrollView>;
 }

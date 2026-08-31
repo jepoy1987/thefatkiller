@@ -62,6 +62,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_goals: {
+        Row: {
+          activity_level: Database["public"]["Enums"]["activity_level"]
+          created_at: string
+          daily_calorie_target: number
+          daily_carbs_target: number
+          daily_fat_target: number
+          daily_protein_target: number
+          daily_step_target: number
+          daily_water_target: number
+          goal_type: Database["public"]["Enums"]["goal_type"]
+          goal_weight: number
+          height: number
+          id: string
+          is_active: boolean
+          starting_weight: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_level: Database["public"]["Enums"]["activity_level"]
+          created_at?: string
+          daily_calorie_target: number
+          daily_carbs_target: number
+          daily_fat_target: number
+          daily_protein_target: number
+          daily_step_target: number
+          daily_water_target: number
+          goal_type?: Database["public"]["Enums"]["goal_type"]
+          goal_weight: number
+          height: number
+          id?: string
+          is_active?: boolean
+          starting_weight: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_level?: Database["public"]["Enums"]["activity_level"]
+          created_at?: string
+          daily_calorie_target?: number
+          daily_carbs_target?: number
+          daily_fat_target?: number
+          daily_protein_target?: number
+          daily_step_target?: number
+          daily_water_target?: number
+          goal_type?: Database["public"]["Enums"]["goal_type"]
+          goal_weight?: number
+          height?: number
+          id?: string
+          is_active?: boolean
+          starting_weight?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -88,10 +145,98 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      complete_onboarding: {
+        Args: {
+          p_activity_level: Database["public"]["Enums"]["activity_level"]
+          p_daily_calorie_target: number
+          p_daily_carbs_target: number
+          p_daily_fat_target: number
+          p_daily_protein_target: number
+          p_daily_step_target: number
+          p_daily_water_target: number
+          p_date_of_birth: string
+          p_display_name: string
+          p_first_name: string
+          p_goal_type: Database["public"]["Enums"]["goal_type"]
+          p_goal_weight: number
+          p_height: number
+          p_last_name: string
+          p_starting_weight: number
+          p_unit_system: Database["public"]["Enums"]["unit_system"]
+        }
+        Returns: {
+          activity_level: Database["public"]["Enums"]["activity_level"]
+          created_at: string
+          daily_calorie_target: number
+          daily_carbs_target: number
+          daily_fat_target: number
+          daily_protein_target: number
+          daily_step_target: number
+          daily_water_target: number
+          goal_type: Database["public"]["Enums"]["goal_type"]
+          goal_weight: number
+          height: number
+          id: string
+          is_active: boolean
+          starting_weight: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_goals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_goal_settings: {
+        Args: {
+          p_activity_level: Database["public"]["Enums"]["activity_level"]
+          p_daily_calorie_target: number
+          p_daily_carbs_target: number
+          p_daily_fat_target: number
+          p_daily_protein_target: number
+          p_daily_step_target: number
+          p_daily_water_target: number
+          p_goal_type: Database["public"]["Enums"]["goal_type"]
+          p_goal_weight: number
+          p_unit_system: Database["public"]["Enums"]["unit_system"]
+        }
+        Returns: {
+          activity_level: Database["public"]["Enums"]["activity_level"]
+          created_at: string
+          daily_calorie_target: number
+          daily_carbs_target: number
+          daily_fat_target: number
+          daily_protein_target: number
+          daily_step_target: number
+          daily_water_target: number
+          goal_type: Database["public"]["Enums"]["goal_type"]
+          goal_weight: number
+          height: number
+          id: string
+          is_active: boolean
+          starting_weight: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_goals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
+      activity_level:
+        | "sedentary"
+        | "lightly_active"
+        | "moderately_active"
+        | "very_active"
+        | "extra_active"
       app_role: "user" | "coach" | "admin"
+      goal_type: "lose_weight" | "maintain_weight" | "gain_weight"
       unit_system: "metric" | "imperial"
     }
     CompositeTypes: {
@@ -220,7 +365,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_level: [
+        "sedentary",
+        "lightly_active",
+        "moderately_active",
+        "very_active",
+        "extra_active",
+      ],
       app_role: ["user", "coach", "admin"],
+      goal_type: ["lose_weight", "maintain_weight", "gain_weight"],
       unit_system: ["metric", "imperial"],
     },
   },
