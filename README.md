@@ -1,6 +1,10 @@
 # The Fat Killer (TFK)
 
-This repository contains the Sprint 0 + Sprint 1 foundation for TFK: the monorepo, marketing site, authenticated web app, mobile app shell, Supabase setup, and the shared data contracts needed to validate a single cross-platform account flow.
+This repository contains the completed Sprint 0-2 foundation for TFK: the monorepo, marketing site, authenticated web product, stable Expo shell, Supabase schema/RLS, onboarding, goals, and Today Dashboard foundation.
+
+New product functionality is developed web-first. The Expo application remains
+supported and buildable, with native feature work following approved web flows.
+See `docs/web-first-development.md` for delivery boundaries.
 
 ## Project structure
 
@@ -71,4 +75,6 @@ The generated file is stored in `packages/types/src/database.ts` and should be r
 
 ## Important
 
-This sprint intentionally omits nutrition, calorie tracking, workouts, coaching, subscriptions, TFK Score, and any other future product modules.
+Current scope intentionally omits tracking logs, workouts, coaching,
+subscriptions, TFK Score, and other future product modules. The repository is
+prepared for those modules, but none are started by this refactor.
