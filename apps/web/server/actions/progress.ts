@@ -17,7 +17,7 @@ export async function saveWeight(data: FormData) {
   const payload = { user_id: user.id, weight_kg: weightToKilograms(input.weight, formValue(data, 'unit_system') === 'imperial' ? 'imperial' : 'metric'), recorded_at: new Date(input.recorded_at).toISOString(), source: 'manual' as const, notes: input.notes || null };
   const result = input.id ? await supabase.from('weight_entries').update(payload).eq('id', input.id) : await supabase.from('weight_entries').insert(payload);
   if (result.error) redirectWithError('/progress', 'Weight could not be saved.');
-  finish(input.id ? 'Weight updated.' : 'Weight logged.');
+  finish(input.id ? 'Weight updated.' : 'Weight saved.');
 }
 
 export async function deleteWeight(data: FormData) {
@@ -36,7 +36,7 @@ export async function saveMeasurement(data: FormData) {
   const payload = { user_id: user.id, measurement_type: input.measurement_type, value: Number(canonicalValue.toFixed(2)), recorded_at: new Date(input.recorded_at).toISOString(), notes: input.notes || null };
   const result = input.id ? await supabase.from('body_measurements').update(payload).eq('id', input.id) : await supabase.from('body_measurements').insert(payload);
   if (result.error) redirectWithError('/progress', 'Measurement could not be saved.');
-  finish(input.id ? 'Measurement updated.' : 'Measurement logged.');
+  finish(input.id ? 'Measurement updated.' : 'Measurement saved.');
 }
 
 export async function deleteMeasurement(data: FormData) {
@@ -59,7 +59,7 @@ export async function uploadProgressPhoto(data: FormData) {
   const weight = input.weight === '' || input.weight === undefined ? null : weightToKilograms(input.weight, formValue(data, 'unit_system') === 'imperial' ? 'imperial' : 'metric');
   const metadata = await supabase.from('progress_photos').insert({ user_id: user.id, storage_path: path, photo_type: input.photo_type, recorded_at: new Date(input.recorded_at).toISOString(), weight_kg: weight, notes: input.notes || null });
   if (metadata.error) { await supabase.storage.from('progress-photos').remove([path]); redirectWithError('/progress', 'Photo metadata could not be saved.'); }
-  finish('Progress photo added.');
+  finish('Photo uploaded.');
 }
 
 export async function deleteProgressPhoto(data: FormData) {
@@ -70,5 +70,5 @@ export async function deleteProgressPhoto(data: FormData) {
   if (removed.error) redirectWithError('/progress', 'Photo file could not be deleted.');
   const deleted = await supabase.from('progress_photos').delete().eq('id', id);
   if (deleted.error) redirectWithError('/progress', 'Photo metadata could not be deleted.');
-  finish('Progress photo deleted.');
+  finish('Photo deleted.');
 }
