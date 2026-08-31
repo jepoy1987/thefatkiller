@@ -32,6 +32,24 @@ Supabase is the source of truth for identity, profile records, and row-level sec
 5. The profile is the shared record used by web and mobile.
 6. The same Supabase project powers both clients.
 
+## Sprint 2 goals and measurement storage
+
+`public.user_goals` stores a user's active configuration and daily targets. A
+partial unique index enforces one active goal per user, while RLS limits all
+reads and writes to `auth.uid()`. The `complete_onboarding` database function
+atomically updates the profile and active goal so onboarding cannot complete
+with missing target data.
+
+Measurements use a single canonical representation at rest:
+
+- weight: kilograms
+- height: centimeters
+- water: milliliters
+
+The profile's `unit_system` remains the user's primary preference. Web and
+mobile convert values only at their input and display boundaries, avoiding
+duplicate converted columns and rounding drift in the database.
+
 ## Intended deployment structure
 
 - Vercel project for website: `thefatkiller.com`
