@@ -32,6 +32,21 @@ Profiles are created by a database trigger and do not require manual creation on
 
 The `forgot-password` routes are created as the foundation for password reset flows. They are intentionally lightweight while the final email design is deferred.
 
+## Staging Auth URL configuration
+
+In the staging Supabase Dashboard under **Authentication → URL Configuration**,
+set the Site URL to `https://app.thefatkiller.com` when the hosted staging app
+is ready. Add these exact redirect URLs:
+
+- `http://localhost:3001/auth/callback`
+- `https://app.thefatkiller.com/auth/callback`
+- `tfk://auth/callback`
+
+The custom mobile scheme is declared as `tfk` in `apps/mobile/app.json`.
+Keep production and staging Auth settings separate. Preview deployment URLs
+should be added explicitly when a preview environment exists; do not use a
+broad production wildcard by default.
+
 ## Database enforcement
 
 Profiles are inserted by a tightly scoped `SECURITY DEFINER` trigger with an empty `search_path`. Function execution is revoked from public client roles. RLS and column-level grants allow authenticated users to select their own profile and update only editable profile columns; IDs and database timestamps cannot be changed by clients.

@@ -17,5 +17,5 @@ port = 54323
 [auth]
 enabled = true
 site_url = "http://localhost:3001"
-additional_redirect_urls = ["http://localhost:3001/auth/callback", "tfk://auth/callback"]
+additional_redirect_urls = ["http://localhost:3001/auth/callback", "https://app.thefatkiller.com/auth/callback", "tfk://auth/callback"]
 enable_signup = true
