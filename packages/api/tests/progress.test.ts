@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import type { Profile, UserGoal, WeightEntry } from '@tfk/types';
+import { calculateProgress } from '../src/index.ts';
+const profile = { unit_system: 'metric' } as Profile;
+const goal = { starting_weight: 100, goal_weight: 80, goal_type: 'lose_weight' } as UserGoal;
+const entry = (weight_kg: number, day: number) => ({ id: String(day), weight_kg, recorded_at: `2026-08-${String(day).padStart(2,'0')}T00:00:00Z` } as WeightEntry);
+test('calculates loss progress and weekly trend from canonical values', () => { const result = calculateProgress(profile, goal, [entry(100, 1), entry(95, 8)]); assert.equal(result.current, 95); assert.equal(result.change, -5); assert.equal(result.remaining, 15); assert.equal(result.percent, 25); assert.equal(result.weeklyRate, -5); assert.equal(result.trend, 'down'); });
+test('handles gain and maintain directions', () => { const gain = calculateProgress(profile, { ...goal, starting_weight: 70, goal_weight: 80, goal_type: 'gain_weight' }, [entry(75, 1)]); assert.equal(gain.percent, 50); assert.equal(gain.remaining, 5); const maintain = calculateProgress(profile, { ...goal, starting_weight: 80, goal_weight: 80, goal_type: 'maintain_weight' }, [entry(80.4, 1)]); assert.equal(maintain.percent, 100); assert.equal(maintain.remaining, 0); });
+test('uses starting weight when history is empty', () => { const result = calculateProgress(profile, goal, []); assert.equal(result.current, 100); assert.equal(result.weeklyRate, null); });

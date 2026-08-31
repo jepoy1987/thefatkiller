@@ -1,0 +1,30 @@
+begin;
+set local search_path = public, extensions, storage, auth;
+select plan(16);
+insert into auth.users (instance_id,id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
+('00000000-0000-0000-0000-000000000000','eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','authenticated','authenticated','progress-a@example.test','',now(),'{}','{}',now(),now()),
+('00000000-0000-0000-0000-000000000000','ffffffff-ffff-4fff-8fff-ffffffffffff','authenticated','authenticated','progress-b@example.test','',now(),'{}','{}',now(),now());
+set local role authenticated;
+select set_config('request.jwt.claim.sub','eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',true);
+insert into public.weight_entries(user_id,weight_kg) values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',90);
+select is((select count(*)::int from public.weight_entries),1,'A reads own weight');
+insert into public.body_measurements(user_id,measurement_type,value) values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','waist',80);
+select is((select count(*)::int from public.body_measurements),1,'A reads own measurement');
+insert into public.progress_photos(user_id,storage_path) values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee/a.jpg');
+select is((select count(*)::int from public.progress_photos),1,'A reads own photo');
+select is((select count(*)::int from public.milestones where milestone_type='first_weight'),1,'first milestone awarded once');
+select set_config('request.jwt.claim.sub','ffffffff-ffff-4fff-8fff-ffffffffffff',true);
+select is((select count(*)::int from public.weight_entries),0,'B cannot read A weight');
+select is((select count(*)::int from public.body_measurements),0,'B cannot read A measurement');
+select is((select count(*)::int from public.progress_photos),0,'B cannot read A photo');
+update public.weight_entries set weight_kg=1 where user_id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'; select is((select count(*)::int from public.weight_entries),0,'B cannot update A weight');
+delete from public.body_measurements where user_id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'; select is((select count(*)::int from public.body_measurements),0,'B cannot delete A measurement');
+select throws_ok($$insert into public.weight_entries(user_id,weight_kg) values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',88)$$,'42501',null,'B cannot insert A weight');
+select throws_ok($$insert into public.body_measurements(user_id,measurement_type,value) values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','waist',1)$$,'42501',null,'B cannot insert A measurement');
+select throws_ok($$insert into public.progress_photos(user_id,storage_path) values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','x')$$,'42501',null,'B cannot insert A photo');
+select lives_ok($$insert into storage.objects(bucket_id,name,owner_id) values('progress-photos','ffffffff-ffff-4fff-8fff-ffffffffffff/b.jpg','ffffffff-ffff-4fff-8fff-ffffffffffff')$$,'B uploads to own folder');
+select throws_ok($$insert into storage.objects(bucket_id,name,owner_id) values('progress-photos','eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee/b.jpg','ffffffff-ffff-4fff-8fff-ffffffffffff')$$,'42501',null,'B cannot upload to A folder');
+select is((select count(*)::int from storage.objects where bucket_id='progress-photos'),1,'B sees only own object');
+update storage.objects set name='ffffffff-ffff-4fff-8fff-ffffffffffff/overwrite.jpg' where bucket_id='progress-photos'; select is((select count(*)::int from storage.objects where name like '%overwrite%'),0,'storage overwrite is not allowed');
+select * from finish();
+rollback;
