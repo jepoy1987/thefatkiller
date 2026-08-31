@@ -1,9 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
+import { getAppOrigin } from '../../../lib/origin';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? requestUrl.origin;
+  const appUrl = getAppOrigin(requestUrl.origin);
   const code = requestUrl.searchParams.get('code');
 
   if (!code) {
