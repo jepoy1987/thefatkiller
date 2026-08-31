@@ -6,6 +6,9 @@ export type ProgressSource = 'manual' | 'import' | 'apple_health' | 'health_conn
 export type MeasurementType = 'waist' | 'hips' | 'chest' | 'neck' | 'left_arm' | 'right_arm' | 'left_thigh' | 'right_thigh' | 'body_fat';
 export type ProgressPhotoType = 'front' | 'side' | 'back' | 'other';
 export type MilestoneType = 'first_weight' | 'five_weights' | 'goal_reached';
+export type FoodSource = 'manual' | 'system' | 'provider' | 'barcode';
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+export type ServingUnit = 'g' | 'ml' | 'oz' | 'cup' | 'tbsp' | 'tsp' | 'piece' | 'serving' | 'other';
 
 export type Profile = {
   id: string;
@@ -37,6 +40,13 @@ export type BodyMeasurement = { id: string; user_id: string; measurement_type: M
 export type ProgressPhoto = { id: string; user_id: string; storage_path: string; photo_type: ProgressPhotoType; recorded_at: string; weight_kg: number | null; notes: string | null; created_at: string; signed_url?: string };
 export type Milestone = { id: string; user_id: string; milestone_type: MilestoneType; achieved_at: string; created_at: string };
 export type ProgressSummary = { current: number; starting: number; goal: number; change: number; remaining: number; percent: number; weeklyRate: number | null; trend: 'up' | 'down' | 'steady'; unit: string };
+export type Food = { id: string; owner_user_id: string | null; name: string; brand: string | null; source: FoodSource; external_id: string | null; serving_size: number; serving_unit: ServingUnit; calories: number; protein_g: number; carbs_g: number; fat_g: number; fiber_g: number | null; sugar_g: number | null; sodium_mg: number | null; is_favorite: boolean; created_at: string; updated_at: string };
+export type FoodLog = { id: string; user_id: string; food_id: string | null; meal_type: MealType; food_name_snapshot: string; brand_snapshot: string | null; servings: number; serving_size_snapshot: number; serving_unit_snapshot: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; fiber_g: number | null; logged_at: string; notes: string | null; created_at: string; updated_at: string };
+export type SavedMeal = { id: string; user_id: string; name: string; description: string | null; created_at: string; updated_at: string; items?: SavedMealItem[] };
+export type SavedMealItem = { id: string; saved_meal_id: string; food_id: string | null; food_name_snapshot: string; servings: number; serving_size_snapshot: number; serving_unit_snapshot: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; position: number; created_at: string };
+export type WaterLog = { id: string; user_id: string; amount_ml: number; logged_at: string; created_at: string; updated_at: string };
+export type NutrientTotals = { calories: number; protein_g: number; carbs_g: number; fat_g: number; water_ml: number };
+export type DailyNutritionSummary = NutrientTotals & { date: string; targets: NutrientTotals; meals: Record<MealType, NutrientTotals> };
 
 export type DashboardTarget = {
   key: 'calories' | 'protein' | 'carbs' | 'fat' | 'water' | 'steps';

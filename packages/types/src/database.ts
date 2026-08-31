@@ -47,6 +47,140 @@ export type Database = {
         }
         Relationships: []
       }
+      food_logs: {
+        Row: {
+          brand_snapshot: string | null
+          calories: number
+          carbs_g: number
+          created_at: string
+          fat_g: number
+          fiber_g: number | null
+          food_id: string | null
+          food_name_snapshot: string
+          id: string
+          logged_at: string
+          meal_type: Database["public"]["Enums"]["meal_type"]
+          notes: string | null
+          protein_g: number
+          serving_size_snapshot: number
+          serving_unit_snapshot: string
+          servings: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_snapshot?: string | null
+          calories: number
+          carbs_g: number
+          created_at?: string
+          fat_g: number
+          fiber_g?: number | null
+          food_id?: string | null
+          food_name_snapshot: string
+          id?: string
+          logged_at?: string
+          meal_type: Database["public"]["Enums"]["meal_type"]
+          notes?: string | null
+          protein_g: number
+          serving_size_snapshot: number
+          serving_unit_snapshot: string
+          servings: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_snapshot?: string | null
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          fat_g?: number
+          fiber_g?: number | null
+          food_id?: string | null
+          food_name_snapshot?: string
+          id?: string
+          logged_at?: string
+          meal_type?: Database["public"]["Enums"]["meal_type"]
+          notes?: string | null
+          protein_g?: number
+          serving_size_snapshot?: number
+          serving_unit_snapshot?: string
+          servings?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_logs_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "foods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foods: {
+        Row: {
+          brand: string | null
+          calories: number
+          carbs_g: number
+          created_at: string
+          external_id: string | null
+          fat_g: number
+          fiber_g: number | null
+          id: string
+          is_favorite: boolean
+          name: string
+          owner_user_id: string | null
+          protein_g: number
+          serving_size: number
+          serving_unit: string
+          sodium_mg: number | null
+          source: Database["public"]["Enums"]["food_source"]
+          sugar_g: number | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          calories: number
+          carbs_g: number
+          created_at?: string
+          external_id?: string | null
+          fat_g: number
+          fiber_g?: number | null
+          id?: string
+          is_favorite?: boolean
+          name: string
+          owner_user_id?: string | null
+          protein_g: number
+          serving_size: number
+          serving_unit: string
+          sodium_mg?: number | null
+          source?: Database["public"]["Enums"]["food_source"]
+          sugar_g?: number | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          external_id?: string | null
+          fat_g?: number
+          fiber_g?: number | null
+          id?: string
+          is_favorite?: boolean
+          name?: string
+          owner_user_id?: string | null
+          protein_g?: number
+          serving_size?: number
+          serving_unit?: string
+          sodium_mg?: number | null
+          source?: Database["public"]["Enums"]["food_source"]
+          sugar_g?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       milestones: {
         Row: {
           achieved_at: string
@@ -152,6 +286,96 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_meal_items: {
+        Row: {
+          calories: number
+          carbs_g: number
+          created_at: string
+          fat_g: number
+          food_id: string | null
+          food_name_snapshot: string
+          id: string
+          position: number
+          protein_g: number
+          saved_meal_id: string
+          serving_size_snapshot: number
+          serving_unit_snapshot: string
+          servings: number
+        }
+        Insert: {
+          calories: number
+          carbs_g: number
+          created_at?: string
+          fat_g: number
+          food_id?: string | null
+          food_name_snapshot: string
+          id?: string
+          position?: number
+          protein_g: number
+          saved_meal_id: string
+          serving_size_snapshot: number
+          serving_unit_snapshot: string
+          servings: number
+        }
+        Update: {
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          fat_g?: number
+          food_id?: string | null
+          food_name_snapshot?: string
+          id?: string
+          position?: number
+          protein_g?: number
+          saved_meal_id?: string
+          serving_size_snapshot?: number
+          serving_unit_snapshot?: string
+          servings?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_meal_items_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "foods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_meal_items_saved_meal_id_fkey"
+            columns: ["saved_meal_id"]
+            isOneToOne: false
+            referencedRelation: "saved_meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_meals: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_goals: {
         Row: {
           activity_level: Database["public"]["Enums"]["activity_level"]
@@ -225,6 +449,33 @@ export type Database = {
         Update: {
           created_at?: string
           role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      water_logs: {
+        Row: {
+          amount_ml: number
+          created_at: string
+          id: string
+          logged_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_ml: number
+          created_at?: string
+          id?: string
+          logged_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_ml?: number
+          created_at?: string
+          id?: string
+          logged_at?: string
           updated_at?: string
           user_id?: string
         }
@@ -312,6 +563,49 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_daily_nutrition: {
+        Args: { p_date: string }
+        Returns: {
+          calories: number
+          carbs_g: number
+          fat_g: number
+          protein_g: number
+          water_ml: number
+        }[]
+      }
+      log_saved_meal: {
+        Args: {
+          p_logged_at: string
+          p_meal_type: Database["public"]["Enums"]["meal_type"]
+          p_saved_meal_id: string
+        }
+        Returns: {
+          brand_snapshot: string | null
+          calories: number
+          carbs_g: number
+          created_at: string
+          fat_g: number
+          fiber_g: number | null
+          food_id: string | null
+          food_name_snapshot: string
+          id: string
+          logged_at: string
+          meal_type: Database["public"]["Enums"]["meal_type"]
+          notes: string | null
+          protein_g: number
+          serving_size_snapshot: number
+          serving_unit_snapshot: string
+          servings: number
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "food_logs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       update_goal_settings: {
         Args: {
           p_activity_level: Database["public"]["Enums"]["activity_level"]
@@ -359,7 +653,9 @@ export type Database = {
         | "very_active"
         | "extra_active"
       app_role: "user" | "coach" | "admin"
+      food_source: "manual" | "system" | "provider" | "barcode"
       goal_type: "lose_weight" | "maintain_weight" | "gain_weight"
+      meal_type: "breakfast" | "lunch" | "dinner" | "snack"
       measurement_type:
         | "waist"
         | "hips"
@@ -514,7 +810,9 @@ export const Constants = {
         "extra_active",
       ],
       app_role: ["user", "coach", "admin"],
+      food_source: ["manual", "system", "provider", "barcode"],
       goal_type: ["lose_weight", "maintain_weight", "gain_weight"],
+      meal_type: ["breakfast", "lunch", "dinner", "snack"],
       measurement_type: [
         "waist",
         "hips",
