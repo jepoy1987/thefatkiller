@@ -2,6 +2,7 @@ import type { DashboardTarget, TodayDashboardData } from '@tfk/types';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { PageHeader } from '../../components/ui/headings';
 import { StatCard } from '../../components/ui/stat-card';
+export { DashboardAccountability } from '../accountability/components';
 
 const formatTarget = (target: DashboardTarget) => `${target.current.toLocaleString()} / ${target.target.toLocaleString()}${target.unit ? ` ${target.unit}` : ''}`;
 

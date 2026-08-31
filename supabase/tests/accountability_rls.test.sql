@@ -1,0 +1,32 @@
+begin;
+set local search_path = public, extensions, auth;
+select plan(18);
+insert into auth.users(instance_id,id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
+('00000000-0000-0000-0000-000000000000','41111111-1111-4111-8111-111111111111','authenticated','authenticated','accountability-a@example.test','',now(),'{}','{}',now(),now()),
+('00000000-0000-0000-0000-000000000000','42222222-2222-4222-8222-222222222222','authenticated','authenticated','accountability-b@example.test','',now(),'{}','{}',now(),now());
+set local role authenticated;
+select set_config('request.jwt.claim.sub','41111111-1111-4111-8111-111111111111',true);
+insert into public.habits(user_id,name,category) values('41111111-1111-4111-8111-111111111111','A habit','hydration');
+select is((select count(*)::int from public.habits),1,'A reads own habit');
+insert into public.habit_completions(habit_id,user_id,completed_on) select id,'41111111-1111-4111-8111-111111111111','2026-08-31' from public.habits;
+select is((select count(*)::int from public.habit_completions),1,'A completes own habit');
+insert into public.daily_check_ins(user_id,check_in_date,mood) values('41111111-1111-4111-8111-111111111111','2026-08-31',4);
+select is((select count(*)::int from public.daily_check_ins),1,'A reads own daily check-in');
+insert into public.weekly_check_ins(user_id,week_start,overall_rating) values('41111111-1111-4111-8111-111111111111','2026-08-31',4);
+select is((select count(*)::int from public.weekly_check_ins),1,'A reads own weekly check-in');
+select throws_ok($$insert into public.habit_completions(habit_id,user_id,completed_on) select id,'42222222-2222-4222-8222-222222222222','2026-09-01' from public.habits$$,'42501',null,'A cannot create B completion');
+select set_config('request.jwt.claim.sub','42222222-2222-4222-8222-222222222222',true);
+select is((select count(*)::int from public.habits),0,'B cannot read A habits');
+select is((select count(*)::int from public.habit_completions),0,'B cannot read A completions');
+select is((select count(*)::int from public.daily_check_ins),0,'B cannot read A daily check-ins');
+select is((select count(*)::int from public.weekly_check_ins),0,'B cannot read A weekly check-ins');
+select throws_ok($$insert into public.habits(user_id,name) values('41111111-1111-4111-8111-111111111111','Forbidden')$$,'42501',null,'B cannot insert A habit');
+select throws_ok($$insert into public.daily_check_ins(user_id,check_in_date) values('41111111-1111-4111-8111-111111111111','2026-09-01')$$,'42501',null,'B cannot insert A daily check-in');
+select throws_ok($$insert into public.weekly_check_ins(user_id,week_start) values('41111111-1111-4111-8111-111111111111','2026-09-07')$$,'42501',null,'B cannot insert A weekly check-in');
+update public.habits set name='Forbidden' where user_id='41111111-1111-4111-8111-111111111111';select is((select count(*)::int from public.habits),0,'B cannot update A habit');
+update public.habit_completions set notes='Forbidden' where user_id='41111111-1111-4111-8111-111111111111';select is((select count(*)::int from public.habit_completions),0,'B cannot update A completion');
+delete from public.habit_completions where user_id='41111111-1111-4111-8111-111111111111';select is((select count(*)::int from public.habit_completions),0,'B cannot delete A completion');
+delete from public.daily_check_ins where user_id='41111111-1111-4111-8111-111111111111';select is((select count(*)::int from public.daily_check_ins),0,'B cannot delete A daily check-in');
+delete from public.weekly_check_ins where user_id='41111111-1111-4111-8111-111111111111';select is((select count(*)::int from public.weekly_check_ins),0,'B cannot delete A weekly check-in');
+select throws_ok($$insert into public.habit_completions(habit_id,user_id,completed_on) values('00000000-0000-4000-8000-000000000001','42222222-2222-4222-8222-222222222222','2026-08-31')$$,'23503',null,'Unknown habits cannot be completed');
+select * from finish();rollback;

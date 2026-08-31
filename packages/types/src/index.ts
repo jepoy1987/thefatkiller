@@ -47,6 +47,16 @@ export type SavedMealItem = { id: string; saved_meal_id: string; food_id: string
 export type WaterLog = { id: string; user_id: string; amount_ml: number; logged_at: string; created_at: string; updated_at: string };
 export type NutrientTotals = { calories: number; protein_g: number; carbs_g: number; fat_g: number; water_ml: number };
 export type DailyNutritionSummary = NutrientTotals & { date: string; targets: NutrientTotals; meals: Record<MealType, NutrientTotals> };
+export type HabitCategory = 'nutrition' | 'hydration' | 'movement' | 'sleep' | 'mindset' | 'medication' | 'custom';
+export type HabitFrequency = 'daily' | 'weekly';
+export type Habit = { id: string; user_id: string; name: string; description: string | null; category: HabitCategory; frequency: HabitFrequency; target_per_period: number; is_active: boolean; sort_order: number; created_at: string; updated_at: string };
+export type HabitCompletion = { id: string; habit_id: string; user_id: string; completed_on: string; value: number | null; notes: string | null; created_at: string };
+export type DailyCheckIn = { id: string; user_id: string; check_in_date: string; mood: number | null; energy: number | null; hunger: number | null; sleep_quality: number | null; stress: number | null; notes: string | null; win_of_day: string | null; challenge_of_day: string | null; created_at: string; updated_at: string };
+export type WeeklyCheckIn = { id: string; user_id: string; week_start: string; overall_rating: number | null; nutrition_rating: number | null; movement_rating: number | null; sleep_rating: number | null; biggest_win: string | null; biggest_challenge: string | null; focus_next_week: string | null; notes: string | null; created_at: string; updated_at: string };
+export type HabitStreak = { habit_id: string; current: number; longest: number; completion_rate: number };
+export type TFKScoreBreakdown = { nutrition: number; hydration: number; habits: number; checkIns: number; progress: number };
+export type TFKScore = { overall: number; label: 'Excellent' | 'Strong' | 'Building' | 'Inconsistent' | 'Needs attention'; breakdown: TFKScoreBreakdown; windowDays: number };
+export type AccountabilitySummary = { today: string; weekStart: string; activeHabits: number; completedHabits: number; dailyCheckInComplete: boolean; streaks: HabitStreak[]; score: TFKScore };
 
 export type DashboardTarget = {
   key: 'calories' | 'protein' | 'carbs' | 'fat' | 'water' | 'steps';
@@ -68,6 +78,7 @@ export type TodayDashboardData = {
     unit: string;
   };
   nextActions: string[];
+  accountability?: AccountabilitySummary;
 };
 export type { Database } from './database';
 

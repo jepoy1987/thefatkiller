@@ -1,5 +1,11 @@
-export const tfkScoringStatus = 'planned';
-
-export function placeholderScore(): string {
-  return 'TFK Score is planned for a future sprint.';
-}
+import type { HabitStreak, TFKScore } from '@tfk/types';
+export type DailyScoreSignal = { date: string; calories: number; calorieTarget: number; protein: number; proteinTarget: number; water: number; waterTarget: number; habitCompleted: number; habitAvailable: number; checkedIn: boolean };
+export type ScoreInput = { days: DailyScoreSignal[]; progressLogged: boolean; windowDays?: number };
+const clamp = (value: number, max: number) => Math.max(0, Math.min(max, Math.round(value)));
+const average = (values: number[]) => values.length ? values.reduce((sum,value)=>sum+value,0)/values.length : 0;
+export function scoreLabel(score:number):TFKScore['label'] { return score>=90?'Excellent':score>=75?'Strong':score>=60?'Building':score>=40?'Inconsistent':'Needs attention'; }
+export function calculateTFKScore({days,progressLogged,windowDays=7}:ScoreInput):TFKScore { const window=days.slice(-windowDays);const nutrition=clamp(average(window.map((day)=>{const calories=day.calorieTarget>0&&day.calories>=day.calorieTarget*.85&&day.calories<=day.calorieTarget*1.15?0.5:0;const protein=day.proteinTarget>0&&day.protein>=day.proteinTarget*.85?0.5:0;return calories+protein;}))*30,30);const hydration=clamp(average(window.map((day)=>day.waterTarget>0?Math.min(day.water/day.waterTarget,1):0))*15,15);const available=window.reduce((sum,day)=>sum+day.habitAvailable,0);const habits=clamp(available?window.reduce((sum,day)=>sum+Math.min(day.habitCompleted,day.habitAvailable),0)/available*30:0,30);const checkIns=clamp(average(window.map((day)=>day.checkedIn?1:0))*15,15);const progress=progressLogged?10:0;const overall=clamp(nutrition+hydration+habits+checkIns+progress,100);return {overall,label:scoreLabel(overall),breakdown:{nutrition,hydration,habits,checkIns,progress},windowDays}; }
+const shift=(date:string,days:number)=>{const value=new Date(`${date}T12:00:00Z`);value.setUTCDate(value.getUTCDate()+days);return value.toISOString().slice(0,10);};
+export function calculateHabitStreak(habitId:string,completedDates:string[],today:string,windowDays=7):HabitStreak { const unique=new Set(completedDates);let cursor=unique.has(today)?today:shift(today,-1);let current=0;while(unique.has(cursor)){current++;cursor=shift(cursor,-1);}const ordered=[...unique].sort();let longest=0;let run=0;let prior='';for(const date of ordered){run=prior&&shift(prior,1)===date?run+1:1;longest=Math.max(longest,run);prior=date;}let recent=0;for(let i=0;i<windowDays;i++)if(unique.has(shift(today,-i)))recent++;return {habit_id:habitId,current,longest,completion_rate:Math.round(recent/windowDays*100)}; }
+export function localDate(timeZone:string,now=new Date()){return new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).format(now);}
+export function mondayFor(date:string){const value=new Date(`${date}T12:00:00Z`);const day=value.getUTCDay()||7;value.setUTCDate(value.getUTCDate()-day+1);return value.toISOString().slice(0,10);}
