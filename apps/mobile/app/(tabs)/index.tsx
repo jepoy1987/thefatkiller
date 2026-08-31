@@ -1,17 +1,11 @@
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { waterFromMilliliters, weightFromKilograms, weightLabel } from '@tfk/validation';
 import { useAuth } from '../../providers/auth';
 
 export default function TodayScreen() {
-  const { session, profile } = useAuth();
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-      <Text style={{ fontSize: 28, fontWeight: '700' }}>Today</Text>
-      <Text style={{ marginTop: 12 }}>Welcome, {profile?.display_name ?? profile?.first_name ?? 'there'}</Text>
-      <Text style={{ marginTop: 8, color: '#475569' }}>{session?.user.email}</Text>
-      <Text style={{ marginTop: 8, color: '#475569' }}>Profile ID: {profile?.id}</Text>
-      <Text style={{ marginTop: 8, color: '#475569' }}>Unit system: {profile?.unit_system}</Text>
-      <Text style={{ marginTop: 24, fontWeight: '700' }}>Today&apos;s Dashboard</Text>
-      <Text style={{ marginTop: 8, color: '#475569' }}>Coming in Sprint 2.</Text>
-    </View>
-  );
+  const { profile, goal } = useAuth();
+  if (!profile || !goal) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Loading Today…</Text></View>;
+  const unit = weightLabel(profile.unit_system); const waterUnit = profile.unit_system === 'imperial' ? 'fl oz' : 'ml';
+  const cards = [['Calories', `0 / ${goal.daily_calorie_target}`], ['Protein', `0 / ${goal.daily_protein_target} g`], ['Carbs', `0 / ${goal.daily_carbs_target} g`], ['Fat', `0 / ${goal.daily_fat_target} g`], ['Water', `0 / ${waterFromMilliliters(goal.daily_water_target, profile.unit_system)} ${waterUnit}`], ['Steps', `0 / ${goal.daily_step_target}`]];
+  return <ScrollView contentContainerStyle={{ padding: 24 }}><Text style={{ fontSize: 28, fontWeight: '700' }}>Welcome, {profile.display_name ?? profile.first_name ?? 'there'}</Text><Text style={{ color: '#475569', marginTop: 6 }}>What do I need to do today?</Text><Text style={{ fontSize: 20, fontWeight: '700', marginTop: 24 }}>Today&apos;s Progress</Text>{cards.map(([label,value]) => <View key={label} style={{ backgroundColor: '#f1f5f9', borderRadius: 12, padding: 16, marginTop: 12 }}><Text style={{ color: '#475569' }}>{label}</Text><Text style={{ fontSize: 20, fontWeight: '700', marginTop: 4 }}>{value}</Text><Text style={{ color: '#64748b', fontSize: 12, marginTop: 5 }}>Tracking starts in the next sprint</Text></View>)}<View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 12, padding: 16, marginTop: 16 }}><Text style={{ fontWeight: '700' }}>Weight Goal</Text><Text style={{ marginTop: 6 }}>Starting: {weightFromKilograms(goal.starting_weight, profile.unit_system)} {unit}</Text><Text>Goal: {weightFromKilograms(goal.goal_weight, profile.unit_system)} {unit}</Text></View><View style={{ backgroundColor: '#ecfdf5', borderRadius: 12, padding: 16, marginTop: 16 }}><Text style={{ fontWeight: '700' }}>Next Actions</Text><Text style={{ marginTop: 6 }}>Set up complete</Text><Text>Nutrition tracking coming next</Text><Text>Water tracking coming next</Text><Text>Progress tracking coming next</Text></View></ScrollView>;
 }

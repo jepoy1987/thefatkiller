@@ -1,7 +1,10 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { loginSchema, onboardingSchema, profileSchema, signupSchema } from '@tfk/validation';
+import {
+  goalSettingsSchema, heightToCentimeters, loginSchema, onboardingSchema,
+  profileSchema, signupSchema, waterToMilliliters, weightToKilograms,
+} from '@tfk/validation';
 import { createClient } from '../lib/supabase/server';
 
 const value = (data: FormData, key: string) => String(data.get(key) ?? '').trim();
@@ -31,14 +34,63 @@ export async function forgotPassword(data: FormData) {
 }
 
 export async function completeOnboarding(data: FormData) {
-  const parsed = onboardingSchema.safeParse({ first_name: value(data, 'first_name'), last_name: value(data, 'last_name'), display_name: value(data, 'display_name'), date_of_birth: value(data, 'date_of_birth'), unit_system: value(data, 'unit_system') });
+  const parsed = onboardingSchema.safeParse({
+    first_name: value(data, 'first_name'), last_name: value(data, 'last_name'),
+    display_name: value(data, 'display_name'), date_of_birth: value(data, 'date_of_birth'),
+    unit_system: value(data, 'unit_system'), goal_type: value(data, 'goal_type'),
+    starting_weight: value(data, 'starting_weight'), goal_weight: value(data, 'goal_weight'),
+    height: value(data, 'height'), activity_level: value(data, 'activity_level'),
+    daily_calorie_target: value(data, 'daily_calorie_target'),
+    daily_protein_target: value(data, 'daily_protein_target'),
+    daily_carbs_target: value(data, 'daily_carbs_target'), daily_fat_target: value(data, 'daily_fat_target'),
+    daily_water_target: value(data, 'daily_water_target'), daily_step_target: value(data, 'daily_step_target'),
+  });
   if (!parsed.success) return fail('/onboarding', parsed.error.issues[0]?.message ?? 'Invalid profile');
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { error } = await supabase.from('profiles').update({ ...parsed.data, onboarding_completed: true }).eq('id', user.id);
+  const input = parsed.data;
+  const { error } = await supabase.rpc('complete_onboarding', {
+    p_first_name: input.first_name, p_last_name: input.last_name,
+    p_display_name: input.display_name, p_date_of_birth: input.date_of_birth,
+    p_unit_system: input.unit_system, p_goal_type: input.goal_type,
+    p_starting_weight: weightToKilograms(input.starting_weight, input.unit_system),
+    p_goal_weight: weightToKilograms(input.goal_weight, input.unit_system),
+    p_height: heightToCentimeters(input.height, input.unit_system),
+    p_activity_level: input.activity_level, p_daily_calorie_target: input.daily_calorie_target,
+    p_daily_protein_target: input.daily_protein_target, p_daily_carbs_target: input.daily_carbs_target,
+    p_daily_fat_target: input.daily_fat_target,
+    p_daily_water_target: waterToMilliliters(input.daily_water_target, input.unit_system),
+    p_daily_step_target: input.daily_step_target,
+  });
   if (error) fail('/onboarding', error.message);
   redirect('/dashboard');
+}
+
+export async function updateGoalSettings(data: FormData) {
+  const parsed = goalSettingsSchema.safeParse({
+    unit_system: value(data, 'unit_system'), goal_type: value(data, 'goal_type'),
+    goal_weight: value(data, 'goal_weight'), activity_level: value(data, 'activity_level'),
+    daily_calorie_target: value(data, 'daily_calorie_target'), daily_protein_target: value(data, 'daily_protein_target'),
+    daily_carbs_target: value(data, 'daily_carbs_target'), daily_fat_target: value(data, 'daily_fat_target'),
+    daily_water_target: value(data, 'daily_water_target'), daily_step_target: value(data, 'daily_step_target'),
+  });
+  if (!parsed.success) return fail('/settings/goals', parsed.error.issues[0]?.message ?? 'Invalid goal settings');
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const input = parsed.data;
+  const { error } = await supabase.rpc('update_goal_settings', {
+    p_unit_system: input.unit_system, p_goal_type: input.goal_type,
+    p_goal_weight: weightToKilograms(input.goal_weight, input.unit_system),
+    p_activity_level: input.activity_level, p_daily_calorie_target: input.daily_calorie_target,
+    p_daily_protein_target: input.daily_protein_target, p_daily_carbs_target: input.daily_carbs_target,
+    p_daily_fat_target: input.daily_fat_target,
+    p_daily_water_target: waterToMilliliters(input.daily_water_target, input.unit_system),
+    p_daily_step_target: input.daily_step_target,
+  });
+  if (error) fail('/settings/goals', error.message);
+  redirect('/settings/goals?message=Goals saved.');
 }
 
 export async function updateProfile(data: FormData) {
