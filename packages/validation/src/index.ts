@@ -37,6 +37,15 @@ export const savedMealSchema = z.object({ name: z.string().trim().min(1, 'Meal n
 export const savedMealDetailsSchema = z.object({ id: z.string().uuid(), name: z.string().trim().min(1, 'Meal name is required.').max(120), description: z.string().max(500).optional() });
 export const waterLogSchema = z.object({ amount: z.coerce.number().positive('Water amount must be greater than zero.'), unit_system: unitSystemSchema, logged_at: z.string().min(1) });
 export const updateFoodLogSchema = z.object({ id: z.string().uuid(), meal_type: mealTypeSchema, servings: z.coerce.number().positive('Servings must be greater than zero.'), logged_at: z.string().min(1), notes: z.string().max(500).optional() });
+export const habitCategorySchema = z.enum(['nutrition','hydration','movement','sleep','mindset','medication','custom']);
+export const habitFrequencySchema = z.enum(['daily','weekly']);
+const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a valid date.');
+const ratingSchema = z.coerce.number().int().min(1, 'Choose a rating from 1 to 5.').max(5, 'Choose a rating from 1 to 5.');
+const optionalRatingSchema = z.union([z.literal(''), ratingSchema]).optional();
+export const habitSchema = z.object({ id: z.string().uuid().optional(), name: z.string().trim().min(1, 'Habit name is required.').max(120), description: z.string().trim().max(500).optional(), category: habitCategorySchema, frequency: habitFrequencySchema, target_per_period: z.coerce.number().int().min(1).max(100).default(1), sort_order: z.coerce.number().int().nonnegative().default(0) });
+export const habitCompletionSchema = z.object({ habit_id: z.string().uuid(), completed_on: isoDateSchema, notes: z.string().trim().max(500).optional(), value: z.union([z.literal(''), z.coerce.number().nonnegative()]).optional() });
+export const dailyCheckInSchema = z.object({ check_in_date: isoDateSchema, mood: optionalRatingSchema, energy: optionalRatingSchema, hunger: optionalRatingSchema, sleep_quality: optionalRatingSchema, stress: optionalRatingSchema, win_of_day: z.string().trim().max(500).optional(), challenge_of_day: z.string().trim().max(500).optional(), notes: z.string().trim().max(1000).optional() });
+export const weeklyCheckInSchema = z.object({ week_start: isoDateSchema, overall_rating: optionalRatingSchema, nutrition_rating: optionalRatingSchema, movement_rating: optionalRatingSchema, sleep_rating: optionalRatingSchema, biggest_win: z.string().trim().max(500).optional(), biggest_challenge: z.string().trim().max(500).optional(), focus_next_week: z.string().trim().max(500).optional(), notes: z.string().trim().max(1000).optional() });
 
 export const emailSchema = z.string().email();
 
@@ -107,3 +116,7 @@ export type QuickAddInput = z.infer<typeof quickAddSchema>;
 export type SavedMealInput = z.infer<typeof savedMealSchema>;
 export type SavedMealDetailsInput = z.infer<typeof savedMealDetailsSchema>;
 export type WaterLogInput = z.infer<typeof waterLogSchema>;
+export type HabitInput = z.infer<typeof habitSchema>;
+export type HabitCompletionInput = z.infer<typeof habitCompletionSchema>;
+export type DailyCheckInInput = z.infer<typeof dailyCheckInSchema>;
+export type WeeklyCheckInInput = z.infer<typeof weeklyCheckInSchema>;

@@ -47,6 +47,54 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_check_ins: {
+        Row: {
+          challenge_of_day: string | null
+          check_in_date: string
+          created_at: string
+          energy: number | null
+          hunger: number | null
+          id: string
+          mood: number | null
+          notes: string | null
+          sleep_quality: number | null
+          stress: number | null
+          updated_at: string
+          user_id: string
+          win_of_day: string | null
+        }
+        Insert: {
+          challenge_of_day?: string | null
+          check_in_date: string
+          created_at?: string
+          energy?: number | null
+          hunger?: number | null
+          id?: string
+          mood?: number | null
+          notes?: string | null
+          sleep_quality?: number | null
+          stress?: number | null
+          updated_at?: string
+          user_id: string
+          win_of_day?: string | null
+        }
+        Update: {
+          challenge_of_day?: string | null
+          check_in_date?: string
+          created_at?: string
+          energy?: number | null
+          hunger?: number | null
+          id?: string
+          mood?: number | null
+          notes?: string | null
+          sleep_quality?: number | null
+          stress?: number | null
+          updated_at?: string
+          user_id?: string
+          win_of_day?: string | null
+        }
+        Relationships: []
+      }
       food_logs: {
         Row: {
           brand_snapshot: string | null
@@ -178,6 +226,86 @@ export type Database = {
           source?: Database["public"]["Enums"]["food_source"]
           sugar_g?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      habit_completions: {
+        Row: {
+          completed_on: string
+          created_at: string
+          habit_id: string
+          id: string
+          notes: string | null
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          completed_on: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          notes?: string | null
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          completed_on?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          category: Database["public"]["Enums"]["habit_category"]
+          created_at: string
+          description: string | null
+          frequency: Database["public"]["Enums"]["habit_frequency"]
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          target_per_period: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["habit_category"]
+          created_at?: string
+          description?: string | null
+          frequency?: Database["public"]["Enums"]["habit_frequency"]
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          target_per_period?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["habit_category"]
+          created_at?: string
+          description?: string | null
+          frequency?: Database["public"]["Enums"]["habit_frequency"]
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          target_per_period?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -481,6 +609,54 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_check_ins: {
+        Row: {
+          biggest_challenge: string | null
+          biggest_win: string | null
+          created_at: string
+          focus_next_week: string | null
+          id: string
+          movement_rating: number | null
+          notes: string | null
+          nutrition_rating: number | null
+          overall_rating: number | null
+          sleep_rating: number | null
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          biggest_challenge?: string | null
+          biggest_win?: string | null
+          created_at?: string
+          focus_next_week?: string | null
+          id?: string
+          movement_rating?: number | null
+          notes?: string | null
+          nutrition_rating?: number | null
+          overall_rating?: number | null
+          sleep_rating?: number | null
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          biggest_challenge?: string | null
+          biggest_win?: string | null
+          created_at?: string
+          focus_next_week?: string | null
+          id?: string
+          movement_rating?: number | null
+          notes?: string | null
+          nutrition_rating?: number | null
+          overall_rating?: number | null
+          sleep_rating?: number | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       weight_entries: {
         Row: {
           created_at: string
@@ -655,6 +831,15 @@ export type Database = {
       app_role: "user" | "coach" | "admin"
       food_source: "manual" | "system" | "provider" | "barcode"
       goal_type: "lose_weight" | "maintain_weight" | "gain_weight"
+      habit_category:
+        | "nutrition"
+        | "hydration"
+        | "movement"
+        | "sleep"
+        | "mindset"
+        | "medication"
+        | "custom"
+      habit_frequency: "daily" | "weekly"
       meal_type: "breakfast" | "lunch" | "dinner" | "snack"
       measurement_type:
         | "waist"
@@ -812,6 +997,16 @@ export const Constants = {
       app_role: ["user", "coach", "admin"],
       food_source: ["manual", "system", "provider", "barcode"],
       goal_type: ["lose_weight", "maintain_weight", "gain_weight"],
+      habit_category: [
+        "nutrition",
+        "hydration",
+        "movement",
+        "sleep",
+        "mindset",
+        "medication",
+        "custom",
+      ],
+      habit_frequency: ["daily", "weekly"],
       meal_type: ["breakfast", "lunch", "dinner", "snack"],
       measurement_type: [
         "waist",
