@@ -19,7 +19,8 @@
       "@tfk/config": ["packages/config/src/index.ts"],
       "@tfk/auth": ["packages/auth/src/index.ts"],
       "@tfk/api": ["packages/api/src/index.ts"],
-      "@tfk/scoring": ["packages/scoring/src/index.ts"]
+      "@tfk/scoring": ["packages/scoring/src/index.ts"],
+      "@tfk/access": ["packages/access/src/index.ts"]
     }
   },
   "exclude": ["node_modules"]

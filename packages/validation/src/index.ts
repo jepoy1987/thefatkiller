@@ -18,6 +18,11 @@ export const waterLabel = (units: UnitSystem) => units === 'imperial' ? 'fl oz' 
 
 export const unitSystemSchema = z.enum(['metric', 'imperial']);
 export const roleSchema = z.enum(['user', 'coach', 'admin']);
+export const planCodeSchema = z.enum(['free', 'premium', 'coach']);
+export const subscriptionStatusSchema = z.enum(['active', 'trialing', 'past_due', 'canceled', 'expired', 'incomplete']);
+export const billingProviderSchema = z.enum(['internal', 'stripe', 'apple', 'google', 'manual']);
+export const featureCodeSchema = z.enum(['progress_tracking', 'nutrition_tracking', 'water_tracking', 'habits', 'daily_check_ins', 'weekly_check_ins', 'tfk_score', 'progress_photos', 'advanced_reports', 'coach_access', 'ai_insights', 'glp1_journal', 'workouts']);
+export const entitlementLimitsSchema = z.record(z.union([z.number().nonnegative(), z.string(), z.boolean(), z.null()]));
 export const goalTypeSchema = z.enum(['lose_weight', 'maintain_weight', 'gain_weight']);
 export const activityLevelSchema = z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extra_active']);
 export const progressSourceSchema = z.enum(['manual', 'import', 'apple_health', 'health_connect', 'coach']);

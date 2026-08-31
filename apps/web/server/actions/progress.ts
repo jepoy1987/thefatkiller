@@ -1,11 +1,13 @@
 'use server';
 
 import { bodyMeasurementSchema, progressPhotoSchema, weightEntrySchema, weightToKilograms } from '@tfk/validation';
+import { getFeatureLimit, hasFeature } from '@tfk/access';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '../../lib/data/client';
 import { requireUser } from '../../lib/data/session';
 import { formValue, redirectWithError } from './form';
+import { getCurrentEntitlements } from '../../lib/data/entitlements';
 
 const finish = (message: string) => { revalidatePath('/progress'); revalidatePath('/dashboard'); redirect(`/progress?message=${encodeURIComponent(message)}`); };
 
@@ -52,7 +54,16 @@ export async function uploadProgressPhoto(data: FormData) {
   if (!parsed.success) redirectWithError('/progress', parsed.error.issues[0]?.message ?? 'Invalid photo details.');
   if (!(file instanceof File) || file.size === 0 || file.size > 10 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) redirectWithError('/progress', 'Choose a JPG, PNG, or WebP image up to 10 MB.');
   const input = parsed.data!; const photoFile = file as File;
-  const supabase = createClient(); const user = await requireUser(supabase); const extension = photoFile.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const supabase = createClient(); const user = await requireUser(supabase);
+  const entitlements = await getCurrentEntitlements(supabase);
+  if (!hasFeature(entitlements, 'progress_photos')) redirectWithError('/progress', 'Progress photos are not included in your current plan.');
+  const maxPhotos = getFeatureLimit(entitlements, 'progress_photos', 'max_active');
+  if (typeof maxPhotos === 'number') {
+    const { count, error } = await supabase.from('progress_photos').select('id', { count: 'exact', head: true });
+    if (error) redirectWithError('/progress', 'Your progress photo allowance could not be checked.');
+    if ((count ?? 0) >= maxPhotos) redirectWithError('/progress', `Your ${entitlements.plan.name} plan includes up to ${maxPhotos} progress photos.`);
+  }
+  const extension = photoFile.name.split('.').pop()?.toLowerCase() ?? 'jpg';
   const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
   const upload = await supabase.storage.from('progress-photos').upload(path, photoFile, { contentType: photoFile.type, upsert: false });
   if (upload.error) redirectWithError('/progress', 'Photo upload failed.');
