@@ -12,10 +12,12 @@ function validOrigin(value: string | undefined) {
 }
 
 export function getAppOrigin(requestOrigin?: string) {
+  const vercelOrigin = validOrigin(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
+  if (process.env.VERCEL_ENV === 'preview' && vercelOrigin) return vercelOrigin;
+
   const override = validOrigin(process.env.NEXT_PUBLIC_APP_URL);
   if (override) return override;
 
-  const vercelOrigin = validOrigin(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
   if (vercelOrigin) return vercelOrigin;
 
   return validOrigin(requestOrigin) ?? LOCAL_APP_ORIGIN;
