@@ -20,6 +20,12 @@ export const unitSystemSchema = z.enum(['metric', 'imperial']);
 export const roleSchema = z.enum(['user', 'coach', 'admin']);
 export const goalTypeSchema = z.enum(['lose_weight', 'maintain_weight', 'gain_weight']);
 export const activityLevelSchema = z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extra_active']);
+export const progressSourceSchema = z.enum(['manual', 'import', 'apple_health', 'health_connect', 'coach']);
+export const measurementTypeSchema = z.enum(['waist', 'hips', 'chest', 'neck', 'left_arm', 'right_arm', 'left_thigh', 'right_thigh', 'body_fat']);
+export const progressPhotoTypeSchema = z.enum(['front', 'side', 'back', 'other']);
+export const weightEntrySchema = z.object({ id: z.string().uuid().optional(), weight: z.coerce.number().positive('Weight must be greater than zero.'), recorded_at: z.string().min(1), notes: z.string().max(500).optional() });
+export const bodyMeasurementSchema = z.object({ id: z.string().uuid().optional(), measurement_type: measurementTypeSchema, value: z.coerce.number().nonnegative('Measurement cannot be negative.'), recorded_at: z.string().min(1), notes: z.string().max(500).optional() });
+export const progressPhotoSchema = z.object({ photo_type: progressPhotoTypeSchema, recorded_at: z.string().min(1), weight: z.union([z.literal(''), z.coerce.number().positive()]).optional(), notes: z.string().max(500).optional() });
 
 export const emailSchema = z.string().email();
 

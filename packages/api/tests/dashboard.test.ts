@@ -9,14 +9,14 @@ const goal: UserGoal = { id: 'goal-1', user_id: 'user-1', goal_type: 'lose_weigh
 test('maps canonical goal data into metric Today data', () => {
   const dashboard = mapTodayDashboard(profile, goal);
   assert.equal(dashboard.welcomeName, 'Ada');
-  assert.deepEqual(dashboard.weightGoal, { starting: 95, target: 82, unit: 'kg' });
+  assert.deepEqual(dashboard.weightGoal, { starting: 95, current: 95, target: 82, unit: 'kg' });
   assert.deepEqual(dashboard.targets.find((target) => target.key === 'water'), { key: 'water', label: 'Water', current: 0, target: 2500, unit: 'ml' });
   assert.equal(dashboard.targets.every((target) => target.current === 0), true);
 });
 
 test('formats imperial dashboard boundaries without changing canonical input', () => {
   const dashboard = mapTodayDashboard({ ...profile, unit_system: 'imperial' }, goal);
-  assert.deepEqual(dashboard.weightGoal, { starting: 209.4, target: 180.8, unit: 'lb' });
+  assert.deepEqual(dashboard.weightGoal, { starting: 209.4, current: 209.4, target: 180.8, unit: 'lb' });
   assert.deepEqual(dashboard.targets.find((target) => target.key === 'water'), { key: 'water', label: 'Water', current: 0, target: 84.5, unit: 'fl oz' });
   assert.equal(goal.goal_weight, 82);
 });

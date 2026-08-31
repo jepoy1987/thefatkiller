@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      body_measurements: {
+        Row: {
+          created_at: string
+          id: string
+          measurement_type: Database["public"]["Enums"]["measurement_type"]
+          notes: string | null
+          recorded_at: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          measurement_type: Database["public"]["Enums"]["measurement_type"]
+          notes?: string | null
+          recorded_at?: string
+          updated_at?: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          measurement_type?: Database["public"]["Enums"]["measurement_type"]
+          notes?: string | null
+          recorded_at?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      milestones: {
+        Row: {
+          achieved_at: string
+          created_at: string
+          id: string
+          milestone_type: Database["public"]["Enums"]["milestone_type"]
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string
+          created_at?: string
+          id?: string
+          milestone_type: Database["public"]["Enums"]["milestone_type"]
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string
+          created_at?: string
+          id?: string
+          milestone_type?: Database["public"]["Enums"]["milestone_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -59,6 +116,39 @@ export type Database = {
           timezone?: string
           unit_system?: Database["public"]["Enums"]["unit_system"]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      progress_photos: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          photo_type: Database["public"]["Enums"]["progress_photo_type"]
+          recorded_at: string
+          storage_path: string
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photo_type?: Database["public"]["Enums"]["progress_photo_type"]
+          recorded_at?: string
+          storage_path: string
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photo_type?: Database["public"]["Enums"]["progress_photo_type"]
+          recorded_at?: string
+          storage_path?: string
+          user_id?: string
+          weight_kg?: number | null
         }
         Relationships: []
       }
@@ -137,6 +227,39 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      weight_entries: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          recorded_at: string
+          source: Database["public"]["Enums"]["progress_source"]
+          updated_at: string
+          user_id: string
+          weight_kg: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          source?: Database["public"]["Enums"]["progress_source"]
+          updated_at?: string
+          user_id: string
+          weight_kg: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          source?: Database["public"]["Enums"]["progress_source"]
+          updated_at?: string
+          user_id?: string
+          weight_kg?: number
         }
         Relationships: []
       }
@@ -237,6 +360,24 @@ export type Database = {
         | "extra_active"
       app_role: "user" | "coach" | "admin"
       goal_type: "lose_weight" | "maintain_weight" | "gain_weight"
+      measurement_type:
+        | "waist"
+        | "hips"
+        | "chest"
+        | "neck"
+        | "left_arm"
+        | "right_arm"
+        | "left_thigh"
+        | "right_thigh"
+        | "body_fat"
+      milestone_type: "first_weight" | "five_weights" | "goal_reached"
+      progress_photo_type: "front" | "side" | "back" | "other"
+      progress_source:
+        | "manual"
+        | "import"
+        | "apple_health"
+        | "health_connect"
+        | "coach"
       unit_system: "metric" | "imperial"
     }
     CompositeTypes: {
@@ -374,6 +515,26 @@ export const Constants = {
       ],
       app_role: ["user", "coach", "admin"],
       goal_type: ["lose_weight", "maintain_weight", "gain_weight"],
+      measurement_type: [
+        "waist",
+        "hips",
+        "chest",
+        "neck",
+        "left_arm",
+        "right_arm",
+        "left_thigh",
+        "right_thigh",
+        "body_fat",
+      ],
+      milestone_type: ["first_weight", "five_weights", "goal_reached"],
+      progress_photo_type: ["front", "side", "back", "other"],
+      progress_source: [
+        "manual",
+        "import",
+        "apple_health",
+        "health_connect",
+        "coach",
+      ],
       unit_system: ["metric", "imperial"],
     },
   },
