@@ -1,0 +1,4 @@
+const test=require('node:test');const assert=require('node:assert/strict');const{readFileSync}=require('node:fs');
+const progress=readFileSync(new URL('../server/actions/progress.ts',`file://${__filename}`),'utf8');const billing=readFileSync(new URL('../app/settings/billing/page.tsx',`file://${__filename}`),'utf8');
+test('progress photo uploads enforce feature access and limits server-side',()=>{assert.match(progress,/getCurrentEntitlements\(supabase\)/);assert.match(progress,/hasFeature\(entitlements, 'progress_photos'\)/);assert.match(progress,/getFeatureLimit\(entitlements, 'progress_photos', 'max_active'\)/);assert.match(progress,/includes up to.*progress photos/);});
+test('billing settings are read-only and disclose provider status honestly',()=>{assert.match(billing,/Online billing is not connected yet/);assert.match(billing,/Pricing coming soon/);assert.doesNotMatch(billing,/checkout|billing portal|stripe/i);});
