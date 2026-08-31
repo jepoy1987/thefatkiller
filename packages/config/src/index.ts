@@ -1,5 +1,5 @@
 export const appConfig = {
-  appUrl: 'https://app.thefatkiller.com',
+  appUrl: 'http://localhost:3001',
   websiteUrl: 'https://thefatkiller.com',
   authRedirectPath: '/auth/callback',
   onboardingPath: '/onboarding',

@@ -10,8 +10,8 @@ export default function HomePage() {
           <a href="/contact">Contact</a>
         </div>
         <div className="flex gap-3">
-          <a className="rounded border px-4 py-2" href="https://app.thefatkiller.com/login">Login</a>
-          <a className="rounded bg-slate-900 px-4 py-2 text-white" href="https://app.thefatkiller.com/signup">Get started</a>
+          <a className="rounded border px-4 py-2" href="http://localhost:3001/login">Login</a>
+          <a className="rounded bg-slate-900 px-4 py-2 text-white" href="http://localhost:3001/signup">Get started</a>
         </div>
       </nav>
 
@@ -23,7 +23,7 @@ export default function HomePage() {
             Build healthy routines, stay consistent, and keep your progress in one place.
           </p>
           <div className="mt-8 flex gap-4">
-            <a className="rounded bg-slate-900 px-6 py-3 text-white" href="https://app.thefatkiller.com/signup">Join now</a>
+            <a className="rounded bg-slate-900 px-6 py-3 text-white" href="http://localhost:3001/signup">Join now</a>
             <a className="rounded border px-6 py-3" href="/features">See features</a>
           </div>
         </div>

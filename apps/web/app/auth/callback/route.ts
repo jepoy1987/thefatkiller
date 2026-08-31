@@ -3,15 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? requestUrl.origin;
   const code = requestUrl.searchParams.get('code');
 
   if (!code) {
-    return NextResponse.redirect(new URL('/login', requestUrl.origin));
+    return NextResponse.redirect(new URL('/login', appUrl));
   }
 
   const next = requestUrl.searchParams.get('next');
   const destination = next?.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
-  const response = NextResponse.redirect(new URL(destination, requestUrl.origin));
+  const response = NextResponse.redirect(new URL(destination, appUrl));
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
   );
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin));
+  if (error) return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, appUrl));
 
   return response;
 }

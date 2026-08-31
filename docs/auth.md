@@ -32,20 +32,18 @@ Profiles are created by a database trigger and do not require manual creation on
 
 The `forgot-password` routes are created as the foundation for password reset flows. They are intentionally lightweight while the final email design is deferred.
 
-## Staging Auth URL configuration
+## Local-first Auth URL configuration
 
-In the staging Supabase Dashboard under **Authentication → URL Configuration**,
-set the Site URL to `https://app.thefatkiller.com` when the hosted staging app
-is ready. Add these exact redirect URLs:
+While testing locally against the staging backend, configure the staging
+Supabase project under **Authentication → URL Configuration** with:
 
-- `http://localhost:3001/auth/callback`
-- `https://app.thefatkiller.com/auth/callback`
-- `tfk://auth/callback`
+- Site URL: `http://localhost:3001`
+- Redirect URL: `http://localhost:3001/auth/callback`
+- Redirect URL: `tfk://auth/callback`
 
-The custom mobile scheme is declared as `tfk` in `apps/mobile/app.json`.
-Keep production and staging Auth settings separate. Preview deployment URLs
-should be added explicitly when a preview environment exists; do not use a
-broad production wildcard by default.
+The custom mobile scheme is declared as `tfk` in `apps/mobile/app.json`. No
+hosted domain or deployment redirect is required for the local acceptance
+flow. Production and hosted staging configuration are intentionally deferred.
 
 ## Database enforcement
 
