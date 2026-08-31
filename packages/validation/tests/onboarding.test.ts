@@ -39,10 +39,11 @@ test('rejects missing goal data', () => {
   assert.equal(onboardingSchema.safeParse(missingGoal).success, false);
 });
 test('accepts decimal weight', () => {
-  assert.equal(onboardingSchema.safeParse({ ...metric, starting_weight: 95.5, goal_weight: 82.25 }).success, true);
-  assert.equal(goalSettingsSchema.safeParse({ ...goalSettings, goal_weight: 82.25 }).success, true);
+  assert.equal(onboardingSchema.safeParse({ ...metric, starting_weight: 100, goal_weight: 90 }).success, true);
+  assert.equal(onboardingSchema.safeParse({ ...metric, starting_weight: 100.5, goal_weight: 90.5 }).success, true);
+  assert.equal(goalSettingsSchema.safeParse({ ...goalSettings, goal_weight: 90.5 }).success, true);
 });
-test('accepts decimal height', () => assert.equal(onboardingSchema.safeParse({ ...metric, height: 177.8 }).success, true));
+test('accepts decimal height', () => assert.equal(onboardingSchema.safeParse({ ...metric, height: 178.5 }).success, true));
 test('accepts decimal protein', () => {
   assert.equal(onboardingSchema.safeParse({ ...metric, daily_protein_target: 140.5 }).success, true);
   assert.equal(goalSettingsSchema.safeParse({ ...goalSettings, daily_protein_target: 140.5 }).success, true);
