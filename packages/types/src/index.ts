@@ -28,6 +28,27 @@ export type UserGoal = {
   daily_water_target: number; daily_step_target: number; is_active: boolean;
   created_at: string; updated_at: string;
 };
+
+export type DashboardTarget = {
+  key: 'calories' | 'protein' | 'carbs' | 'fat' | 'water' | 'steps';
+  label: string;
+  current: number;
+  target: number;
+  unit: string | null;
+};
+
+export type TodayDashboardData = {
+  profile: Profile;
+  goal: UserGoal;
+  welcomeName: string;
+  targets: DashboardTarget[];
+  weightGoal: {
+    starting: number;
+    target: number;
+    unit: string;
+  };
+  nextActions: string[];
+};
 export type { Database } from './database';
 
 export type AuthUser = {

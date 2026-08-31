@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { signup } from '../actions';
+import { signup } from '../../server/actions/auth';
 
 export default function SignupPage({ searchParams }: { searchParams: { error?: string } }) {
   return (

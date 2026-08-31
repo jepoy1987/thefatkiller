@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { forgotPassword } from '../actions';
+import { forgotPassword } from '../../server/actions/auth';
 
 export default function ForgotPasswordPage({ searchParams }: { searchParams: { error?: string; message?: string } }) {
   return (
