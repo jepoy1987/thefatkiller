@@ -253,6 +253,191 @@ export type Database = {
         }
         Relationships: []
       }
+      glp1_dose_logs: {
+        Row: {
+          created_at: string
+          dose_amount: number | null
+          dose_unit: Database["public"]["Enums"]["glp1_dose_unit"] | null
+          event_type: Database["public"]["Enums"]["glp1_dose_event_type"]
+          id: string
+          injection_site:
+            | Database["public"]["Enums"]["glp1_injection_site"]
+            | null
+          medication_profile_id: string
+          notes: string | null
+          taken_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dose_amount?: number | null
+          dose_unit?: Database["public"]["Enums"]["glp1_dose_unit"] | null
+          event_type: Database["public"]["Enums"]["glp1_dose_event_type"]
+          id?: string
+          injection_site?:
+            | Database["public"]["Enums"]["glp1_injection_site"]
+            | null
+          medication_profile_id: string
+          notes?: string | null
+          taken_at: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dose_amount?: number | null
+          dose_unit?: Database["public"]["Enums"]["glp1_dose_unit"] | null
+          event_type?: Database["public"]["Enums"]["glp1_dose_event_type"]
+          id?: string
+          injection_site?:
+            | Database["public"]["Enums"]["glp1_injection_site"]
+            | null
+          medication_profile_id?: string
+          notes?: string | null
+          taken_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "glp1_dose_logs_medication_profile_id_user_id_fkey"
+            columns: ["medication_profile_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "glp1_medication_profiles"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      glp1_medication_profiles: {
+        Row: {
+          created_at: string
+          custom_medication_name: string | null
+          id: string
+          is_active: boolean
+          medication_name: Database["public"]["Enums"]["glp1_medication"]
+          notes: string | null
+          prescribed_schedule:
+            | Database["public"]["Enums"]["glp1_schedule"]
+            | null
+          started_on: string | null
+          updated_at: string
+          user_id: string
+          usual_day_of_week: number | null
+          usual_time: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom_medication_name?: string | null
+          id?: string
+          is_active?: boolean
+          medication_name: Database["public"]["Enums"]["glp1_medication"]
+          notes?: string | null
+          prescribed_schedule?:
+            | Database["public"]["Enums"]["glp1_schedule"]
+            | null
+          started_on?: string | null
+          updated_at?: string
+          user_id: string
+          usual_day_of_week?: number | null
+          usual_time?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom_medication_name?: string | null
+          id?: string
+          is_active?: boolean
+          medication_name?: Database["public"]["Enums"]["glp1_medication"]
+          notes?: string | null
+          prescribed_schedule?:
+            | Database["public"]["Enums"]["glp1_schedule"]
+            | null
+          started_on?: string | null
+          updated_at?: string
+          user_id?: string
+          usual_day_of_week?: number | null
+          usual_time?: string | null
+        }
+        Relationships: []
+      }
+      glp1_symptom_logs: {
+        Row: {
+          abdominal_discomfort: number | null
+          appetite: number | null
+          constipation: number | null
+          created_at: string
+          diarrhea: number | null
+          dose_log_id: string | null
+          fatigue: number | null
+          headache: number | null
+          hunger: number | null
+          id: string
+          logged_at: string
+          medication_profile_id: string | null
+          nausea: number | null
+          notes: string | null
+          other_symptoms: string | null
+          reflux: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abdominal_discomfort?: number | null
+          appetite?: number | null
+          constipation?: number | null
+          created_at?: string
+          diarrhea?: number | null
+          dose_log_id?: string | null
+          fatigue?: number | null
+          headache?: number | null
+          hunger?: number | null
+          id?: string
+          logged_at: string
+          medication_profile_id?: string | null
+          nausea?: number | null
+          notes?: string | null
+          other_symptoms?: string | null
+          reflux?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abdominal_discomfort?: number | null
+          appetite?: number | null
+          constipation?: number | null
+          created_at?: string
+          diarrhea?: number | null
+          dose_log_id?: string | null
+          fatigue?: number | null
+          headache?: number | null
+          hunger?: number | null
+          id?: string
+          logged_at?: string
+          medication_profile_id?: string | null
+          nausea?: number | null
+          notes?: string | null
+          other_symptoms?: string | null
+          reflux?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "glp1_symptom_logs_dose_log_id_user_id_fkey"
+            columns: ["dose_log_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "glp1_dose_logs"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "glp1_symptom_logs_medication_profile_id_user_id_fkey"
+            columns: ["medication_profile_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "glp1_medication_profiles"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       habit_completions: {
         Row: {
           completed_on: string
@@ -924,6 +1109,10 @@ export type Database = {
           water_ml: number
         }[]
       }
+      has_current_feature: {
+        Args: { p_feature_code: string }
+        Returns: boolean
+      }
       log_saved_meal: {
         Args: {
           p_logged_at: string
@@ -1006,6 +1195,16 @@ export type Database = {
       app_role: "user" | "coach" | "admin"
       billing_provider: "internal" | "stripe" | "apple" | "google" | "manual"
       food_source: "manual" | "system" | "provider" | "barcode"
+      glp1_dose_event_type: "taken" | "missed" | "skipped"
+      glp1_dose_unit: "mg" | "mcg" | "units" | "other"
+      glp1_injection_site:
+        | "abdomen"
+        | "thigh"
+        | "upper_arm"
+        | "other"
+        | "not_applicable"
+      glp1_medication: "semaglutide" | "tirzepatide" | "liraglutide" | "other"
+      glp1_schedule: "daily" | "weekly" | "other"
       goal_type: "lose_weight" | "maintain_weight" | "gain_weight"
       habit_category:
         | "nutrition"
@@ -1180,6 +1379,17 @@ export const Constants = {
       app_role: ["user", "coach", "admin"],
       billing_provider: ["internal", "stripe", "apple", "google", "manual"],
       food_source: ["manual", "system", "provider", "barcode"],
+      glp1_dose_event_type: ["taken", "missed", "skipped"],
+      glp1_dose_unit: ["mg", "mcg", "units", "other"],
+      glp1_injection_site: [
+        "abdomen",
+        "thigh",
+        "upper_arm",
+        "other",
+        "not_applicable",
+      ],
+      glp1_medication: ["semaglutide", "tirzepatide", "liraglutide", "other"],
+      glp1_schedule: ["daily", "weekly", "other"],
       goal_type: ["lose_weight", "maintain_weight", "gain_weight"],
       habit_category: [
         "nutrition",
