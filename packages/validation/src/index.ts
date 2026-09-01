@@ -51,6 +51,39 @@ export const habitSchema = z.object({ id: z.string().uuid().optional(), name: z.
 export const habitCompletionSchema = z.object({ habit_id: z.string().uuid(), completed_on: isoDateSchema, notes: z.string().trim().max(500).optional(), value: z.union([z.literal(''), z.coerce.number().nonnegative()]).optional() });
 export const dailyCheckInSchema = z.object({ check_in_date: isoDateSchema, mood: optionalRatingSchema, energy: optionalRatingSchema, hunger: optionalRatingSchema, sleep_quality: optionalRatingSchema, stress: optionalRatingSchema, win_of_day: z.string().trim().max(500).optional(), challenge_of_day: z.string().trim().max(500).optional(), notes: z.string().trim().max(1000).optional() });
 export const weeklyCheckInSchema = z.object({ week_start: isoDateSchema, overall_rating: optionalRatingSchema, nutrition_rating: optionalRatingSchema, movement_rating: optionalRatingSchema, sleep_rating: optionalRatingSchema, biggest_win: z.string().trim().max(500).optional(), biggest_challenge: z.string().trim().max(500).optional(), focus_next_week: z.string().trim().max(500).optional(), notes: z.string().trim().max(1000).optional() });
+export const glp1MedicationSchema = z.enum(['semaglutide', 'tirzepatide', 'liraglutide', 'other']);
+export const glp1ScheduleSchema = z.enum(['daily', 'weekly', 'other']);
+export const glp1DoseEventTypeSchema = z.enum(['taken', 'missed', 'skipped']);
+export const glp1DoseUnitSchema = z.enum(['mg', 'mcg', 'units', 'other']);
+export const glp1InjectionSiteSchema = z.enum(['abdomen', 'thigh', 'upper_arm', 'other', 'not_applicable']);
+const optionalText = (max: number) => z.string().trim().max(max).optional();
+const optionalGLP1Rating = z.union([z.literal(''), ratingSchema]).optional();
+export const glp1MedicationProfileSchema = z.object({
+  id: z.union([z.literal(''), z.string().uuid()]).optional(), medication_name: glp1MedicationSchema,
+  custom_medication_name: optionalText(100), started_on: z.union([z.literal(''), isoDateSchema]).optional(),
+  prescribed_schedule: z.union([z.literal(''), glp1ScheduleSchema]).optional(),
+  usual_day_of_week: z.union([z.literal(''), z.coerce.number().int().min(1).max(7)]).optional(),
+  usual_time: z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/, 'Choose a valid time.').optional(), notes: optionalText(1000),
+}).superRefine((value, context) => {
+  if (value.medication_name === 'other' && !value.custom_medication_name) context.addIssue({ code: z.ZodIssueCode.custom, path: ['custom_medication_name'], message: 'Enter the medication name.' });
+  if (value.prescribed_schedule !== 'weekly' && value.usual_day_of_week !== '' && value.usual_day_of_week != null) context.addIssue({ code: z.ZodIssueCode.custom, path: ['usual_day_of_week'], message: 'A usual day applies only to a weekly schedule.' });
+});
+export const glp1DoseLogSchema = z.object({
+  id: z.union([z.literal(''), z.string().uuid()]).optional(), medication_profile_id: z.string().uuid(), event_type: glp1DoseEventTypeSchema,
+  dose_amount: z.union([z.literal(''), z.coerce.number().positive('Dose must be greater than zero.')]).optional(),
+  dose_unit: z.union([z.literal(''), glp1DoseUnitSchema]).optional(), taken_at: z.string().min(1, 'Date and time are required.'),
+  injection_site: z.union([z.literal(''), glp1InjectionSiteSchema]).optional(), notes: optionalText(1000),
+}).superRefine((value, context) => {
+  if (value.event_type === 'taken' && value.dose_amount === '') context.addIssue({ code: z.ZodIssueCode.custom, path: ['dose_amount'], message: 'Dose is required for a Taken entry.' });
+  if (value.event_type === 'taken' && !value.dose_unit) context.addIssue({ code: z.ZodIssueCode.custom, path: ['dose_unit'], message: 'Dose unit is required for a Taken entry.' });
+});
+export const glp1SymptomLogSchema = z.object({
+  medication_profile_id: z.union([z.literal(''), z.string().uuid()]).optional(), dose_log_id: z.union([z.literal(''), z.string().uuid()]).optional(),
+  logged_at: z.string().min(1, 'Date and time are required.'), appetite: optionalGLP1Rating, hunger: optionalGLP1Rating,
+  nausea: optionalGLP1Rating, constipation: optionalGLP1Rating, diarrhea: optionalGLP1Rating, reflux: optionalGLP1Rating,
+  fatigue: optionalGLP1Rating, headache: optionalGLP1Rating, abdominal_discomfort: optionalGLP1Rating,
+  other_symptoms: optionalText(500), notes: optionalText(1000),
+});
 
 export const emailSchema = z.string().email();
 
@@ -125,3 +158,6 @@ export type HabitInput = z.infer<typeof habitSchema>;
 export type HabitCompletionInput = z.infer<typeof habitCompletionSchema>;
 export type DailyCheckInInput = z.infer<typeof dailyCheckInSchema>;
 export type WeeklyCheckInInput = z.infer<typeof weeklyCheckInSchema>;
+export type GLP1MedicationProfileInput = z.infer<typeof glp1MedicationProfileSchema>;
+export type GLP1DoseLogInput = z.infer<typeof glp1DoseLogSchema>;
+export type GLP1SymptomLogInput = z.infer<typeof glp1SymptomLogSchema>;
