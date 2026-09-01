@@ -14,6 +14,12 @@ export type MilestoneType = 'first_weight' | 'five_weights' | 'goal_reached';
 export type FoodSource = 'manual' | 'system' | 'provider' | 'barcode';
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export type ServingUnit = 'g' | 'ml' | 'oz' | 'cup' | 'tbsp' | 'tsp' | 'piece' | 'serving' | 'other';
+export type GLP1Medication = 'semaglutide' | 'tirzepatide' | 'liraglutide' | 'other';
+export type GLP1Schedule = 'daily' | 'weekly' | 'other';
+export type GLP1DoseEventType = 'taken' | 'missed' | 'skipped';
+export type GLP1DoseUnit = 'mg' | 'mcg' | 'units' | 'other';
+export type GLP1InjectionSite = 'abdomen' | 'thigh' | 'upper_arm' | 'other' | 'not_applicable';
+export type GLP1SymptomIntensity = 1 | 2 | 3 | 4 | 5;
 
 export type Profile = {
   id: string;
@@ -67,6 +73,9 @@ export type HabitStreak = { habit_id: string; current: number; longest: number; 
 export type TFKScoreBreakdown = { nutrition: number; hydration: number; habits: number; checkIns: number; progress: number };
 export type TFKScore = { overall: number; label: 'Excellent' | 'Strong' | 'Building' | 'Inconsistent' | 'Needs attention'; breakdown: TFKScoreBreakdown; windowDays: number };
 export type AccountabilitySummary = { today: string; weekStart: string; activeHabits: number; completedHabits: number; dailyCheckInComplete: boolean; streaks: HabitStreak[]; score: TFKScore };
+export type GLP1MedicationProfile = { id: string; user_id: string; medication_name: GLP1Medication; custom_medication_name: string | null; is_active: boolean; started_on: string | null; prescribed_schedule: GLP1Schedule | null; usual_day_of_week: number | null; usual_time: string | null; notes: string | null; created_at: string; updated_at: string };
+export type GLP1DoseLog = { id: string; user_id: string; medication_profile_id: string; event_type: GLP1DoseEventType; dose_amount: number | null; dose_unit: GLP1DoseUnit | null; taken_at: string; injection_site: GLP1InjectionSite | null; notes: string | null; created_at: string; updated_at: string };
+export type GLP1SymptomLog = { id: string; user_id: string; medication_profile_id: string | null; dose_log_id: string | null; logged_at: string; appetite: GLP1SymptomIntensity | null; hunger: GLP1SymptomIntensity | null; nausea: GLP1SymptomIntensity | null; constipation: GLP1SymptomIntensity | null; diarrhea: GLP1SymptomIntensity | null; reflux: GLP1SymptomIntensity | null; fatigue: GLP1SymptomIntensity | null; headache: GLP1SymptomIntensity | null; abdominal_discomfort: GLP1SymptomIntensity | null; other_symptoms: string | null; notes: string | null; created_at: string; updated_at: string };
 
 export type DashboardTarget = {
   key: 'calories' | 'protein' | 'carbs' | 'fat' | 'water' | 'steps';

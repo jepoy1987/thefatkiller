@@ -4,7 +4,7 @@ import { Alert } from '../../../components/ui/alert';
 import { Card, CardContent, CardHeader } from '../../../components/ui/card';
 import { getBillingFoundation } from '../../../lib/data/entitlements';
 
-const futureFeatures = new Set<FeatureCode>(['advanced_reports', 'coach_access', 'ai_insights', 'glp1_journal', 'workouts']);
+const futureFeatures = new Set<FeatureCode>(['advanced_reports', 'coach_access', 'ai_insights', 'workouts']);
 const title = (value: string) => value.replaceAll('_', ' ').replace(/^./, (letter) => letter.toUpperCase());
 const limitText = (limits: EntitlementLimits) => Object.entries(limits).map(([name, value]) => `${title(name)}: ${value === null ? 'Unlimited' : value}`).join(' · ');
 
