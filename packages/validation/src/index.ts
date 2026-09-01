@@ -1,4 +1,9 @@
 import { z } from 'zod';
+export const coachGoalCategorySchema = z.enum(['nutrition','hydration','movement','sleep','mindset','progress','accountability','custom']);
+export const coachGoalPrioritySchema = z.enum(['low','normal','high']);
+export const coachGoalSchema = z.object({ client_id:z.string().uuid(), title:z.string().trim().min(3,'Use a meaningful goal title.').max(120), description:z.string().trim().max(1000).optional(), category:coachGoalCategorySchema, target_date:z.union([z.literal(''),z.string().date()]).optional(), priority:coachGoalPrioritySchema, client_visible:z.coerce.boolean().default(false) });
+export const coachNoteSchema = z.object({ client_id:z.string().uuid(), note:z.string().trim().min(3,'Add a meaningful note.').max(2000), client_visible:z.coerce.boolean().default(false) });
+export const coachingPrivacySchema = z.object({ share_progress:z.coerce.boolean(), share_nutrition:z.coerce.boolean(), share_accountability:z.coerce.boolean(), share_glp1_summary:z.coerce.boolean(), share_glp1_details:z.literal(false).default(false) });
 import type { UnitSystem } from '@tfk/types';
 
 const KG_PER_LB = 0.45359237;
