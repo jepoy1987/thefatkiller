@@ -12,6 +12,9 @@ function validOrigin(value: string | undefined) {
 }
 
 export function getAppOrigin(requestOrigin?: string) {
+  const requestAppOrigin = validOrigin(requestOrigin);
+  if (requestAppOrigin) return requestAppOrigin;
+
   const vercelOrigin = validOrigin(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
   if (process.env.VERCEL_ENV === 'preview' && vercelOrigin) return vercelOrigin;
 
@@ -20,5 +23,5 @@ export function getAppOrigin(requestOrigin?: string) {
 
   if (vercelOrigin) return vercelOrigin;
 
-  return validOrigin(requestOrigin) ?? LOCAL_APP_ORIGIN;
+  return LOCAL_APP_ORIGIN;
 }
