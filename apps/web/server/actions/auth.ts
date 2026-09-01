@@ -26,7 +26,7 @@ export async function signup(data: FormData) {
 
 export async function forgotPassword(data: FormData) {
   const email = formValue(data, 'email');
-  const { error } = await createClient().auth.resetPasswordForEmail(email, { redirectTo: `${getAppOrigin()}/auth/callback?next=/reset-password` });
+  const { error } = await createClient().auth.resetPasswordForEmail(email, { redirectTo: `${getAppOrigin()}/auth/recovery-callback` });
   if (error) redirectWithError('/forgot-password', error.message);
   redirect('/forgot-password?message=If the account exists, a reset link has been sent.');
 }
