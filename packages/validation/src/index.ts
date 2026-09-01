@@ -105,6 +105,13 @@ export const loginSchema = z.object({
   password: z.string().min(8),
 });
 
+export const resetPasswordSchema = z.object({
+  password: z.string().min(8, 'Password must be at least 8 characters.'),
+  confirm_password: z.string().min(1, 'Confirm your new password.'),
+}).refine((value) => value.password === value.confirm_password, {
+  message: 'Passwords do not match.', path: ['confirm_password'],
+});
+
 export const profileSchema = z.object({
   first_name: z.string().max(80).nullable().optional(),
   last_name: z.string().max(80).nullable().optional(),

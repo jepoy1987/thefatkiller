@@ -5,10 +5,12 @@ import { getDashboardFoundation } from '../../lib/data/dashboard';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import Link from 'next/link';
 import { doseSummary, journalDateTime, weekdayLabels } from '../../features/glp1/domain';
+import { Alert } from '../../components/ui/alert';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({searchParams}:{searchParams:{message?:string}}) {
   const { dashboard, glp1, coaching } = await getDashboardFoundation();
   return <AppShell active="today"><div className="grid gap-8">
+    {searchParams.message?<Alert variant="success">{searchParams.message}</Alert>:null}
     <DashboardHeader name={dashboard.welcomeName} />
     <section className="grid gap-4"><SectionHeader title="Today’s targets" description="Live nutrition progress against the targets in your active goal. Steps remain at zero until activity tracking is added." /><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{dashboard.targets.map((target) => <TargetCard key={target.key} target={target} />)}</div></section>
     {dashboard.accountability?<DashboardAccountability summary={dashboard.accountability}/>:null}

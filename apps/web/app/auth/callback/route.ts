@@ -32,5 +32,9 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, appUrl));
 
+  if (destination === '/reset-password') {
+    response.cookies.set('tfk_recovery', '1', { httpOnly: true, maxAge: 600, path: '/', sameSite: 'lax', secure: appUrl.startsWith('https://') });
+  }
+
   return response;
 }
