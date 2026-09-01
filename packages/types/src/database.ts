@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       body_measurements: {
@@ -44,6 +69,169 @@ export type Database = {
           updated_at?: string
           user_id?: string
           value?: number
+        }
+        Relationships: []
+      }
+      coach_client_relationships: {
+        Row: {
+          client_user_id: string
+          coach_user_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["coach_relationship_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_user_id: string
+          coach_user_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["coach_relationship_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_user_id?: string
+          coach_user_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["coach_relationship_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      coach_goals: {
+        Row: {
+          category: Database["public"]["Enums"]["coach_goal_category"]
+          client_user_id: string
+          client_visible: boolean
+          coach_user_id: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          priority: Database["public"]["Enums"]["coach_goal_priority"]
+          relationship_id: string
+          status: Database["public"]["Enums"]["coach_goal_status"]
+          target_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["coach_goal_category"]
+          client_user_id: string
+          client_visible?: boolean
+          coach_user_id: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["coach_goal_priority"]
+          relationship_id: string
+          status?: Database["public"]["Enums"]["coach_goal_status"]
+          target_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["coach_goal_category"]
+          client_user_id?: string
+          client_visible?: boolean
+          coach_user_id?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["coach_goal_priority"]
+          relationship_id?: string
+          status?: Database["public"]["Enums"]["coach_goal_status"]
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_goals_relationship_id_coach_user_id_client_user_id_fkey"
+            columns: ["relationship_id", "coach_user_id", "client_user_id"]
+            isOneToOne: false
+            referencedRelation: "coach_client_relationships"
+            referencedColumns: ["id", "coach_user_id", "client_user_id"]
+          },
+        ]
+      }
+      coach_notes: {
+        Row: {
+          client_user_id: string
+          client_visible: boolean
+          coach_user_id: string
+          created_at: string
+          id: string
+          note: string
+          relationship_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_user_id: string
+          client_visible?: boolean
+          coach_user_id: string
+          created_at?: string
+          id?: string
+          note: string
+          relationship_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_user_id?: string
+          client_visible?: boolean
+          coach_user_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          relationship_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_notes_relationship_id_coach_user_id_client_user_id_fkey"
+            columns: ["relationship_id", "coach_user_id", "client_user_id"]
+            isOneToOne: false
+            referencedRelation: "coach_client_relationships"
+            referencedColumns: ["id", "coach_user_id", "client_user_id"]
+          },
+        ]
+      }
+      coaching_privacy_settings: {
+        Row: {
+          share_accountability: boolean
+          share_glp1_details: boolean
+          share_glp1_summary: boolean
+          share_nutrition: boolean
+          share_progress: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          share_accountability?: boolean
+          share_glp1_details?: boolean
+          share_glp1_summary?: boolean
+          share_nutrition?: boolean
+          share_progress?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          share_accountability?: boolean
+          share_glp1_details?: boolean
+          share_glp1_summary?: boolean
+          share_nutrition?: boolean
+          share_progress?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1035,9 +1223,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_assign_coach_client: {
+        Args: { target_client_user_id: string; target_coach_user_id: string }
+        Returns: string
+      }
       admin_assign_internal_plan: {
         Args: { target_plan_code: string; target_user_id: string }
         Returns: string
+      }
+      admin_grant_coach_role: {
+        Args: { target_user_id: string }
+        Returns: undefined
       }
       complete_onboarding: {
         Args: {
@@ -1082,6 +1278,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      get_client_coaching_summary: { Args: never; Returns: Json }
+      get_coach_client_summary: { Args: { client_id: string }; Returns: Json }
+      get_coach_dashboard: { Args: never; Returns: Json[] }
+      get_current_app_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
       }
       get_current_entitlements: {
         Args: never
@@ -1146,6 +1349,119 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      save_coach_goal: {
+        Args: {
+          p_category: Database["public"]["Enums"]["coach_goal_category"]
+          p_client_id: string
+          p_client_visible: boolean
+          p_description: string
+          p_priority: Database["public"]["Enums"]["coach_goal_priority"]
+          p_target_date: string
+          p_title: string
+        }
+        Returns: {
+          category: Database["public"]["Enums"]["coach_goal_category"]
+          client_user_id: string
+          client_visible: boolean
+          coach_user_id: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          priority: Database["public"]["Enums"]["coach_goal_priority"]
+          relationship_id: string
+          status: Database["public"]["Enums"]["coach_goal_status"]
+          target_date: string | null
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coach_goals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_coach_note: {
+        Args: { p_client_id: string; p_client_visible: boolean; p_note: string }
+        Returns: {
+          client_user_id: string
+          client_visible: boolean
+          coach_user_id: string
+          created_at: string
+          id: string
+          note: string
+          relationship_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coach_notes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      set_coach_goal_status: {
+        Args: {
+          p_goal_id: string
+          p_status: Database["public"]["Enums"]["coach_goal_status"]
+        }
+        Returns: {
+          category: Database["public"]["Enums"]["coach_goal_category"]
+          client_user_id: string
+          client_visible: boolean
+          coach_user_id: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          priority: Database["public"]["Enums"]["coach_goal_priority"]
+          relationship_id: string
+          status: Database["public"]["Enums"]["coach_goal_status"]
+          target_date: string | null
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coach_goals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_coach_goal: {
+        Args: {
+          p_category: Database["public"]["Enums"]["coach_goal_category"]
+          p_client_visible: boolean
+          p_description: string
+          p_goal_id: string
+          p_priority: Database["public"]["Enums"]["coach_goal_priority"]
+          p_target_date: string
+          p_title: string
+        }
+        Returns: {
+          category: Database["public"]["Enums"]["coach_goal_category"]
+          client_user_id: string
+          client_visible: boolean
+          coach_user_id: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          priority: Database["public"]["Enums"]["coach_goal_priority"]
+          relationship_id: string
+          status: Database["public"]["Enums"]["coach_goal_status"]
+          target_date: string | null
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coach_goals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_goal_settings: {
         Args: {
           p_activity_level: Database["public"]["Enums"]["activity_level"]
@@ -1194,6 +1510,18 @@ export type Database = {
         | "extra_active"
       app_role: "user" | "coach" | "admin"
       billing_provider: "internal" | "stripe" | "apple" | "google" | "manual"
+      coach_goal_category:
+        | "nutrition"
+        | "hydration"
+        | "movement"
+        | "sleep"
+        | "mindset"
+        | "progress"
+        | "accountability"
+        | "custom"
+      coach_goal_priority: "low" | "normal" | "high"
+      coach_goal_status: "active" | "completed" | "archived"
+      coach_relationship_status: "invited" | "active" | "paused" | "ended"
       food_source: "manual" | "system" | "provider" | "barcode"
       glp1_dose_event_type: "taken" | "missed" | "skipped"
       glp1_dose_unit: "mg" | "mcg" | "units" | "other"
@@ -1367,6 +1695,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       activity_level: [
@@ -1378,6 +1709,19 @@ export const Constants = {
       ],
       app_role: ["user", "coach", "admin"],
       billing_provider: ["internal", "stripe", "apple", "google", "manual"],
+      coach_goal_category: [
+        "nutrition",
+        "hydration",
+        "movement",
+        "sleep",
+        "mindset",
+        "progress",
+        "accountability",
+        "custom",
+      ],
+      coach_goal_priority: ["low", "normal", "high"],
+      coach_goal_status: ["active", "completed", "archived"],
+      coach_relationship_status: ["invited", "active", "paused", "ended"],
       food_source: ["manual", "system", "provider", "barcode"],
       glp1_dose_event_type: ["taken", "missed", "skipped"],
       glp1_dose_unit: ["mg", "mcg", "units", "other"],
