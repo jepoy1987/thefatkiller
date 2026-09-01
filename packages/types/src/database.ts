@@ -95,6 +95,30 @@ export type Database = {
         }
         Relationships: []
       }
+      features: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       food_logs: {
         Row: {
           brand_snapshot: string | null
@@ -330,6 +354,81 @@ export type Database = {
           id?: string
           milestone_type?: Database["public"]["Enums"]["milestone_type"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      plan_entitlements: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          feature_id: string
+          id: string
+          limits: Json
+          plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          feature_id: string
+          id?: string
+          limits?: Json
+          plan_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          feature_id?: string
+          id?: string
+          limits?: Json
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_entitlements_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_entitlements_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -582,6 +681,62 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_id: string
+          provider: Database["public"]["Enums"]["billing_provider"]
+          provider_customer_id: string | null
+          provider_subscription_id: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id: string
+          provider: Database["public"]["Enums"]["billing_provider"]
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string
+          provider?: Database["public"]["Enums"]["billing_provider"]
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       water_logs: {
         Row: {
           amount_ml: number
@@ -695,6 +850,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_assign_internal_plan: {
+        Args: { target_plan_code: string; target_user_id: string }
+        Returns: string
+      }
       complete_onboarding: {
         Args: {
           p_activity_level: Database["public"]["Enums"]["activity_level"]
@@ -738,6 +897,22 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      get_current_entitlements: {
+        Args: never
+        Returns: {
+          cancel_at_period_end: boolean
+          current_period_end: string
+          current_period_start: string
+          feature_codes: string[]
+          is_internal_test: boolean
+          limits: Json
+          plan_code: string
+          plan_name: string
+          provider: Database["public"]["Enums"]["billing_provider"]
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string
+        }[]
       }
       get_daily_nutrition: {
         Args: { p_date: string }
@@ -829,6 +1004,7 @@ export type Database = {
         | "very_active"
         | "extra_active"
       app_role: "user" | "coach" | "admin"
+      billing_provider: "internal" | "stripe" | "apple" | "google" | "manual"
       food_source: "manual" | "system" | "provider" | "barcode"
       goal_type: "lose_weight" | "maintain_weight" | "gain_weight"
       habit_category:
@@ -859,6 +1035,13 @@ export type Database = {
         | "apple_health"
         | "health_connect"
         | "coach"
+      subscription_status:
+        | "active"
+        | "trialing"
+        | "past_due"
+        | "canceled"
+        | "expired"
+        | "incomplete"
       unit_system: "metric" | "imperial"
     }
     CompositeTypes: {
@@ -995,6 +1178,7 @@ export const Constants = {
         "extra_active",
       ],
       app_role: ["user", "coach", "admin"],
+      billing_provider: ["internal", "stripe", "apple", "google", "manual"],
       food_source: ["manual", "system", "provider", "barcode"],
       goal_type: ["lose_weight", "maintain_weight", "gain_weight"],
       habit_category: [
@@ -1027,6 +1211,14 @@ export const Constants = {
         "apple_health",
         "health_connect",
         "coach",
+      ],
+      subscription_status: [
+        "active",
+        "trialing",
+        "past_due",
+        "canceled",
+        "expired",
+        "incomplete",
       ],
       unit_system: ["metric", "imperial"],
     },

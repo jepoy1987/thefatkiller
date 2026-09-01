@@ -1,5 +1,10 @@
 export type UnitSystem = 'metric' | 'imperial';
 export type AppRole = 'user' | 'coach' | 'admin';
+export type PlanCode = 'free' | 'premium' | 'coach';
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'expired' | 'incomplete';
+export type BillingProvider = 'internal' | 'stripe' | 'apple' | 'google' | 'manual';
+export type FeatureCode = 'progress_tracking' | 'nutrition_tracking' | 'water_tracking' | 'habits' | 'daily_check_ins' | 'weekly_check_ins' | 'tfk_score' | 'progress_photos' | 'advanced_reports' | 'coach_access' | 'ai_insights' | 'glp1_journal' | 'workouts';
+export type EntitlementLimits = Record<string, number | string | boolean | null>;
 export type GoalType = 'lose_weight' | 'maintain_weight' | 'gain_weight';
 export type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extra_active';
 export type ProgressSource = 'manual' | 'import' | 'apple_health' | 'health_connect' | 'coach';
@@ -27,6 +32,11 @@ export type Profile = {
 };
 
 export type UserRole = { user_id: string; role: AppRole; created_at: string; updated_at: string };
+export type Plan = { id: string; code: PlanCode; name: string; description: string | null; is_active: boolean; sort_order: number; created_at: string; updated_at: string };
+export type Feature = { id: string; code: FeatureCode; name: string; description: string | null; created_at: string };
+export type PlanEntitlement = { id: string; plan_id: string; feature_id: string; enabled: boolean; limits: EntitlementLimits; created_at: string };
+export type UserSubscription = { id: string; user_id: string; plan_id: string; status: SubscriptionStatus; provider: BillingProvider; provider_customer_id: string | null; provider_subscription_id: string | null; current_period_start: string | null; current_period_end: string | null; cancel_at_period_end: boolean; trial_ends_at: string | null; created_at: string; updated_at: string };
+export type EntitlementSet = { plan: { code: PlanCode; name: string }; subscriptionStatus: SubscriptionStatus | null; provider: BillingProvider | null; features: FeatureCode[]; limits: Partial<Record<FeatureCode, EntitlementLimits>>; currentPeriodStart: string | null; currentPeriodEnd: string | null; cancelAtPeriodEnd: boolean; trialEndsAt: string | null; isInternalTest: boolean };
 export type UserGoal = {
   id: string; user_id: string; goal_type: GoalType;
   starting_weight: number; goal_weight: number; height: number;
