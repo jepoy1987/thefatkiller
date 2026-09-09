@@ -111,6 +111,9 @@ importers:
       '@tfk/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@tfk/scoring':
+        specifier: workspace:*
+        version: link:../../packages/scoring
       '@tfk/types':
         specifier: workspace:*
         version: link:../../packages/types
