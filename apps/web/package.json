@@ -17,6 +17,7 @@
     "@tfk/api": "workspace:*",
     "@tfk/auth": "workspace:*",
     "@tfk/config": "workspace:*",
+    "@tfk/scoring": "workspace:*",
     "@tfk/types": "workspace:*",
     "@tfk/validation": "workspace:*",
     "clsx": "^2.1.1",

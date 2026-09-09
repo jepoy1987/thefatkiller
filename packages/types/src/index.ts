@@ -28,7 +28,7 @@ export type CoachClientRelationship = { id:string; coach_user_id:string; client_
 export type CoachingPrivacySettings = { user_id:string; share_progress:boolean; share_nutrition:boolean; share_accountability:boolean; share_glp1_summary:boolean; share_glp1_details:boolean; updated_at:string };
 export type CoachGoal = { id:string; coach_user_id:string; client_user_id:string; relationship_id:string; title:string; description:string|null; category:CoachGoalCategory; target_date:string|null; status:CoachGoalStatus; priority:CoachGoalPriority; client_visible:boolean; created_at:string; updated_at:string; completed_at:string|null };
 export type CoachNote = { id:string; coach_user_id:string; client_user_id:string; relationship_id:string; note:string; client_visible:boolean; created_at:string; updated_at:string };
-export type CoachClientSummary = { client_id:string; display_name:string; unit_system:UnitSystem; timezone:string; goal:{goal_type:GoalType;starting_weight:number;goal_weight:number}|null; progress:{latest_weight:number|null;last_weigh_in:string|null;change_7d:number|null;change_30d:number|null}|null; nutrition:{logged_days_7d:number;protein_days_7d:number;water_days_7d:number}|null; accountability:{habit_completion_pct:number;check_in_days_7d:number;last_check_in:string|null}|null; glp1_summary:{active_medication:GLP1Medication|null;last_journal_entry:string|null;recent_symptom_log_exists:boolean}|null };
+export type CoachClientSummary = { today:string; availability:{progress:boolean;nutrition:boolean;accountability:boolean}; score_input:ScoreInput|null; client_id:string; display_name:string; unit_system:UnitSystem; timezone:string; goal:{goal_type:GoalType;starting_weight:number;goal_weight:number}|null; progress:{latest_weight:number|null;last_weigh_in:string|null;change_7d:number|null;change_30d:number|null}|null; nutrition:{logged_days_7d:number;protein_days_7d:number;water_days_7d:number}|null; accountability:{habit_completion_pct:number;habit_opportunities:number;check_in_days_7d:number;last_check_in:string|null}|null; glp1_summary:{active_medication:GLP1Medication|null;last_journal_entry:string|null;recent_symptom_log_exists:boolean}|null };
 export type CoachDashboardData = { clients: CoachClientSummary[] };
 
 export type Profile = {
@@ -116,3 +116,6 @@ export type AuthUser = {
   email: string | null;
   created_at: string;
 };
+
+export type DailyScoreSignal = { date: string; calories: number; calorieTarget: number; protein: number; proteinTarget: number; water: number; waterTarget: number; habitCompleted: number; habitAvailable: number; checkedIn: boolean; logged?: boolean };
+export type ScoreInput = { days: DailyScoreSignal[]; progressLogged: boolean; windowDays?: number };

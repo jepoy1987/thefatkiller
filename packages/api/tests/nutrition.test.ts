@@ -33,3 +33,17 @@ test('converts local nutrition dates across UTC, Manila, and Chicago', () => {
   assert.equal(zonedDateTimeToIso('2026-08-31T00:00:00', 'America/Chicago'), '2026-08-31T05:00:00.000Z');
   assert.deepEqual(dateRangeForTimeZone('2026-11-01', 'America/Chicago'), { start: '2026-11-01T05:00:00.000Z', end: '2026-11-02T06:00:00.000Z' });
 });
+
+test('seven local dates use midnight bounds across zones and DST', () => {
+  for (const zone of ['Asia/Manila', 'America/Chicago', 'UTC']) {
+    for (const endDate of ['2026-03-09', '2026-11-02', '2026-09-07']) {
+      const end = new Date(`${endDate}T12:00:00Z`);
+      const dates = Array.from({length:7}, (_,i) => { const d = new Date(end); d.setUTCDate(d.getUTCDate()-6+i); return d.toISOString().slice(0,10); });
+      const ranges = dates.map(date => dateRangeForTimeZone(date,zone));
+      assert.equal(new Set(dates).size,7);
+      for (let i=1;i<ranges.length;i++) assert.equal(ranges[i-1].end,ranges[i].start);
+      const hours=(Date.parse(ranges[6].end)-Date.parse(ranges[0].start))/3600000;
+      assert.equal(hours,zone==='America/Chicago'&&endDate==='2026-03-09'?167:zone==='America/Chicago'&&endDate==='2026-11-02'?169:168);
+    }
+  }
+});

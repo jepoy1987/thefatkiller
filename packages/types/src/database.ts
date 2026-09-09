@@ -20,6 +20,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_accountability_score_input: { Args: Record<PropertyKey, never>; Returns: Json };
       graphql: {
         Args: {
           extensions?: Json
