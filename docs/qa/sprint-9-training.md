@@ -96,3 +96,72 @@ records were rolled back. Local and staging generated types match apart from
 PostgREST version metadata. Preview results are recorded in the PR. Production
 verification/deployment and Sprint 10 are outside this task. The PR must remain
 open and unmerged.
+
+## Sprint 9 verified-finding fixes — 2026-09-14
+
+P1 root cause: the definer command used `NOT (client = uid OR (coach = uid
+AND relationship = helper()))`. For self assignments or revoked relationships,
+NULL comparisons can make that expression NULL; PL/pgSQL `IF` then skips the
+rejection. SELECT RLS did hide the assignment, but cannot authorize a definer
+mutation.
+
+Focused migration `20260914111401_sprint_9_assignment_status_authorization.sql`
+replaces only that command branch. It derives identity from `auth.uid()`, rejects
+all payload keys except `id` and `status`, fails closed, and locks the exact live
+relationship through the mutation. All other command branches are unchanged.
+The public wrapper remains SECURITY INVOKER, the private transactional command
+remains SECURITY DEFINER with an empty search path, anonymous/PUBLIC execution is
+revoked, and authenticated table access remains SELECT-only. The server action
+uses the authenticated client and a strict `{id,status}` schema; it supplies no
+coach identity and the RPC remains the authoritative security boundary.
+
+| Caller | Allowed status changes |
+| --- | --- |
+| Assigned client with workouts access | assigned → skipped; skipped → assigned |
+| Owning coach with coach role, coach_access and exact active relationship | assigned/skipped → archived |
+| Paused/ended coach, unrelated user/coach | Rejected |
+| Admin | No override; only assigned-client transitions with workouts access |
+| Any caller attempting ownership changes or fabricated completion | Rejected |
+
+P2 root cause: the new-set editor key included the next set number. Deleting the
+highest saved set changed that key and remounted the unrelated new-set form,
+while its dirty marker stayed in the parent. New drafts now use an exercise ID
+key, existing sets retain row ID keys, and only the new form's own successful
+save resets its inputs. Server results remain authoritative for saved/deleted
+rows. Reverting inputs to their saved/default values clears that form's dirty
+marker. No router refresh or optimistic row cache was added.
+
+Five React DOM/jsdom regression tests exercise the actual SessionLogger and
+ActionForm reconciliation: new draft + highest saved set deletion, saved draft
++ preceding row deletion, reverting real drafts, deleting an edited saved row,
+and failed saves. They assert surviving values, no shifted/reappearing deleted
+rows across server refreshes, and completion enabled after the preserved draft
+is saved. Only server-action transport is mocked.
+
+P3 audited and deferred: the training foundation repeats entitlement resolution
+through several independently guarded loaders. Reworking those interfaces or
+adding request caching is outside this focused authorization/draft correction.
+No global or cross-user cache was introduced.
+
+Verification: clean local baseline 231/231; post-fix 286/286 (55 new assignment
+security checks); local public/private schema lint passed. The new tests exposed
+the original authorization failure before the fix. Staging received only the new
+migration, passed 55/55 rollback-only security checks, has 18/18 migration parity,
+and passed public/private schema lint. Fingerprints for users, roles,
+subscriptions, relationships, and all nine training tables matched before/after
+staging QA (13 components). The reusable fingerprint query is in
+`supabase/verification/sprint_9_assignment_fingerprint.sql`.
+
+Application gates passed: lint, typecheck, 124/124 app/shared tests (38 web,
+including five draft regressions), full two-app build using local Supabase, and
+`git diff --check`. Manual local browser regression saved Set B (10 reps/110 lb),
+entered draft A (12 reps/120 lb plus notes) and a separate Set 1 edit, deleted B,
+and confirmed both drafts survived. Saving Set 1 triggered another refresh:
+B remained absent and A remained dirty. Saving A cleared the warning, reset the
+new form, enabled Complete Workout, and completion succeeded.
+
+Client browser skip and restore actions also passed on a temporary local coached
+assignment. The active owning coach's archive action was rechecked through the
+client-detail UI. Paused, ended, unrelated, missing-role, missing-entitlement,
+admin, immutable-field, and unchanged-row cases are covered by the local and
+staging security suite.
