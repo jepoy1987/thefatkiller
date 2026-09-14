@@ -65,6 +65,21 @@ Staging report security tests passed 54/54 in BEGIN/ROLLBACK. Twenty-four data f
 
 ## Delivery status
 
-Feature branch will be pushed and a draft PR opened into main. Automatic Vercel Preview readiness, exact commit, route/runtime health and authenticated QA results are recorded in the delivery addendum. Keep the PR draft/open/unmerged. Production is not configured, verified, deployed or promoted.
+Feature branch is pushed and draft PR #13 is open into main. Automatic Vercel Preview readiness, exact commit, route/runtime health and authenticated QA results are recorded below. Keep the PR draft/open/unmerged. Production is not configured, verified, deployed or promoted.
 
 Recommended next step after Preview QA: review the deterministic calculation semantics, historical-target limitation, coach privacy and documented branch-specific migration inventory before deciding whether to mark the PR ready for review. Do not merge automatically. Sprint 10 remains paused; Sprint 12 has not started.
+
+
+## Delivery addendum
+
+Implementation commit: `69bdf6c0eced550c897e3086f2ab7faf1317816c`.
+Draft PR: [#13](https://github.com/jepoy1987/thefatkiller/pull/13), open/unmerged.
+Automatic implementation [Preview](https://thefatkiller-78qua50ab-projects-tam.vercel.app) is READY and its Git SHA matches the implementation commit. The following documentation-only commit records the results; its final SHA is in branch history.
+
+Authenticated Preview QA used three newly created synthetic staging identities (Premium client, assigned Coach, Free) and only their synthetic records. Premium Reports rendered all sections and five accessible charts/tables; 7/30/90 presets returned 200 with correct period labels; custom form submission rendered the requested ten-day range. Free saw the plan gate and no Reports nav item. The assigned coach saw one assignment-linked completed workout while the owner saw two total completed workouts. An unassigned client route returned 404. Changing the temporary client's sharing controls through the existing UI and reloading the coach report produced four Not shared sections, no complete score, and only the permitted training chart. Browser error checks were empty after navigation completed.
+
+/login, /signup and /forgot-password returned 200 without authentication. /reports, the coach report route and /dashboard redirected 307 to /login. Deployment-scoped Preview error and 5xx queries returned no entries during the verification window. One navigation raced the login redirect, and one inspection raced a reload; both were repeated after navigation settled and passed, with no application error or code change required.
+
+All temporary Preview identities and their cascading fixtures were removed. The 24 original staging data fingerprints still exactly match the pre-promotion baseline, including the paused Sprint 10 weekly_insights table. No existing QA subscriptions or accounts were changed. Neither AI credentials nor Production configuration were touched.
+
+No blocking issue remains in the completed Sprint 11 checks. Known product limits are current-target reconstruction, range-bounded streaks, and deferred export/duration/exercise rankings. Review PR #13 and the documented migration inventory; keep it draft/unmerged until explicitly authorized otherwise. Sprint 10 remains paused with its real-model QA requirement intact.
