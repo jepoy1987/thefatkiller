@@ -35,19 +35,49 @@ export function buildWeeklyInsightInput(raw:unknown):WeeklyInsightInput {
  };
  return weeklyInsightInputSchema.parse(input);
 }
-export type InsightFact={category:WeeklyInsightCategory;text:string};
+export type InsightFact={category:WeeklyInsightCategory;text:string;winEligible:boolean};
+// Five of seven dates means activity on a substantial majority of the window.
+// Habit consistency requires >=80% across >=5 opportunities to avoid calling a
+// single completion a weekly consistency win. These are product presentation
+// thresholds, not medical targets or changes to the canonical scorer.
+export const WIN_CONSISTENCY_DAYS = 5;
+export const WIN_HABIT_MIN_OPPORTUNITIES = 5;
+export const WIN_HABIT_PERCENT = 80;
 export function insightFacts(input:WeeklyInsightInput):InsightFact[] {
- const facts:InsightFact[]=[];const add=(category:WeeklyInsightCategory,text:string)=>facts.push({category,text});
+ const facts:InsightFact[]=[];
+ const add=(category:WeeklyInsightCategory,text:string,winEligible=false)=>{
+  if(input.availability[category])facts.push({category,text,winEligible});
+ };
  if(input.progress){const p=input.progress;add('progress',p.weigh_ins+' weigh-ins were recorded in the selected period.');if(p.change!==null)add('progress','Weight changed by '+p.change+' '+p.weight_unit+' between the first and last weigh-in in the selected period.');}
- if(input.nutrition){const p=input.nutrition;add('nutrition','Nutrition was logged on '+p.logged_days+' of 7 days.');if(p.calorie_target_days!==null)add('nutrition','Calories were within 85–115% of the configured target on '+p.calorie_target_days+' logged days.');if(p.protein_target_days!==null)add('nutrition','Protein met the configured target on '+p.protein_target_days+' logged days.');}
- if(input.hydration){const p=input.hydration;add('hydration','Water was logged on '+p.logged_days+' of 7 days.');if(p.target_days!==null)add('hydration','Water met the configured target on '+p.target_days+' days.');}
- if(input.habits)add('habits',input.habits.completed+' of '+input.habits.opportunities+' eligible daily habit opportunities were completed.');
- if(input.daily_check_ins)add('daily_check_ins','Daily check-ins were recorded on '+input.daily_check_ins.completed_days+' of 7 days.');
- if(input.weekly_check_ins)add('weekly_check_ins',input.weekly_check_ins.completed_weeks+' of '+input.weekly_check_ins.eligible_weeks+' weeks overlapping the period have a weekly check-in.');
- if(input.training){add('training',input.training.assigned_completed+' of '+input.training.assigned+' scheduled non-archived assignments were completed.');add('training',input.training.completed+' workouts were completed across '+input.training.completed_days+' of 7 days, including self-directed workouts.');}
- if(input.coaching)add('coaching',input.coaching.active_goals+' visible goals are active; '+input.coaching.completed_goals+' visible goals were completed during the period in active coaching relationships.');
+ if(input.nutrition){const p=input.nutrition;
+  add('nutrition','Nutrition was logged on '+p.logged_days+' of 7 days.',p.logged_days>=WIN_CONSISTENCY_DAYS);
+  if(p.calorie_target_days!==null)add('nutrition','Calories were within 85–115% of the configured target on '+p.calorie_target_days+' logged days.',p.calorie_target!==null&&p.calorie_target>0&&p.calorie_target_days>=WIN_CONSISTENCY_DAYS&&p.calorie_target_days<=p.logged_days);
+  if(p.protein_target_days!==null)add('nutrition','Protein met the configured target on '+p.protein_target_days+' logged days.',p.protein_target_g!==null&&p.protein_target_g>0&&p.protein_target_days>=WIN_CONSISTENCY_DAYS&&p.protein_target_days<=p.logged_days);
+ }
+ if(input.hydration){const p=input.hydration;
+  add('hydration','Water was logged on '+p.logged_days+' of 7 days.',p.logged_days>=WIN_CONSISTENCY_DAYS);
+  if(p.target_days!==null)add('hydration','Water met the configured target on '+p.target_days+' days.',p.target_ml!==null&&p.target_ml>0&&p.target_days>=WIN_CONSISTENCY_DAYS&&p.target_days<=p.logged_days);
+ }
+ if(input.habits){const p=input.habits;add('habits',p.completed+' of '+p.opportunities+' eligible daily habit opportunities were completed.',p.opportunities>=WIN_HABIT_MIN_OPPORTUNITIES&&p.completed<=p.opportunities&&p.completed*100>=p.opportunities*WIN_HABIT_PERCENT);}
+ if(input.daily_check_ins)add('daily_check_ins','Daily check-ins were recorded on '+input.daily_check_ins.completed_days+' of 7 days.',input.daily_check_ins.completed_days>=WIN_CONSISTENCY_DAYS);
+ if(input.weekly_check_ins){const p=input.weekly_check_ins;add('weekly_check_ins',p.completed_weeks+' of '+p.eligible_weeks+' weeks overlapping the period have a weekly check-in.',p.eligible_weeks>0&&p.completed_weeks===p.eligible_weeks);}
+ if(input.training){const p=input.training;
+  add('training',p.assigned_completed+' of '+p.assigned+' scheduled non-archived assignments were completed.',p.assigned>0&&p.assigned_completed===p.assigned);
+  // This fact describes completed actions, not adherence or training intensity.
+  add('training',p.completed+' workouts were completed across '+p.completed_days+' of 7 days, including self-directed workouts.',p.completed>0&&p.completed_days>0&&p.completed_days<=p.completed);
+ }
+ if(input.coaching)add('coaching',input.coaching.active_goals+' visible goals are active; '+input.coaching.completed_goals+' visible goals were completed during the period in active coaching relationships.',input.coaching.completed_goals>0);
+ // Scores and weight movement are neutral observations, never positive wins.
  if(input.score)add('score','The canonical TFK Score is '+input.score.overall+' of 100.');
  return facts;
+}
+/** Called after grounding and before assigning the value sent to persistence. */
+export function validateWeeklyInsightSections(result:WeeklyInsightResult,input:WeeklyInsightInput):WeeklyInsightResult {
+ const eligible=insightFacts(input).filter(f=>f.winEligible);
+ if(result.wins.some(item=>!eligible.some(f=>f.category===item.category&&f.text===item.evidence)))throw new Error('Ineligible win');
+ // Watch items/focus/data gaps retain their exact grounding rules; no positive
+ // threshold is required for a neutral observation of low or missing activity.
+ return result;
 }
 export function insightDataGaps(input:WeeklyInsightInput):string[] {
  const gaps=['Today is partial; unlogged days do not establish what happened offline.'];
@@ -80,6 +110,7 @@ export const WEEKLY_SYSTEM_PROMPT = [
  'TFK Score and its breakdown are canonical: never calculate, alter, reinterpret or replace them.',
  'Return only the requested structured JSON, with no Markdown.',
  'Every evidence and reason must copy an exact supplied fact with its matching category.',
+ 'Wins may copy ONLY eligible_win_facts. Use an empty wins array when none qualify. Never promote a low, zero, missing, unavailable, score or weight fact to a win.',
  'Focus titles must copy the allowed title for that category. Copy data_gaps exactly.',
  'Copy headline and summary exactly from allowed_narrative. Win/watch titles must copy the evidence_titles entry for their category.',
  'Do not add a clinical, physiological or causal explanation. Do not infer intentions or personal qualities.',

@@ -1,7 +1,7 @@
 import type { WeeklyInsightInput, WeeklyInsightResult } from '@tfk/types';
 import { weeklyInsightOutputSchema, weeklyInsightInputSchema } from '@tfk/validation';
 import { InsightProviderError } from './provider';
-import { insightFacts, validateWeeklyInsightOutput, WEEKLY_PROMPT_VERSION } from '../../features/insights/domain';
+import { insightFacts, validateWeeklyInsightOutput, validateWeeklyInsightSections, WEEKLY_PROMPT_VERSION } from '../../features/insights/domain';
 
 import { isSafeHealthText } from '../ai/output-safety';
 export type InsightClaim={id:string;claimed:boolean;attempt?:number;status:string};
@@ -18,7 +18,7 @@ export async function runWeeklyInsightGeneration(raw:unknown,deps:InsightGenerat
  const start=Date.now();let model:string|null=null;let tokens:number|null=null;let result:WeeklyInsightResult|null=null;let error:string|null=null;
  try {
   const response=await deps.provider(input);model=response.model;tokens=response.tokens;
-  try{const structured=weeklyInsightOutputSchema.parse(response.output);const fields=[structured.headline,structured.summary,...structured.data_gaps,...[...structured.wins,...structured.watch_items].flatMap(i=>[i.title,i.evidence]),...structured.next_week_focus.flatMap(i=>[i.title,i.reason])];if(!isSafeHealthText(fields))throw new Error('Unsafe output');result=validateWeeklyInsightOutput(structured,input);}catch{throw new InsightProviderError('invalid_output');}
+  try{const structured=weeklyInsightOutputSchema.parse(response.output);const fields=[structured.headline,structured.summary,...structured.data_gaps,...[...structured.wins,...structured.watch_items].flatMap(i=>[i.title,i.evidence]),...structured.next_week_focus.flatMap(i=>[i.title,i.reason])];if(!isSafeHealthText(fields))throw new Error('Unsafe output');const grounded=validateWeeklyInsightOutput(structured,input);result=validateWeeklyInsightSections(grounded,input);}catch{throw new InsightProviderError('invalid_output');}
  }catch(cause){error=cause instanceof InsightProviderError?cause.code:'provider_failed';}
  let saved=false;
  try{saved=await deps.finish(claim.id,claim.attempt!,result,model,error);}catch{ /* Emit metadata only; keep pending lease recoverable. */ }

@@ -23,7 +23,7 @@ export async function requestWeeklyInsight(input:WeeklyInsightInput,config:Provi
   const response=await fetcher('https://api.openai.com/v1/responses',{
    method:'POST',headers:{Authorization:'Bearer '+config.apiKey,'Content-Type':'application/json'},signal:controller.signal,
    body:JSON.stringify({model:config.model,store:false,max_output_tokens:2200,
-    instructions:WEEKLY_SYSTEM_PROMPT,input:JSON.stringify({summary:input,facts:insightFacts(input),allowed_narrative:weeklyNarrative,evidence_titles:evidenceTitles,allowed_focus_titles:focusTitles,data_gaps:insightDataGaps(input)}),
+    instructions:WEEKLY_SYSTEM_PROMPT,input:JSON.stringify({summary:input,facts:insightFacts(input),eligible_win_facts:insightFacts(input).filter(f=>f.winEligible),allowed_narrative:weeklyNarrative,evidence_titles:evidenceTitles,allowed_focus_titles:focusTitles,data_gaps:insightDataGaps(input)}),
     text:{format:{type:'json_schema',name:'tfk_weekly_insight',strict:true,schema:weeklyOutputJsonSchema}}}),
   });
   if(!response.ok)throw new InsightProviderError('provider_failed');

@@ -182,3 +182,83 @@ test('provider schema mirrors accepted cardinality and narrative choices',()=>{
  assert.equal(p.headline.enum[0],domain.weeklyNarrative.headline);assert.equal(p.summary.enum[0],domain.weeklyNarrative.summary);
  assert.ok(p.watch_items.items.properties.title.enum.includes(domain.evidenceTitles.nutrition));
 });
+
+function sectionOutput(input,category,index=0,section='wins'){
+ const fact=domain.insightFacts(input).filter(f=>f.category===category)[index];
+ const o=output(input);o.wins=[];o.watch_items=[];
+ o[section]=[{title:domain.evidenceTitles[category],category,evidence:fact.text}];
+ return o;
+}
+const sectionCases=[
+ ['zero score',i=>{i.score.overall=0;},'score',0,false],
+ ['high score stays neutral',i=>{i.score.overall=100;},'score',0,false],
+ ['zero assigned workouts',i=>{i.training.assigned=0;i.training.assigned_completed=0;},'training',0,false],
+ ['zero completed workouts',i=>{i.training.completed=0;i.training.completed_days=0;},'training',1,false],
+ ['no daily check-ins',i=>{i.daily_check_ins.completed_days=0;},'daily_check_ins',0,false],
+ ['one daily check-in is not consistency',i=>{i.daily_check_ins.completed_days=1;},'daily_check_ins',0,false],
+ ['no nutrition logs',i=>{i.nutrition.logged_days=0;},'nutrition',0,false],
+ ['one nutrition day is not consistency',i=>{i.nutrition.logged_days=1;},'nutrition',0,false],
+ ['four nutrition days below threshold',i=>{i.nutrition.logged_days=4;},'nutrition',0,false],
+ ['five nutrition days meets threshold',i=>{i.nutrition.logged_days=5;},'nutrition',0,true],
+ ['six nutrition days',()=>{},'nutrition',0,true],
+ ['nutrition logging cannot qualify zero protein adherence',i=>{i.nutrition.protein_target_days=0;},'nutrition',2,false],
+ ['three of three scheduled workouts',i=>{i.training.assigned_completed=3;},'training',0,true],
+ ['two of three scheduled workouts is not full completion',()=>{},'training',0,false],
+ ['completed workout action',()=>{},'training',1,true],
+ ['habit consistency exact eighty percent',i=>{i.habits.opportunities=5;i.habits.completed=4;i.habits.completion_pct=0;},'habits',0,true],
+ ['habit consistency below eighty percent',i=>{i.habits.opportunities=5;i.habits.completed=3;i.habits.completion_pct=100;},'habits',0,false],
+ ['one of one habits too little for weekly consistency',i=>{i.habits.opportunities=1;i.habits.completed=1;},'habits',0,false],
+ ['zero habit opportunities',i=>{i.habits.opportunities=0;i.habits.completed=0;},'habits',0,false],
+ ['five hydration target days',i=>{i.hydration.target_days=5;},'hydration',1,true],
+ ['zero hydration target days despite logging',i=>{i.hydration.target_days=0;},'hydration',1,false],
+ ['completed coaching goal',()=>{},'coaching',0,true],
+ ['active goals alone are not completed',i=>{i.coaching.completed_goals=0;},'coaching',0,false],
+ ['negative weight movement remains neutral',()=>{},'progress',1,false],
+ ['unchanged weight remains neutral',i=>{i.progress.change=0;},'progress',1,false],
+ ['all overlapping weekly check-ins completed',i=>{i.weekly_check_ins.completed_weeks=i.weekly_check_ins.eligible_weeks;},'weekly_check_ins',0,true],
+];
+for(const [name,mutate,category,index,allowed] of sectionCases){
+ test('section eligibility: '+name,async()=>{
+  const i=domain.buildWeeklyInsightInput(source());mutate(i);const o=sectionOutput(i,category,index);
+  const grounded=domain.validateWeeklyInsightOutput(o,i);
+  if(allowed)assert.deepEqual(clean(domain.validateWeeklyInsightSections(grounded,i)),clean(o));
+  else assert.throws(()=>domain.validateWeeklyInsightSections(grounded,i),/Ineligible win/);
+  const f=dependencies(i);f.deps.provider=async()=>({output:o,model:'stub',tokens:null});
+  const generated=await generation.runWeeklyInsightGeneration(i,f.deps);
+  assert.equal(generated.status,allowed?'completed':'failed');
+  if(!allowed){assert.equal(f.row().result,null);assert.equal(f.row().error,'invalid_output');assert.ok(!JSON.stringify(f.logs).includes(o.wins[0].evidence));}
+ });
+}
+test('section eligibility: unavailable nutrition rejected',()=>{
+ const i=domain.buildWeeklyInsightInput(source()),o=sectionOutput(i,'nutrition');i.nutrition=null;i.availability.nutrition=false;o.data_gaps=domain.insightDataGaps(i);
+ assert.throws(()=>domain.validateWeeklyInsightSections(o,i));assert.throws(()=>domain.validateWeeklyInsightOutput(o,i));
+});
+test('section eligibility: missing data cannot be a win but exact gaps remain valid',()=>{
+ const i=domain.buildWeeklyInsightInput(source()),o=output(i);o.wins[0].evidence=domain.insightDataGaps(i)[0];
+ assert.throws(()=>domain.validateWeeklyInsightSections(o,i));assert.throws(()=>domain.validateWeeklyInsightOutput(o,i));
+ o.wins=[];assert.deepEqual(clean(domain.validateWeeklyInsightSections(domain.validateWeeklyInsightOutput(o,i),i).data_gaps),clean(domain.insightDataGaps(i)));
+});
+test('section eligibility: grounded low metric can remain in watch items',()=>{
+ const i=domain.buildWeeklyInsightInput(source());i.score.overall=0;const o=sectionOutput(i,'score',0,'watch_items');
+ assert.deepEqual(clean(domain.validateWeeklyInsightSections(domain.validateWeeklyInsightOutput(o,i),i)),clean(o));
+});
+test('section eligibility: evidence cannot borrow eligibility from another category',()=>{
+ const i=domain.buildWeeklyInsightInput(source()),o=sectionOutput(i,'nutrition');o.wins[0].category='training';o.wins[0].title=domain.evidenceTitles.training;
+ assert.throws(()=>domain.validateWeeklyInsightSections(o,i));
+});
+test('section eligibility: failed result can retry safely and completed reload does not regenerate',async()=>{
+ const i=domain.buildWeeklyInsightInput(source()),f=dependencies(i),good=f.deps.provider;i.score.overall=0;
+ f.deps.provider=async()=>({output:sectionOutput(i,'score'),model:'stub',tokens:null});
+ assert.equal((await generation.runWeeklyInsightGeneration(i,f.deps)).status,'failed');assert.equal(f.row().result,null);
+ f.retry();f.deps.provider=good;assert.equal((await generation.runWeeklyInsightGeneration(i,f.deps)).status,'completed');
+ await generation.runWeeklyInsightGeneration(i,f.deps);assert.equal(f.calls(),1);
+});
+test('section eligibility: provider receives only snapshot-derived eligible win facts',async()=>{
+ const i=domain.buildWeeklyInsightInput(source());i.score.overall=0;
+ await provider.requestWeeklyInsight(i,{apiKey:'stub',model:'stub'},async(_,init)=>{
+  const sent=JSON.parse(JSON.parse(init.body).input);
+  assert.deepEqual(sent.eligible_win_facts,clean(domain.insightFacts(i).filter(f=>f.winEligible)));
+  assert.ok(!sent.eligible_win_facts.some(f=>f.category==='score'||f.category==='progress'));
+  return {ok:true,json:async()=>({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(output(i))}]}]})};
+ });
+});
