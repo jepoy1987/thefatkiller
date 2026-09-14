@@ -195,3 +195,15 @@ export const reportPeriodSchema = z.object({
  if(period.end>period.today)ctx.addIssue({code:'custom',path:['end'],message:'End date cannot be in the future for this timezone.'});
  if(period.preset!=='custom'&&(days!==Number(period.preset)||period.end!==period.today))ctx.addIssue({code:'custom',path:['preset'],message:'Preset dates must end today and match the selected duration.'});
 });
+
+const reminderTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use a time in HH:mm format.');
+export const reminderPreferencesSchema = z.object({
+ weigh_in_enabled:z.boolean(), weigh_in_time:reminderTime,
+ weigh_in_days_of_week:z.array(z.number().int().min(0).max(6)).min(1).max(7).refine(days=>new Set(days).size===days.length,'Choose each weekday only once.'),
+ daily_check_in_enabled:z.boolean(),daily_check_in_time:reminderTime,
+ weekly_check_in_enabled:z.boolean(),weekly_check_in_day:z.number().int().min(0).max(6),weekly_check_in_time:reminderTime,
+ habit_reminders_enabled:z.boolean(),habit_reminder_time:reminderTime,
+ workout_reminders_enabled:z.boolean(),workout_reminder_minutes_before:z.number().int().min(0).max(1440),workout_reminder_time:reminderTime,
+ glp1_journal_enabled:z.boolean(),glp1_journal_time:reminderTime,
+ quiet_hours_enabled:z.boolean(),quiet_hours_start:reminderTime,quiet_hours_end:reminderTime,
+}).strict().superRefine((p,ctx)=>{if(p.quiet_hours_enabled&&p.quiet_hours_start===p.quiet_hours_end)ctx.addIssue({code:z.ZodIssueCode.custom,path:['quiet_hours_end'],message:'Quiet hours must have different start and end times.'});});

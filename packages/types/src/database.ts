@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -772,6 +767,48 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          dedupe_key: string
+          expires_at: string | null
+          id: string
+          message: string
+          metadata: Json
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          dedupe_key: string
+          expires_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          dedupe_key?: string
+          expires_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plan_entitlements: {
         Row: {
           created_at: string
@@ -925,6 +962,75 @@ export type Database = {
           storage_path?: string
           user_id?: string
           weight_kg?: number | null
+        }
+        Relationships: []
+      }
+      reminder_preferences: {
+        Row: {
+          daily_check_in_enabled: boolean
+          daily_check_in_time: string
+          glp1_journal_enabled: boolean
+          glp1_journal_time: string
+          habit_reminder_time: string
+          habit_reminders_enabled: boolean
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          updated_at: string
+          user_id: string
+          weekly_check_in_day: number
+          weekly_check_in_enabled: boolean
+          weekly_check_in_time: string
+          weigh_in_days_of_week: number[]
+          weigh_in_enabled: boolean
+          weigh_in_time: string
+          workout_reminder_minutes_before: number
+          workout_reminder_time: string
+          workout_reminders_enabled: boolean
+        }
+        Insert: {
+          daily_check_in_enabled?: boolean
+          daily_check_in_time?: string
+          glp1_journal_enabled?: boolean
+          glp1_journal_time?: string
+          habit_reminder_time?: string
+          habit_reminders_enabled?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          updated_at?: string
+          user_id: string
+          weekly_check_in_day?: number
+          weekly_check_in_enabled?: boolean
+          weekly_check_in_time?: string
+          weigh_in_days_of_week?: number[]
+          weigh_in_enabled?: boolean
+          weigh_in_time?: string
+          workout_reminder_minutes_before?: number
+          workout_reminder_time?: string
+          workout_reminders_enabled?: boolean
+        }
+        Update: {
+          daily_check_in_enabled?: boolean
+          daily_check_in_time?: string
+          glp1_journal_enabled?: boolean
+          glp1_journal_time?: string
+          habit_reminder_time?: string
+          habit_reminders_enabled?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          updated_at?: string
+          user_id?: string
+          weekly_check_in_day?: number
+          weekly_check_in_enabled?: boolean
+          weekly_check_in_time?: string
+          weigh_in_days_of_week?: number[]
+          weigh_in_enabled?: boolean
+          weigh_in_time?: string
+          workout_reminder_minutes_before?: number
+          workout_reminder_time?: string
+          workout_reminders_enabled?: boolean
         }
         Relationships: []
       }
@@ -1723,6 +1829,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      generate_due_notifications: { Args: never; Returns: Json }
       get_accountability_score_input: { Args: never; Returns: Json }
       get_client_coaching_summary: { Args: never; Returns: Json }
       get_coach_client_summary: { Args: { client_id: string }; Returns: Json }
@@ -1804,6 +1911,8 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      mark_all_notifications_read: { Args: never; Returns: number }
+      notification_unread_count: { Args: never; Returns: number }
       save_coach_goal: {
         Args: {
           p_category: Database["public"]["Enums"]["coach_goal_category"]
@@ -1883,6 +1992,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_notification_read: {
+        Args: { p_id: string; p_read: boolean }
+        Returns: boolean
       }
       training_mutate: {
         Args: { operation: string; payload: Json }

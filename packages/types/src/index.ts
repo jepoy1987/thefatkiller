@@ -122,3 +122,4 @@ export type ScoreInput = { days: DailyScoreSignal[]; progressLogged: boolean; wi
 export type * from './training';
 
 export type * from './reports';
+export type { Notification, NotificationType, ReminderPreferences, ReminderCategory, ReminderEvaluationResult, DueReminder, NotificationChannel } from './notifications';
