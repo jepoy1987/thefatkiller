@@ -74,3 +74,19 @@ Push this branch and open a draft PR into main. Verify automatic Preview exact S
 Remaining release confidence checks: assistive technology/cross-browser time controls, scheduler capacity at realistic population size and explicit staging scheduling activation approval. Scheduler inactivity in staging is intentional and accepted for this sprint; deterministic manual evaluation is available to trusted operators. Sprint 10/PR #12 must still reconcile against newer main and complete real-model QA before any future merge.
 
 References consulted: [Supabase Cron](https://supabase.com/docs/guides/cron), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), Supabase changelog and installed CLI help. Existing Next.js 14 patterns are retained.
+
+## Delivery addendum
+
+Implementation commit: `b15e93e979cb1cd040c03426b3f96d29f2924b5f`.
+Draft PR: [#14](https://github.com/jepoy1987/thefatkiller/pull/14), open/unmerged into main.
+Implementation [Preview](https://thefatkiller-3q5atc6hy-projects-tam.vercel.app) was READY at the exact implementation SHA (`dpl_6fhqoCnnQ7vzxTs6VgG86dSGAZak`).
+
+Fresh Preview checks: `/login` 200; unauthenticated `/notifications` and `/settings/notifications` 307 to `/login`. Authenticated QA used three isolated synthetic identities, never existing accounts. The client saved settings, a privileged evaluation of only that synthetic user generated all six categories, and the second evaluation reported six duplicates with zero inserts. Notification history showed the exact GLP-1 wording, internal actions and badge six. Read, unread and mark-all changes passed, including explicit waits verifying badge 0→1→0. App actions were allowed to settle before assertions. An initial login navigation raced the auth response; repeating after the redirect settled passed without code changes.
+
+Authenticated Preview regression routes returned 200 for dashboard, progress, nutrition, check-ins, training, coaching, reports, GLP-1, billing and profile settings. 390px screenshot was inspected with no horizontal overflow. Preview deployment-scoped error and 5xx queries returned no entries in the checked one-hour window; browser errors were empty. No Production routes or runtime logs were accessed.
+
+All synthetic Preview identities, assignments, templates and cascading health/reminder data were removed, credential files deleted and the browser closed. Final staging counts: zero notifications, preferences and reminder-run rows; cron.job absent. All 24 original fingerprints exactly match the pre-sprint baseline. Branch inventory matches 20 applied versions plus one intentional remote-only paused Sprint 10 version, for 21 total staging migrations.
+
+Staging security advisors report 19 warnings, distinct from clean schema lint: two expected authenticated SECURITY DEFINER notices for the narrowly guarded notification read-state RPCs, plus existing function-exposure/password-protection notices. The new RPC ownership checks and anonymous restrictions are tested; no broad notification write grant was introduced. Existing `rls_auto_enable` exposure notices and disabled leaked-password protection are recorded for separate platform review; no unrelated permissions or Auth configuration were changed. Local security advisors reported no issues.
+
+Final delivery is ready for a dedicated Sprint 12 pre-merge QA/review pass. Keep PR #14 draft/open/unmerged. Confirm scheduler capacity and consent before any future staging activation; Production scheduling and verification remain deferred. No Sprint 10 reconciliation, AI work or Sprint 13 work was performed.
