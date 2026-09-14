@@ -1,0 +1,16 @@
+import type { ScoreInput, TFKScore, UnitSystem } from './index';
+export type ReportAvailability = 'available' | 'no_entries' | 'not_applicable' | 'not_shared';
+export type ReportPeriod = { start:string; end:string; days:number; timezone:string; preset:'7'|'30'|'90'|'custom'; includesToday:boolean };
+export type ReportPoint = { date:string; value:number|null };
+type Available = { availability:ReportAvailability };
+export type ProgressReportSummary = Available & { count:number|null; start:number|null; end:number|null; change:number|null; unit:'kg'|'lb'; trend:ReportPoint[] };
+export type NutritionReportSummary = Available & { loggedDays:number|null; averageCalories:number|null; averageProtein:number|null; averageCarbs:number|null; averageFat:number|null; calorieTarget:number|null; proteinTarget:number|null; calorieDays:number|null; proteinDays:number|null; proteinPct:number|null; calorieTrend:ReportPoint[]; proteinTrend:ReportPoint[] };
+export type HydrationReportSummary = Available & { loggedDays:number|null; averageIntake:number|null; averageTargetPct:number|null; targetDays:number|null; target:number|null; unit:'ml'|'fl oz'; trend:ReportPoint[] };
+export type AccountabilityReportSummary = Available & { habitCompleted:number|null; habitOpportunities:number|null; habitPct:number|null; checkInDays:number|null; checkInPct:number|null; weeklyCheckIns:number|null; overlappingWeeks:number; currentStreak:number|null; longestStreak:number|null; score:TFKScore|null; scoreStart:string; scoreEnd:string };
+export type TrainingReportSummary = Available & { assigned:number|null; assignedCompleted:number|null; completionPct:number|null; completed:number|null; sessions:number|null; trend:ReportPoint[]; coachScoped:boolean };
+export type ReportComparison = { start:string; end:string; nutritionLoggedDays:number|null; scorePoints:number|null; workoutsCompleted:number|null; habitPercentagePoints:number|null };
+export type TFKReport = { period:ReportPeriod; coachView:boolean; progress:ProgressReportSummary; nutrition:NutritionReportSummary; hydration:HydrationReportSummary; accountability:AccountabilityReportSummary; training:TrainingReportSummary; comparison:ReportComparison|null };
+export type ReportContext = { timezone:string; unit_system:UnitSystem; today:string; coach_view:boolean; progress:boolean; nutrition:boolean; hydration:boolean; accountability:boolean; score:boolean; training:boolean };
+export type ReportDay = { date:string; weight:{count:number;first:number|null;last:number|null}|null; nutrition:{calories:number|null;protein:number|null;carbs:number|null;fat:number|null}|null; water:number|null; accountability:{available:number;completed:number;checked:boolean}|null; training:{assigned:number;assigned_completed:number;sessions:number;completed:number}|null };
+export type ReportPeriodSource = { start:string; end:string; days:ReportDay[]; targets:{calories:number|null;protein:number|null;water:number|null}; weekly_check_ins:number|null; score_input:ScoreInput|null };
+export type ReportSource = {context:ReportContext;current:ReportPeriodSource;previous:ReportPeriodSource|null};
