@@ -1,3 +1,5 @@
+> Historical initial implementation report. Current retention design and activation instructions: [Sprint 13 retention](sprint-13-retention.md). Subsequent local real-model QA passed; Preview provider configuration is branch-scoped. Authenticated Preview QA remains manual.
+
 # Sprint 13 — AI food photo logging
 
 Status: local implementation/QA passed; **real-model QA is mandatory and pending**. No OpenAI key is available. Keep the PR draft/open/unmerged. Staging migration application is pending explicit approval requested after automatic approval review rejected authorization from the attached brief.

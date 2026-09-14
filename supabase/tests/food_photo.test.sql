@@ -57,7 +57,7 @@ select ok(public.finish_food_photo('76666666-6666-4666-8666-666666666666','72222
 select public.claim_food_photo('76666666-6666-4666-8666-666666666666','72222222-2222-4222-8222-222222222222',true);
 select public.finish_food_photo('76666666-6666-4666-8666-666666666666','72222222-2222-4222-8222-222222222222',3,null,'mock','fixture','timeout',true);
 select throws_ok($$select public.claim_food_photo('76666666-6666-4666-8666-666666666666','72222222-2222-4222-8222-222222222222',true)$$,'54000',null,'Fourth attempt blocked');
-update public.food_photo_analyses set expires_at=clock_timestamp()-interval '1 second' where user_id='71111111-1111-4111-8111-111111111111';
+update public.food_photo_analyses set expires_at=now()-interval '1 second' where user_id='71111111-1111-4111-8111-111111111111';
 set local role authenticated;select set_config('request.jwt.claim.sub','71111111-1111-4111-8111-111111111111',true);
 select is((select count(*)::int from public.food_photo_analyses),0,'Expired analysis inaccessible');
 select is((select count(*)::int from storage.objects where bucket_id='food-analysis'),0,'Expired photo inaccessible');

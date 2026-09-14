@@ -418,6 +418,8 @@ export type Database = {
       food_photo_analyses: {
         Row: {
           attempts: number
+          cleanup_claim: string | null
+          cleanup_lease_until: string | null
           completed_at: string | null
           confirmed_log_ids: string[] | null
           created_at: string
@@ -435,6 +437,8 @@ export type Database = {
         }
         Insert: {
           attempts?: number
+          cleanup_claim?: string | null
+          cleanup_lease_until?: string | null
           completed_at?: string | null
           confirmed_log_ids?: string[] | null
           created_at?: string
@@ -452,6 +456,8 @@ export type Database = {
         }
         Update: {
           attempts?: number
+          cleanup_claim?: string | null
+          cleanup_lease_until?: string | null
           completed_at?: string | null
           confirmed_log_ids?: string[] | null
           created_at?: string
@@ -1838,6 +1844,14 @@ export type Database = {
       admin_grant_coach_role: {
         Args: { target_user_id: string }
         Returns: undefined
+      }
+      claim_food_photo_cleanup: {
+        Args: { p_limit?: number }
+        Returns: Database["public"]["Tables"]["food_photo_analyses"]["Row"][]
+      }
+      complete_food_photo_cleanup: {
+        Args: { p_id: string; p_user_id: string; p_claim: string; p_path: string | null }
+        Returns: boolean
       }
       claim_food_photo: {
         Args: { p_id: string; p_retry?: boolean; p_user_id: string }
