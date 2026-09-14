@@ -68,3 +68,11 @@ OPENAI_API_KEY and approved AI_WEEKLY_MODEL were unavailable, and no local worke
 Recommended next step: supply the approved model and local/Preview-only credentials securely, perform one real local test generation and authenticated Preview QA (including saved reload reuse, safety and ownership), then reassess readiness. Keep the PR draft and unmerged until those checks pass.
 
 Production was NOT configured, verified, manually deployed or promoted. Sprint 11 was NOT started.
+
+## Delivery evidence
+
+Implementation commit: `aa57067fbdc982425a9ca6cb7211935dfb9e8947`.
+Draft PR: [#12](https://github.com/jepoy1987/thefatkiller/pull/12), open and unmerged.
+The subsequent documentation commit records this deployment evidence; its SHA is available in branch history.
+
+Automatic Git Preview for the implementation commit: [thefatkiller-mxf1q6xud-projects-tam.vercel.app](https://thefatkiller-mxf1q6xud-projects-tam.vercel.app), deployment `dpl_BoE4GscBFxQBHRMmz99mJyA3nQyq`, target Preview, READY. Login, signup and forgot-password returned 200. Eleven protected routes, including Insights and detail, redirected 307 to /login without authentication. Deployment-scoped Preview error and 5xx queries returned no entries during the smoke check. This is unauthenticated runtime smoke coverage, not authenticated model QA. No manual deployment or promotion was performed.
