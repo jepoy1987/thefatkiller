@@ -1,3 +1,4 @@
+import { TodayInsightCard } from '../../features/insights/components';
 import { TodayTrainingCard } from '../../features/training/components';
 import { AppShell } from '../../components/layout/app-shell';
 import { SectionHeader } from '../../components/ui/headings';
@@ -9,12 +10,13 @@ import { doseSummary, journalDateTime, weekdayLabels } from '../../features/glp1
 import { Alert } from '../../components/ui/alert';
 
 export default async function DashboardPage({searchParams}:{searchParams:{message?:string}}) {
-  const { dashboard, glp1, coaching, training } = await getDashboardFoundation();
+  const { dashboard, glp1, coaching, training, insights } = await getDashboardFoundation();
   return <AppShell active="today"><div className="grid gap-8">
     {searchParams.message?<Alert variant="success">{searchParams.message}</Alert>:null}
     <DashboardHeader name={dashboard.welcomeName} />
     <section className="grid gap-4"><SectionHeader title="Today’s targets" description="Live nutrition progress against the targets in your active goal. Steps remain at zero until activity tracking is added." /><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{dashboard.targets.map((target) => <TargetCard key={target.key} target={target} />)}</div></section>
     {dashboard.accountability?<DashboardAccountability summary={dashboard.accountability}/>:null}
+    {insights.allowed ? <TodayInsightCard insight={insights.insight} /> : null}
     {training ? <TodayTrainingCard assignments={training.assignments} /> : null}
     {coaching?<Card><CardHeader title="Coaching" description={`Coach: ${coaching.coach_name}`}/><CardContent className="text-sm"><p>Active goals: {coaching.active_goal_count}</p>{coaching.next_target_date?<p>Next target: {coaching.next_target_date}</p>:null}<Link href="/coaching" className="mt-2 inline-block font-semibold text-primary">Open coaching</Link></CardContent></Card>:null}
     {glp1?<Card><CardHeader title="GLP-1 Journal" description="Your optional medication and symptom journal."/><CardContent className="grid gap-2 text-sm">{glp1.lastDose?<p><strong>Last recorded:</strong> {journalDateTime(glp1.lastDose.taken_at,dashboard.profile.timezone)} · {doseSummary(glp1.lastDose)}</p>:<p className="text-muted-foreground">No medication entries yet.</p>}{glp1.medicationProfile.prescribed_schedule?<p><strong>Usual journal schedule:</strong> {glp1.medicationProfile.prescribed_schedule==='weekly'&&glp1.medicationProfile.usual_day_of_week?weekdayLabels[glp1.medicationProfile.usual_day_of_week-1]:glp1.medicationProfile.prescribed_schedule}</p>:null}{glp1.latestSymptom?<p><strong>Latest symptom log:</strong> {journalDateTime(glp1.latestSymptom.logged_at,dashboard.profile.timezone)}</p>:null}<Link href="/glp1" className="font-semibold text-primary">Open journal</Link></CardContent></Card>:null}

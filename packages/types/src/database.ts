@@ -1305,6 +1305,66 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_insights: {
+        Row: {
+          attempts: number
+          created_at: string
+          error_code: string | null
+          generated_at: string | null
+          generated_text: string | null
+          id: string
+          input_snapshot: Json
+          insight_json: Json | null
+          model: string | null
+          period_end: string
+          period_start: string
+          prompt_version: string
+          retry_after: string | null
+          status: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          generated_at?: string | null
+          generated_text?: string | null
+          id?: string
+          input_snapshot: Json
+          insight_json?: Json | null
+          model?: string | null
+          period_end: string
+          period_start: string
+          prompt_version: string
+          retry_after?: string | null
+          status?: string
+          timezone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          generated_at?: string | null
+          generated_text?: string | null
+          id?: string
+          input_snapshot?: Json
+          insight_json?: Json | null
+          model?: string | null
+          period_end?: string
+          period_start?: string
+          prompt_version?: string
+          retry_after?: string | null
+          status?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       weight_entries: {
         Row: {
           created_at: string
@@ -1679,6 +1739,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      claim_weekly_insight: {
+        Args: { p_input: Json; p_user_id: string }
+        Returns: Json
+      }
       complete_onboarding: {
         Args: {
           p_activity_level: Database["public"]["Enums"]["activity_level"]
@@ -1723,6 +1787,17 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      finish_weekly_insight: {
+        Args: {
+          p_attempt: number
+          p_error?: string
+          p_id: string
+          p_model: string
+          p_result: Json
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       get_accountability_score_input: { Args: never; Returns: Json }
       get_client_coaching_summary: { Args: never; Returns: Json }
       get_coach_client_summary: { Args: { client_id: string }; Returns: Json }
@@ -1762,6 +1837,7 @@ export type Database = {
         }[]
       }
       get_training_summary: { Args: never; Returns: Json }
+      get_weekly_insight_source: { Args: never; Returns: Json }
       has_current_feature: {
         Args: { p_feature_code: string }
         Returns: boolean
