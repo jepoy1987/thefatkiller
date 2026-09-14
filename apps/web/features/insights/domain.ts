@@ -62,6 +62,12 @@ export function insightDataGaps(input:WeeklyInsightInput):string[] {
 export const focusTitles:Record<WeeklyInsightCategory,string>={
  progress:'Keep a consistent weigh-in record',nutrition:'Aim for consistent nutrition logging',hydration:'Keep your water log current',habits:'Review your existing daily habits',daily_check_ins:'Make time for a daily check-in',weekly_check_ins:'Complete your weekly check-in',training:'Review your existing workout schedule',coaching:'Review your visible coaching goals',score:'Review the recorded score breakdown',
 };
+// Model selects supported facts; unconstrained narration cannot invent additional claims.
+export const weeklyNarrative = {
+ headline: 'Your weekly activity records',
+ summary: 'Review the recorded facts and data gaps below. Today is partial; unlogged days do not establish what happened offline.',
+};
+export const evidenceTitles:Record<WeeklyInsightCategory,string>={progress:'Weight records',nutrition:'Nutrition records',hydration:'Water records',habits:'Habit records',daily_check_ins:'Daily check-in records',weekly_check_ins:'Weekly check-in records',training:'Workout records',coaching:'Visible coaching goals',score:'Recorded TFK Score'};
 export const WEEKLY_SYSTEM_PROMPT = [
  'You explain a private weekly activity summary, using only provided facts.',
  'Do not infer missing values or invent data, workouts, calories, symptoms or history.',
@@ -75,11 +81,12 @@ export const WEEKLY_SYSTEM_PROMPT = [
  'Return only the requested structured JSON, with no Markdown.',
  'Every evidence and reason must copy an exact supplied fact with its matching category.',
  'Focus titles must copy the allowed title for that category. Copy data_gaps exactly.',
- 'Headline and summary must be cautious, brief, numerical-free explanations of the supplied logging patterns.',
+ 'Copy headline and summary exactly from allowed_narrative. Win/watch titles must copy the evidence_titles entry for their category.',
  'Do not add a clinical, physiological or causal explanation. Do not infer intentions or personal qualities.',
 ].join('\n');
 export function validateWeeklyInsightOutput(raw:unknown,input:WeeklyInsightInput):WeeklyInsightResult {
  const result=weeklyInsightOutputSchema.parse(raw);
+ if(result.headline!==weeklyNarrative.headline||result.summary!==weeklyNarrative.summary||[...result.wins,...result.watch_items].some(i=>i.title!==evidenceTitles[i.category]))throw new Error('Unsupported narrative');
  const facts=insightFacts(input);const matches=(category:WeeklyInsightCategory,text:string)=>facts.some(f=>f.category===category&&f.text===text);
  if([...result.wins,...result.watch_items].some(i=>!matches(i.category,i.evidence))||result.next_week_focus.some(i=>!matches(i.category,i.reason)||i.title!==focusTitles[i.category]))throw new Error('Unsupported evidence');
  if(JSON.stringify(result.data_gaps)!==JSON.stringify(insightDataGaps(input)))throw new Error('Missing data gaps');

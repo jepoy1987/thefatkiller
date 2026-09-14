@@ -1,5 +1,5 @@
 import type { WeeklyInsightInput } from '@tfk/types';
-import { focusTitles, insightDataGaps, insightFacts, WEEKLY_SYSTEM_PROMPT } from '../../features/insights/domain';
+import { weeklyNarrative, evidenceTitles, focusTitles, insightDataGaps, insightFacts, WEEKLY_SYSTEM_PROMPT } from '../../features/insights/domain';
 
 export type ProviderConfig={apiKey:string;model:string};
 export class InsightProviderError extends Error {
@@ -13,8 +13,8 @@ const string={type:'string'};
 const categories=['progress','nutrition','hydration','habits','daily_check_ins','weekly_check_ins','training','coaching','score'];
 const category={type:'string',enum:categories};
 const object=(properties:Record<string,unknown>)=>({type:'object',properties,required:Object.keys(properties),additionalProperties:false});
-const item=object({title:string,evidence:string,category});
-export const weeklyOutputJsonSchema=object({headline:string,summary:string,wins:{type:'array',items:item},watch_items:{type:'array',items:item},next_week_focus:{type:'array',items:object({title:string,reason:string,category})},data_gaps:{type:'array',items:string}});
+const item=object({title:{type:'string',enum:Object.values(evidenceTitles)},evidence:string,category});
+export const weeklyOutputJsonSchema=object({headline:{type:'string',enum:[weeklyNarrative.headline]},summary:{type:'string',enum:[weeklyNarrative.summary]},wins:{type:'array',maxItems:4,items:item},watch_items:{type:'array',maxItems:4,items:item},next_week_focus:{type:'array',minItems:1,maxItems:3,items:object({title:{type:'string',enum:Object.values(focusTitles)},reason:string,category})},data_gaps:{type:'array',maxItems:12,items:string}});
 /** Server transport only. Imported exclusively by the server-only generation
  * module; config is explicit so contract tests cannot pick up ambient secrets. */
 export async function requestWeeklyInsight(input:WeeklyInsightInput,config:ProviderConfig,fetcher:typeof fetch=fetch):Promise<{output:unknown;model:string;tokens:number|null}> {
@@ -23,7 +23,7 @@ export async function requestWeeklyInsight(input:WeeklyInsightInput,config:Provi
   const response=await fetcher('https://api.openai.com/v1/responses',{
    method:'POST',headers:{Authorization:'Bearer '+config.apiKey,'Content-Type':'application/json'},signal:controller.signal,
    body:JSON.stringify({model:config.model,store:false,max_output_tokens:2200,
-    instructions:WEEKLY_SYSTEM_PROMPT,input:JSON.stringify({summary:input,facts:insightFacts(input),allowed_focus_titles:focusTitles,data_gaps:insightDataGaps(input)}),
+    instructions:WEEKLY_SYSTEM_PROMPT,input:JSON.stringify({summary:input,facts:insightFacts(input),allowed_narrative:weeklyNarrative,evidence_titles:evidenceTitles,allowed_focus_titles:focusTitles,data_gaps:insightDataGaps(input)}),
     text:{format:{type:'json_schema',name:'tfk_weekly_insight',strict:true,schema:weeklyOutputJsonSchema}}}),
   });
   if(!response.ok)throw new InsightProviderError('provider_failed');

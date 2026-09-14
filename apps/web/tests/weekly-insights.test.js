@@ -14,7 +14,8 @@ async function load(path,imports={}){
 const validationZod=await import('zod');
 const domain=await load('../features/insights/domain.ts');
 const provider=await load('../server/insights/provider.ts',{'../../features/insights/domain':domain});
-const generation=await load('../server/insights/generation.ts',{'./provider':provider,'../../features/insights/domain':domain});
+const safety=await load('../server/ai/output-safety.ts');
+const generation=await load('../server/insights/generation.ts',{'./provider':provider,'../../features/insights/domain':domain,'../ai/output-safety':safety});
 function source(timezone='Asia/Manila',asOf='2026-09-14T14:00:00Z'){
  const end=scoring.localDate(timezone,new Date(asOf)),dates=scoring.localDateWindow(end);
  return {period:{start:dates[0],end,timezone,as_of:asOf,includes_today:true},unit_system:'metric',goal_type:'lose_weight',
@@ -24,10 +25,10 @@ function source(timezone='Asia/Manila',asOf='2026-09-14T14:00:00Z'){
 }
 function output(input){
  const fact=domain.insightFacts(input).find(f=>f.category==='nutrition')??domain.insightFacts(input)[0];
- return {headline:'A week of recorded patterns',summary:'Your records show some consistent logging and some gaps. The incomplete records leave uncertainty about the rest of the week.',wins:[{title:'Logging consistency',evidence:fact.text,category:fact.category}],watch_items:[],next_week_focus:[{title:domain.focusTitles[fact.category],reason:fact.text,category:fact.category}],data_gaps:domain.insightDataGaps(input)};
+ return {...domain.weeklyNarrative,wins:[{title:domain.evidenceTitles[fact.category],evidence:fact.text,category:fact.category}],watch_items:[],next_week_focus:[{title:domain.focusTitles[fact.category],reason:fact.text,category:fact.category}],data_gaps:domain.insightDataGaps(input)};
 }
 const clean=x=>JSON.parse(JSON.stringify(x));
-for(const [timezone,asOf] of [['Asia/Manila','2026-09-14T23:30:00Z'],['America/Chicago','2026-03-09T04:30:00Z'],['America/Chicago','2026-11-02T05:30:00Z']]){
+for(const [timezone,asOf] of [['UTC','2026-09-14T23:30:00Z'],['Asia/Manila','2026-09-14T23:30:00Z'],['America/Chicago','2026-03-09T04:30:00Z'],['America/Chicago','2026-11-02T05:30:00Z']]){
  test('exact seven local dates including DST: '+timezone+' '+asOf,()=>{
   const raw=source(timezone,asOf),input=domain.buildWeeklyInsightInput(raw);
   assert.deepEqual(clean(input.period.dates),scoring.localDateWindow(scoring.localDate(timezone,new Date(asOf))));
@@ -145,4 +146,39 @@ test('no available facts prevents even a claim or provider call',async()=>{
  const i=domain.buildWeeklyInsightInput(raw),f=dependencies(i);
  await assert.rejects(()=>generation.runWeeklyInsightGeneration(i,f.deps),/insufficient_data/);
  assert.equal(f.row(),null);assert.equal(f.calls(),0);
+});
+
+for(const phrase of ['increase your GLP-1 dose','skip your medication','take 2.5 mg tonight','You have diabetes','Treat your infection with antibiotics','Eat only 300 calories daily','Purge after meals','Exercise for hours to burn off dinner','This diet cured your illness','Your workouts caused better health','You lost weight rapidly; excellent work']) {
+ test('server generation rejects unsafe text in all output fields: '+phrase,async()=>{
+  const i=domain.buildWeeklyInsightInput(source());
+  for(const field of ['headline','summary','title','evidence','reason','gap']){
+   const f=dependencies(i),o=output(i);
+   if(field==='headline'||field==='summary')o[field]=phrase;
+   if(field==='title'||field==='evidence')o.wins[0][field]=phrase;
+   if(field==='reason')o.next_week_focus[0].reason=phrase;
+   if(field==='gap')o.data_gaps.push(phrase);
+   f.deps.provider=async()=>({output:o,model:'stub',tokens:null});
+   assert.equal((await generation.runWeeklyInsightGeneration(i,f.deps)).status,'failed');
+   assert.equal(f.row().result,null);assert.equal(f.row().error,'invalid_output');
+   assert.ok(!JSON.stringify(f.logs).includes(phrase));
+  }
+ });
+}
+for(const category of ['progress','nutrition','hydration','habits','daily_check_ins','weekly_check_ins','training','coaching','score']) {
+ test('grounding rejects invented fact for '+category,()=>{
+  const i=domain.buildWeeklyInsightInput(source()),o=output(i);
+  o.wins=[{category,title:domain.evidenceTitles[category],evidence:'There were 999 successful records.'}];
+  assert.throws(()=>domain.validateWeeklyInsightOutput(o,i));
+ });
+}
+test('numerical-free unsupported claims cannot bypass headline/title/summary grounding',()=>{
+ const i=domain.buildWeeklyInsightInput(source());
+ for(const field of ['headline','summary'])assert.throws(()=>domain.validateWeeklyInsightOutput({...output(i),[field]:'Your hydration improved dramatically.'},i));
+ const o=output(i);o.wins[0].title='Perfect adherence';assert.throws(()=>domain.validateWeeklyInsightOutput(o,i));
+});
+test('provider schema mirrors accepted cardinality and narrative choices',()=>{
+ const p=provider.weeklyOutputJsonSchema.properties;
+ assert.equal(p.wins.maxItems,4);assert.equal(p.watch_items.maxItems,4);assert.equal(p.next_week_focus.minItems,1);assert.equal(p.next_week_focus.maxItems,3);
+ assert.equal(p.headline.enum[0],domain.weeklyNarrative.headline);assert.equal(p.summary.enum[0],domain.weeklyNarrative.summary);
+ assert.ok(p.watch_items.items.properties.title.enum.includes(domain.evidenceTitles.nutrition));
 });
