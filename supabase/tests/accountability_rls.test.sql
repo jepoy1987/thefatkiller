@@ -28,5 +28,20 @@ update public.habit_completions set notes='Forbidden' where user_id='41111111-11
 delete from public.habit_completions where user_id='41111111-1111-4111-8111-111111111111';select is((select count(*)::int from public.habit_completions),0,'B cannot delete A completion');
 delete from public.daily_check_ins where user_id='41111111-1111-4111-8111-111111111111';select is((select count(*)::int from public.daily_check_ins),0,'B cannot delete A daily check-in');
 delete from public.weekly_check_ins where user_id='41111111-1111-4111-8111-111111111111';select is((select count(*)::int from public.weekly_check_ins),0,'B cannot delete A weekly check-in');
-select throws_ok($$insert into public.habit_completions(habit_id,user_id,completed_on) values('00000000-0000-4000-8000-000000000001','42222222-2222-4222-8222-222222222222','2026-08-31')$$,'23503',null,'Unknown habits cannot be completed');
+-- Ownership RLS rejects an unknown habit before the foreign-key check.
+select throws_ok($$insert into public.habit_completions(habit_id,user_id,completed_on) values('00000000-0000-4000-8000-000000000001','42222222-2222-4222-8222-222222222222','2026-08-31')$$,'42501',null,'Unknown habits are rejected by ownership RLS');
+-- Check persistence without RLS hiding any unauthorized rows. Keep the 18
+-- pgTAP assertions; a failed invariant aborts this rollback-only test file.
+reset role;
+do $$
+begin
+  if exists (
+    select 1 from public.habit_completions
+    where user_id = '42222222-2222-4222-8222-222222222222'
+       or habit_id = '00000000-0000-4000-8000-000000000001'
+  ) then
+    raise exception 'Unauthorized habit completion was persisted';
+  end if;
+end;
+$$;
 select * from finish();rollback;
