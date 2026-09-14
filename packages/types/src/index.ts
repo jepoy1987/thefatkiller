@@ -3,7 +3,7 @@ export type AppRole = 'user' | 'coach' | 'admin';
 export type PlanCode = 'free' | 'premium' | 'coach';
 export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'expired' | 'incomplete';
 export type BillingProvider = 'internal' | 'stripe' | 'apple' | 'google' | 'manual';
-export type FeatureCode = 'progress_tracking' | 'nutrition_tracking' | 'water_tracking' | 'habits' | 'daily_check_ins' | 'weekly_check_ins' | 'tfk_score' | 'progress_photos' | 'advanced_reports' | 'coach_access' | 'ai_insights' | 'glp1_journal' | 'workouts';
+export type FeatureCode = 'progress_tracking' | 'nutrition_tracking' | 'water_tracking' | 'habits' | 'daily_check_ins' | 'weekly_check_ins' | 'tfk_score' | 'progress_photos' | 'advanced_reports' | 'coach_access' | 'ai_food_photo' | 'ai_insights' | 'glp1_journal' | 'workouts';
 export type EntitlementLimits = Record<string, number | string | boolean | null>;
 export type GoalType = 'lose_weight' | 'maintain_weight' | 'gain_weight';
 export type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extra_active';
@@ -121,3 +121,8 @@ export type DailyScoreSignal = { date: string; calories: number; calorieTarget: 
 export type ScoreInput = { days: DailyScoreSignal[]; progressLogged: boolean; windowDays?: number };
 export type * from './training';
 export type * from './insights';
+
+export type * from './reports';
+export type { Notification, NotificationType, ReminderPreferences, ReminderCategory, ReminderEvaluationResult, DueReminder, NotificationChannel } from './notifications';
+
+export * from './food-photo';

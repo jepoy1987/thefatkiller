@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import sharp from 'sharp';
+import {foodPhotoResultSchema,foodPhotoReviewSchema} from '@tfk/validation';
+import {openAIPhotoProvider,FoodPhotoError} from '../server/food-photo/provider.ts';
+import {runFoodPhoto} from '../server/food-photo/generation.ts';
+import {prepareFoodPhoto,MAX_PHOTO_BYTES} from '../server/food-photo/image.ts';
+import {photoTotals,resizePortion,confidenceText} from '../features/food-photo/domain.ts';
+const item={name:'Rice',estimated_portion:{amount:100,unit:'g'},estimated_calories:130,protein_g:3,carbs_g:28,fat_g:0.3,confidence:0.8};
+const result={items:[item],meal_totals:{calories:130,protein_g:3,carbs_g:28,fat_g:0.3},uncertainties:['Portion is approximate.']};
+const clone=()=>structuredClone(result);
+test('Strict valid structured output accepted',()=>assert.equal(foodPhotoResultSchema.safeParse(result).success,true));
+for(const [name,mutate] of [
+ ['negative calories',r=>r.items[0].estimated_calories=-1],['missing macros',r=>delete r.items[0].protein_g],['confidence outside range',r=>r.items[0].confidence=1.1],['zero portion',r=>r.items[0].estimated_portion.amount=0],['unsupported unit',r=>r.items[0].estimated_portion.unit='bucket'],['invented fields',r=>r.secret='no'],['missing uncertainty',r=>r.uncertainties=[]],['mismatched total',r=>r.meal_totals.calories=999],['empty items',r=>r.items=[]],['huge name',r=>r.items[0].name='x'.repeat(121)]
+])test('Reject '+name,()=>{const r=clone();mutate(r);assert.equal(foodPhotoResultSchema.safeParse(r).success,false);});
+const response=output=>new Response(JSON.stringify({status:'completed',output:[{content:[{type:'output_text',text:typeof output==='string'?output:JSON.stringify(output)}]}]}));
+test('OpenAI transport uses image and strict schema with no persistence',async()=>{let request;const provider=openAIPhotoProvider({apiKey:'test-only',model:'configured-model'},async(_,options)=>{request=JSON.parse(options.body);return response(result);});assert.deepEqual(await provider(new Uint8Array([1])),result);assert.equal(request.store,false);assert.equal(request.text.format.strict,true);assert.match(request.input[0].content[1].image_url,/^data:image\/jpeg;base64,/);});
+test('Malformed provider JSON rejected safely',async()=>{await assert.rejects(openAIPhotoProvider({apiKey:'test',model:'test'},async()=>response('{bad'))(new Uint8Array()),{code:'invalid_output'});});
+test('Provider HTTP errors do not leak body',async()=>{await assert.rejects(openAIPhotoProvider({apiKey:'test',model:'test'},async()=>new Response('PRIVATE',{status:500}))(new Uint8Array()),{code:'provider_failed'});});
+test('Provider timeout is bounded',async()=>{await assert.rejects(openAIPhotoProvider({apiKey:'test',model:'test'},(_,o)=>new Promise((_,reject)=>o.signal.addEventListener('abort',()=>reject(new Error('aborted')))),5)(new Uint8Array()),{code:'timeout'});});
+function ports(){const events=[];return {events,claim:async()=>({claimed:true,analysis:{id:'analysis',attempts:1,storage_path:'owner/analysis.jpg'}}),upload:async()=>events.push('upload'),remove:async()=>events.push('delete'),provider:async()=>{events.push('provider');return result;},finish:async(a,r,e,d)=>events.push({r,e,d})};}
+test('Photo deleted before provider; result persisted without logging meal',async()=>{const p=ports();assert.equal(await runFoodPhoto(new Uint8Array([1]),p),'analysis');assert.deepEqual(p.events.slice(0,3),['upload','delete','provider']);assert.equal(p.events[3].d,true);assert.deepEqual(p.events[3].r,result);});
+test('Completed/duplicate claim never calls provider',async()=>{const p=ports();p.claim=async()=>({claimed:false,analysis:{id:'existing'}});assert.equal(await runFoodPhoto(new Uint8Array(),p),'existing');assert.equal(p.events.length,0);});
+test('Failed provider records safe failure and explicit new claim can retry',async()=>{const p=ports();p.provider=async()=>{throw new FoodPhotoError('provider_failed');};await runFoodPhoto(new Uint8Array(),p);assert.equal(p.events.at(-1).e,'provider_failed');p.provider=async()=>result;await runFoodPhoto(new Uint8Array(),p);assert.equal(p.events.at(-1).e,null);});
+test('Invalid mock output rejected by orchestration too',async()=>{const p=ports();p.provider=async()=>({});await runFoodPhoto(new Uint8Array(),p);assert.equal(p.events.at(-1).e,'invalid_output');});
+test('Upload failure still attempts cleanup and makes no provider call',async()=>{const p=ports();p.upload=async()=>{throw new FoodPhotoError('upload_failed');};await runFoodPhoto(new Uint8Array(),p);assert.equal(p.events.includes('provider'),false);assert.equal(p.events.at(-1).e,'upload_failed');});
+test('Review changes portion/macros, removes and adds item with correct totals',()=>{const resized=resizePortion(item,200);assert.equal(resized.estimated_calories,260);const edited={...resized,estimated_calories:250};const items=[edited,{...item,name:'Added food'}];assert.equal(photoTotals(items).calories,380);assert.equal(photoTotals(items.slice(1)).calories,130);assert.equal(foodPhotoReviewSchema.safeParse({items,meal_type:'dinner',logged_at:new Date().toISOString(),notes:'Edited'}).success,true);});
+test('Review rejects future timestamp and invalid meal',()=>{for(const patch of [{logged_at:'2999-01-01T00:00:00Z'},{meal_type:'invalid'},{items:[]}])assert.equal(foodPhotoReviewSchema.safeParse({items:[item],meal_type:'lunch',logged_at:new Date().toISOString(),notes:'',...patch}).success,false);});
+test('Confidence meaning has text',()=>{assert.match(confidenceText(0.2),/Low confidence/);assert.match(confidenceText(0.6),/Medium/);assert.match(confidenceText(0.9),/High/);});
+test('Image decode strips metadata and bounds dimensions',async()=>{const source=await sharp({create:{width:2000,height:1000,channels:3,background:'red'}}).withMetadata({exif:{IFD0:{Artist:'PRIVATE'}}}).jpeg().toBuffer();const output=await prepareFoodPhoto(source,'image/jpeg');const metadata=await sharp(output).metadata();assert.equal(metadata.width,1600);assert.equal(metadata.exif,undefined);});
+test('Reject bad MIME, wrong magic, oversized and malformed photos',async()=>{for(const [bytes,mime] of [[new Uint8Array([1]),'text/plain'],[new Uint8Array([1]),'image/png'],[new Uint8Array(MAX_PHOTO_BYTES+1),'image/jpeg']])await assert.rejects(prepareFoodPhoto(bytes,mime));});

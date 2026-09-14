@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {reminderPreferencesSchema} from '@tfk/validation';
+import {defaultReminderPreferences,notificationExpired,unreadLabel,reminderFormValues} from '../features/notifications/domain.ts';
+test('Safe default preferences use opt-in weigh-in and GLP-1',()=>{assert.equal(reminderPreferencesSchema.safeParse(defaultReminderPreferences).success,true);assert.equal(defaultReminderPreferences.glp1_journal_enabled,false);assert.equal(defaultReminderPreferences.weigh_in_enabled,false);});
+for(const value of ['24:00','12:60','8:00','08:00:01','bad','-1:00'])test('Reject invalid time '+value,()=>assert.equal(reminderPreferencesSchema.safeParse({...defaultReminderPreferences,daily_check_in_time:value}).success,false));
+for(const days of [[],[-1],[7],[1,1]])test('Reject invalid weekdays '+JSON.stringify(days),()=>assert.equal(reminderPreferencesSchema.safeParse({...defaultReminderPreferences,weigh_in_days_of_week:days}).success,false));
+for(const lead of [-1,1441,0.5])test('Reject lead interval '+lead,()=>assert.equal(reminderPreferencesSchema.safeParse({...defaultReminderPreferences,workout_reminder_minutes_before:lead}).success,false));
+test('Accept lead boundaries',()=>{for(const lead of [0,1440])assert.equal(reminderPreferencesSchema.safeParse({...defaultReminderPreferences,workout_reminder_minutes_before:lead}).success,true);});
+test('Quiet hours require distinct endpoints',()=>{assert.equal(reminderPreferencesSchema.safeParse({...defaultReminderPreferences,quiet_hours_enabled:true,quiet_hours_end:'22:00'}).success,false);assert.equal(reminderPreferencesSchema.safeParse({...defaultReminderPreferences,quiet_hours_enabled:true}).success,true);});
+test('Do not accept timezone override or arbitrary user ID',()=>{for(const extra of [{timezone:'UTC'},{user_id:'forged'}])assert.equal(reminderPreferencesSchema.safeParse({...defaultReminderPreferences,...extra}).success,false);});
+test('HTML form converts checkboxes, weekdays and numeric lead values',()=>{const f=new FormData();for(const [k,v] of Object.entries(defaultReminderPreferences)){if(Array.isArray(v))v.forEach(x=>f.append(k,String(x)));else if(typeof v==='boolean'){if(v)f.set(k,'on');}else f.set(k,String(v));}assert.deepEqual(reminderFormValues(f),defaultReminderPreferences);});
+test('Badge represents capped count honestly',()=>{assert.equal(unreadLabel(0),'0');assert.equal(unreadLabel(100),'100');assert.equal(unreadLabel(101),'100+');});
+test('Expiry boundary excludes expired and retains indefinite notifications',()=>{const now=new Date('2026-09-14T12:00Z');assert.equal(notificationExpired(null,now),false);assert.equal(notificationExpired(now.toISOString(),now),true);assert.equal(notificationExpired('2026-09-14T12:01Z',now),false);});
+test('Loader bounds history and never invokes generation',()=>{const s=readFileSync(new URL('../lib/data/notifications.ts',import.meta.url),'utf8');assert.match(s,/limit\(100\)/);assert.doesNotMatch(s,/generate_due_notifications|service_role/);});
+test('Read-state mutations derive authenticated session',()=>{const s=readFileSync(new URL('../server/actions/notifications.ts',import.meta.url),'utf8');assert.match(s,/requireUser/);assert.match(s,/user_id:user.id/);assert.doesNotMatch(s,/generate_due_notifications/);});

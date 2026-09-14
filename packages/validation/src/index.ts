@@ -214,3 +214,33 @@ export const weeklyInsightOutputSchema = z.object({
   next_week_focus:z.array(z.object({title:insightText(100),reason:insightText(240),category:z.enum(categories)}).strict()).min(1).max(3),
   data_gaps:z.array(insightText(240)).max(12),
 }).strict();
+
+/** Calendar-only dates. The caller supplies today from the authenticated profile timezone. */
+export const reportPeriodSchema = z.object({
+ preset:z.enum(['7','30','90','custom']), start:z.string().date(), end:z.string().date(), today:z.string().date(),
+}).strict().superRefine((period,ctx)=>{
+ const days=Math.round((Date.parse(period.end+'T12:00:00Z')-Date.parse(period.start+'T12:00:00Z'))/86400000)+1;
+ if(period.start<'1900-01-01'||days<1||days>365)ctx.addIssue({code:'custom',path:['start'],message:'Choose an ordered range of 1 to 365 days, starting in 1900 or later.'});
+ if(period.end>period.today)ctx.addIssue({code:'custom',path:['end'],message:'End date cannot be in the future for this timezone.'});
+ if(period.preset!=='custom'&&(days!==Number(period.preset)||period.end!==period.today))ctx.addIssue({code:'custom',path:['preset'],message:'Preset dates must end today and match the selected duration.'});
+});
+
+const reminderTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use a time in HH:mm format.');
+export const reminderPreferencesSchema = z.object({
+ weigh_in_enabled:z.boolean(), weigh_in_time:reminderTime,
+ weigh_in_days_of_week:z.array(z.number().int().min(0).max(6)).min(1).max(7).refine(days=>new Set(days).size===days.length,'Choose each weekday only once.'),
+ daily_check_in_enabled:z.boolean(),daily_check_in_time:reminderTime,
+ weekly_check_in_enabled:z.boolean(),weekly_check_in_day:z.number().int().min(0).max(6),weekly_check_in_time:reminderTime,
+ habit_reminders_enabled:z.boolean(),habit_reminder_time:reminderTime,
+ workout_reminders_enabled:z.boolean(),workout_reminder_minutes_before:z.number().int().min(0).max(1440),workout_reminder_time:reminderTime,
+ glp1_journal_enabled:z.boolean(),glp1_journal_time:reminderTime,
+ quiet_hours_enabled:z.boolean(),quiet_hours_start:reminderTime,quiet_hours_end:reminderTime,
+}).strict().superRefine((p,ctx)=>{if(p.quiet_hours_enabled&&p.quiet_hours_start===p.quiet_hours_end)ctx.addIssue({code:z.ZodIssueCode.custom,path:['quiet_hours_end'],message:'Quiet hours must have different start and end times.'});});
+
+const nutrient = z.number().finite().min(0).max(10000);
+export const foodPortionSchema = z.object({amount:z.number().finite().min(0.01).max(10000),unit:z.enum(['g','ml','oz','cup','tbsp','tsp','piece','serving','other'])}).strict();
+export const foodPhotoItemSchema = z.object({name:z.string().trim().min(1).max(120),estimated_portion:foodPortionSchema,estimated_calories:nutrient,protein_g:nutrient,carbs_g:nutrient,fat_g:nutrient,confidence:z.number().finite().min(0).max(1)}).strict();
+export const foodPhotoResultSchema = z.object({items:z.array(foodPhotoItemSchema).min(1).max(20),meal_totals:z.object({calories:z.number().finite().min(0).max(200000),protein_g:z.number().finite().min(0).max(200000),carbs_g:z.number().finite().min(0).max(200000),fat_g:z.number().finite().min(0).max(200000)}).strict(),uncertainties:z.array(z.string().trim().min(1).max(300)).min(1).max(10)}).strict().superRefine((v,ctx)=>{
+ for(const key of ['calories','protein_g','carbs_g','fat_g'] as const){const sum=v.items.reduce((n,i)=>n+(key==='calories'?i.estimated_calories:i[key]),0);if(Math.abs(sum-v.meal_totals[key])>1)ctx.addIssue({code:'custom',message:'Meal totals must match item estimates.',path:['meal_totals',key]});}
+});
+export const foodPhotoReviewSchema = z.object({items:z.array(foodPhotoItemSchema).min(1,'Keep at least one item.').max(20),meal_type:z.enum(['breakfast','lunch','dinner','snack']),logged_at:z.string().datetime({offset:true}).refine(s=>{const t=Date.parse(s);return t<=Date.now()+300000&&t>=Date.now()-365*86400000;},'Choose a time within the past year, not in the future.'),notes:z.string().max(500)}).strict();

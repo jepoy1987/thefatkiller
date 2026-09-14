@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -39,6 +34,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      weekly_insights: {
+        Row: {
+          attempts: number
+          created_at: string
+          error_code: string | null
+          generated_at: string | null
+          generated_text: string | null
+          id: string
+          input_snapshot: Json
+          insight_json: Json | null
+          model: string | null
+          period_end: string
+          period_start: string
+          prompt_version: string
+          retry_after: string | null
+          status: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          generated_at?: string | null
+          generated_text?: string | null
+          id?: string
+          input_snapshot: Json
+          insight_json?: Json | null
+          model?: string | null
+          period_end: string
+          period_start: string
+          prompt_version: string
+          retry_after?: string | null
+          status?: string
+          timezone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          generated_at?: string | null
+          generated_text?: string | null
+          id?: string
+          input_snapshot?: Json
+          insight_json?: Json | null
+          model?: string | null
+          period_end?: string
+          period_start?: string
+          prompt_version?: string
+          retry_after?: string | null
+          status?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       body_measurements: {
         Row: {
           created_at: string
@@ -420,6 +475,66 @@ export type Database = {
           },
         ]
       }
+      food_photo_analyses: {
+        Row: {
+          attempts: number
+          cleanup_claim: string | null
+          cleanup_lease_until: string | null
+          completed_at: string | null
+          confirmed_log_ids: string[] | null
+          created_at: string
+          error_code: string | null
+          expires_at: string
+          id: string
+          model: string | null
+          prompt_version: string
+          provider: string | null
+          result_json: Json | null
+          started_at: string
+          status: string
+          storage_path: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          cleanup_claim?: string | null
+          cleanup_lease_until?: string | null
+          completed_at?: string | null
+          confirmed_log_ids?: string[] | null
+          created_at?: string
+          error_code?: string | null
+          expires_at?: string
+          id: string
+          model?: string | null
+          prompt_version?: string
+          provider?: string | null
+          result_json?: Json | null
+          started_at?: string
+          status?: string
+          storage_path?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          cleanup_claim?: string | null
+          cleanup_lease_until?: string | null
+          completed_at?: string | null
+          confirmed_log_ids?: string[] | null
+          created_at?: string
+          error_code?: string | null
+          expires_at?: string
+          id?: string
+          model?: string | null
+          prompt_version?: string
+          provider?: string | null
+          result_json?: Json | null
+          started_at?: string
+          status?: string
+          storage_path?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       foods: {
         Row: {
           brand: string | null
@@ -772,6 +887,48 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          dedupe_key: string
+          expires_at: string | null
+          id: string
+          message: string
+          metadata: Json
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          dedupe_key: string
+          expires_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          dedupe_key?: string
+          expires_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plan_entitlements: {
         Row: {
           created_at: string
@@ -925,6 +1082,75 @@ export type Database = {
           storage_path?: string
           user_id?: string
           weight_kg?: number | null
+        }
+        Relationships: []
+      }
+      reminder_preferences: {
+        Row: {
+          daily_check_in_enabled: boolean
+          daily_check_in_time: string
+          glp1_journal_enabled: boolean
+          glp1_journal_time: string
+          habit_reminder_time: string
+          habit_reminders_enabled: boolean
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          updated_at: string
+          user_id: string
+          weekly_check_in_day: number
+          weekly_check_in_enabled: boolean
+          weekly_check_in_time: string
+          weigh_in_days_of_week: number[]
+          weigh_in_enabled: boolean
+          weigh_in_time: string
+          workout_reminder_minutes_before: number
+          workout_reminder_time: string
+          workout_reminders_enabled: boolean
+        }
+        Insert: {
+          daily_check_in_enabled?: boolean
+          daily_check_in_time?: string
+          glp1_journal_enabled?: boolean
+          glp1_journal_time?: string
+          habit_reminder_time?: string
+          habit_reminders_enabled?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          updated_at?: string
+          user_id: string
+          weekly_check_in_day?: number
+          weekly_check_in_enabled?: boolean
+          weekly_check_in_time?: string
+          weigh_in_days_of_week?: number[]
+          weigh_in_enabled?: boolean
+          weigh_in_time?: string
+          workout_reminder_minutes_before?: number
+          workout_reminder_time?: string
+          workout_reminders_enabled?: boolean
+        }
+        Update: {
+          daily_check_in_enabled?: boolean
+          daily_check_in_time?: string
+          glp1_journal_enabled?: boolean
+          glp1_journal_time?: string
+          habit_reminder_time?: string
+          habit_reminders_enabled?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          updated_at?: string
+          user_id?: string
+          weekly_check_in_day?: number
+          weekly_check_in_enabled?: boolean
+          weekly_check_in_time?: string
+          weigh_in_days_of_week?: number[]
+          weigh_in_enabled?: boolean
+          weigh_in_time?: string
+          workout_reminder_minutes_before?: number
+          workout_reminder_time?: string
+          workout_reminders_enabled?: boolean
         }
         Relationships: []
       }
@@ -1305,66 +1531,6 @@ export type Database = {
         }
         Relationships: []
       }
-      weekly_insights: {
-        Row: {
-          attempts: number
-          created_at: string
-          error_code: string | null
-          generated_at: string | null
-          generated_text: string | null
-          id: string
-          input_snapshot: Json
-          insight_json: Json | null
-          model: string | null
-          period_end: string
-          period_start: string
-          prompt_version: string
-          retry_after: string | null
-          status: string
-          timezone: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          attempts?: number
-          created_at?: string
-          error_code?: string | null
-          generated_at?: string | null
-          generated_text?: string | null
-          id?: string
-          input_snapshot: Json
-          insight_json?: Json | null
-          model?: string | null
-          period_end: string
-          period_start: string
-          prompt_version: string
-          retry_after?: string | null
-          status?: string
-          timezone: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          attempts?: number
-          created_at?: string
-          error_code?: string | null
-          generated_at?: string | null
-          generated_text?: string | null
-          id?: string
-          input_snapshot?: Json
-          insight_json?: Json | null
-          model?: string | null
-          period_end?: string
-          period_start?: string
-          prompt_version?: string
-          retry_after?: string | null
-          status?: string
-          timezone?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       weight_entries: {
         Row: {
           created_at: string
@@ -1727,6 +1893,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_weekly_insight_source: { Args: never; Returns: Json }
+      finish_weekly_insight: {
+        Args: {
+          p_attempt: number
+          p_error?: string
+          p_id: string
+          p_model: string
+          p_result: Json
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      claim_weekly_insight: {
+        Args: { p_input: Json; p_user_id: string }
+        Returns: Json
+      }
       admin_assign_coach_client: {
         Args: { target_client_user_id: string; target_coach_user_id: string }
         Returns: string
@@ -1739,9 +1921,21 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
-      claim_weekly_insight: {
-        Args: { p_input: Json; p_user_id: string }
+      claim_food_photo_cleanup: {
+        Args: { p_limit?: number }
+        Returns: Database["public"]["Tables"]["food_photo_analyses"]["Row"][]
+      }
+      complete_food_photo_cleanup: {
+        Args: { p_id: string; p_user_id: string; p_claim: string; p_path: string | null }
+        Returns: boolean
+      }
+      claim_food_photo: {
+        Args: { p_id: string; p_retry?: boolean; p_user_id: string }
         Returns: Json
+      }
+      clear_food_photo_storage: {
+        Args: { p_id: string; p_path: string; p_user_id: string }
+        Returns: boolean
       }
       complete_onboarding: {
         Args: {
@@ -1787,17 +1981,34 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      finish_weekly_insight: {
+      confirm_food_photo: {
+        Args: {
+          p_id: string
+          p_items: Json
+          p_logged_at: string
+          p_meal_type: Database["public"]["Enums"]["meal_type"]
+          p_notes?: string
+        }
+        Returns: string[]
+      }
+      expire_food_photo: {
+        Args: { p_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      finish_food_photo: {
         Args: {
           p_attempt: number
-          p_error?: string
+          p_deleted: boolean
+          p_error: string
           p_id: string
           p_model: string
+          p_provider: string
           p_result: Json
           p_user_id: string
         }
         Returns: boolean
       }
+      generate_due_notifications: { Args: never; Returns: Json }
       get_accountability_score_input: { Args: never; Returns: Json }
       get_client_coaching_summary: { Args: never; Returns: Json }
       get_coach_client_summary: { Args: { client_id: string }; Returns: Json }
@@ -1836,8 +2047,12 @@ export type Database = {
           water_ml: number
         }[]
       }
+      get_report_context: { Args: { p_client_id?: string }; Returns: Json }
+      get_report_data: {
+        Args: { p_client_id?: string; p_end: string; p_start: string }
+        Returns: Json
+      }
       get_training_summary: { Args: never; Returns: Json }
-      get_weekly_insight_source: { Args: never; Returns: Json }
       has_current_feature: {
         Args: { p_feature_code: string }
         Returns: boolean
@@ -1875,6 +2090,8 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      mark_all_notifications_read: { Args: never; Returns: number }
+      notification_unread_count: { Args: never; Returns: number }
       save_coach_goal: {
         Args: {
           p_category: Database["public"]["Enums"]["coach_goal_category"]
@@ -1954,6 +2171,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_notification_read: {
+        Args: { p_id: string; p_read: boolean }
+        Returns: boolean
       }
       training_mutate: {
         Args: { operation: string; payload: Json }
