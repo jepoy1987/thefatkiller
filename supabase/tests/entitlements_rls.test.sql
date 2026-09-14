@@ -10,8 +10,8 @@ insert into auth.users (instance_id,id,aud,role,email,encrypted_password,email_c
 set local role authenticated;
 select set_config('request.jwt.claim.sub','61616161-6161-4616-8616-616161616161',true);
 select is((select count(*)::int from public.plans),3,'authenticated users read the plan catalog');
-select is((select count(*)::int from public.features),13,'authenticated users read feature definitions');
-select is((select count(*)::int from public.plan_entitlements),33,'authenticated users read the plan matrix');
+select is((select count(*)::int from public.features),14,'authenticated users read feature definitions');
+select is((select count(*)::int from public.plan_entitlements),36,'authenticated users read the plan matrix');
 select is((select plan_code from public.get_current_entitlements()),'free','no subscription resolves Free');
 select is((select (limits->'progress_photos'->>'max_active')::int from public.get_current_entitlements()),3,'Free resolves a three-photo limit');
 select throws_ok($$insert into public.plans(code,name) values('self_upgrade','Nope')$$,'42501',null,'normal users cannot add plans');

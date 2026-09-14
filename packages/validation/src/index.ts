@@ -207,3 +207,11 @@ export const reminderPreferencesSchema = z.object({
  glp1_journal_enabled:z.boolean(),glp1_journal_time:reminderTime,
  quiet_hours_enabled:z.boolean(),quiet_hours_start:reminderTime,quiet_hours_end:reminderTime,
 }).strict().superRefine((p,ctx)=>{if(p.quiet_hours_enabled&&p.quiet_hours_start===p.quiet_hours_end)ctx.addIssue({code:z.ZodIssueCode.custom,path:['quiet_hours_end'],message:'Quiet hours must have different start and end times.'});});
+
+const nutrient = z.number().finite().min(0).max(10000);
+export const foodPortionSchema = z.object({amount:z.number().finite().min(0.01).max(10000),unit:z.enum(['g','ml','oz','cup','tbsp','tsp','piece','serving','other'])}).strict();
+export const foodPhotoItemSchema = z.object({name:z.string().trim().min(1).max(120),estimated_portion:foodPortionSchema,estimated_calories:nutrient,protein_g:nutrient,carbs_g:nutrient,fat_g:nutrient,confidence:z.number().finite().min(0).max(1)}).strict();
+export const foodPhotoResultSchema = z.object({items:z.array(foodPhotoItemSchema).min(1).max(20),meal_totals:z.object({calories:z.number().finite().min(0).max(200000),protein_g:z.number().finite().min(0).max(200000),carbs_g:z.number().finite().min(0).max(200000),fat_g:z.number().finite().min(0).max(200000)}).strict(),uncertainties:z.array(z.string().trim().min(1).max(300)).min(1).max(10)}).strict().superRefine((v,ctx)=>{
+ for(const key of ['calories','protein_g','carbs_g','fat_g'] as const){const sum=v.items.reduce((n,i)=>n+(key==='calories'?i.estimated_calories:i[key]),0);if(Math.abs(sum-v.meal_totals[key])>1)ctx.addIssue({code:'custom',message:'Meal totals must match item estimates.',path:['meal_totals',key]});}
+});
+export const foodPhotoReviewSchema = z.object({items:z.array(foodPhotoItemSchema).min(1,'Keep at least one item.').max(20),meal_type:z.enum(['breakfast','lunch','dinner','snack']),logged_at:z.string().datetime({offset:true}).refine(s=>{const t=Date.parse(s);return t<=Date.now()+300000&&t>=Date.now()-365*86400000;},'Choose a time within the past year, not in the future.'),notes:z.string().max(500)}).strict();
