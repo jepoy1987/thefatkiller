@@ -59,3 +59,26 @@ export function mapTodayDashboard(profile: Profile, goal: UserGoal, latestWeight
     nextActions: ['Log today’s meals', 'Add water as you drink it', 'Review your Progress trend'],
   };
 }
+import type { ExerciseTrackingType, TrainingSummary, UnitSystem, WorkoutAssignment, WorkoutSession } from '@tfk/types';
+export function trainingFields(type:ExerciseTrackingType) {
+ return {reps:['sets_reps','bodyweight','other'].includes(type),weight:['sets_reps','other'].includes(type),duration:['duration','duration_distance','other'].includes(type),distance:['distance','duration_distance','other'].includes(type),rpe:['sets_reps','bodyweight','other'].includes(type)};
+}
+// Distance is displayed/input in meters or yards. Storage is always meters.
+export const trainingDistanceToMeters=(value:number,units:UnitSystem)=>units==='imperial'?value*0.9144:value;
+export const trainingDistanceFromMeters=(value:number,units:UnitSystem)=>units==='imperial'?value/0.9144:value;
+export const trainingDistanceLabel=(units:UnitSystem)=>units==='imperial'?'yd':'m';
+export function sessionDurationSeconds(session:Pick<WorkoutSession,'started_at'|'completed_at'>,now=new Date()) {
+ const end=session.completed_at?new Date(session.completed_at):now;
+ return Math.max(0,Math.floor((end.getTime()-new Date(session.started_at).getTime())/1000));
+}
+export function trainingDate(iso:string,timezone:string) {return new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(iso));}
+export function summarizeTraining(sessions:WorkoutSession[],assignments:WorkoutAssignment[],timezone:string,now=new Date()):TrainingSummary {
+ const today=trainingDate(now.toISOString(),timezone);
+ const day=(n:number)=>{const d=new Date(`${today}T12:00:00Z`);d.setUTCDate(d.getUTCDate()-n);return d.toISOString().slice(0,10);};
+ const completed=sessions.filter(s=>s.status==='completed'&&s.completed_at&&new Date(s.completed_at)<=now);
+ const inWindow=(date:string,days:number)=>date>=day(days-1)&&date<=today;
+ const scheduled=assignments.filter(a=>a.status!=='archived'&&a.assigned_for&&inWindow(a.assigned_for,7));
+ return {today,completed_7d:completed.filter(s=>inWindow(trainingDate(s.completed_at!,timezone),7)).length,completed_30d:completed.filter(s=>inWindow(trainingDate(s.completed_at!,timezone),30)).length,last_completed_at:completed.map(s=>s.completed_at!).sort().at(-1)??null,assigned_7d:scheduled.length,assigned_completed_7d:scheduled.filter(a=>a.status==='completed').length};
+}
+export const trainingAdherence=(s:Pick<TrainingSummary,'assigned_7d'|'assigned_completed_7d'>)=>s.assigned_7d?Math.round(100*s.assigned_completed_7d/s.assigned_7d):null;
+export const assignmentCanStart=(status:WorkoutAssignment['status'])=>status==='assigned'||status==='in_progress';

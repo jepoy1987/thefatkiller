@@ -8,14 +8,15 @@ import { getLatestWeight } from './progress';
 import { getTodayNutritionTotals } from './nutrition';
 import { getAccountabilitySummary } from './accountability';
 import { getGLP1TodaySummary } from './glp1';
+import { getTrainingTodaySummary } from './training';
 import { getTodayCoaching } from './coaching';
 
 export async function getDashboardFoundation() {
   const supabase = createClient();
   const user = await requireUser(supabase);
-  const [profile, goal, latestWeight, nutrition, accountability, glp1, coaching] = await Promise.all([getProfile(supabase, user.id), getActiveGoal(supabase), getLatestWeight(supabase), getTodayNutritionTotals(), getAccountabilitySummary(), getGLP1TodaySummary(supabase), getTodayCoaching(supabase)]);
+  const [profile, goal, latestWeight, nutrition, accountability, glp1, coaching, training] = await Promise.all([getProfile(supabase, user.id), getActiveGoal(supabase), getLatestWeight(supabase), getTodayNutritionTotals(), getAccountabilitySummary(), getGLP1TodaySummary(supabase), getTodayCoaching(supabase), getTrainingTodaySummary(supabase)]);
   if (!profile.onboarding_completed || !goal) redirect('/onboarding');
-  return { user, dashboard: { ...mapTodayDashboard(profile, goal, latestWeight, nutrition), accountability }, glp1, coaching };
+  return { user, dashboard: { ...mapTodayDashboard(profile, goal, latestWeight, nutrition), accountability }, glp1, coaching, training };
 }
 
 export async function getOnboardingFoundation() {

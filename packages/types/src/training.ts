@@ -1,0 +1,16 @@
+export type ExerciseCategory = 'strength'|'cardio'|'mobility'|'conditioning'|'core'|'other';
+export type ExerciseEquipment = 'none'|'barbell'|'dumbbell'|'kettlebell'|'machine'|'cable'|'band'|'bodyweight'|'cardio_machine'|'other';
+export type ExerciseTrackingType = 'sets_reps'|'duration'|'distance'|'duration_distance'|'bodyweight'|'other';
+export type Exercise = {id:string;owner_user_id:string|null;name:string;description:string|null;category:ExerciseCategory;equipment:ExerciseEquipment;tracking_type:ExerciseTrackingType;instructions:string|null;is_active:boolean;created_at:string;updated_at:string};
+export type WorkoutTemplateItem = {id:string;workout_template_id:string;exercise_id:string;position:number;target_sets:number|null;target_reps_min:number|null;target_reps_max:number|null;target_duration_seconds:number|null;target_distance_meters:number|null;target_rest_seconds:number|null;notes:string|null;created_at:string;updated_at:string};
+export type WorkoutTemplate = {id:string;owner_user_id:string;name:string;description:string|null;is_active:boolean;created_at:string;updated_at:string;items?:WorkoutTemplateItem[]};
+export type TrainingProgramWorkout = {id:string;program_id:string;workout_template_id:string;week_number:number|null;day_number:number|null;position:number;created_at:string};
+export type TrainingProgram = {id:string;owner_user_id:string;name:string;description:string|null;duration_weeks:number|null;is_active:boolean;created_at:string;updated_at:string;workouts?:TrainingProgramWorkout[]};
+export type WorkoutAssignmentStatus = 'assigned'|'in_progress'|'completed'|'skipped'|'archived';
+export type WorkoutAssignment = {id:string;coach_user_id:string|null;client_user_id:string;relationship_id:string|null;workout_template_id:string;program_id:string|null;assigned_for:string|null;due_at:string|null;status:WorkoutAssignmentStatus;notes:string|null;created_at:string;updated_at:string;completed_at:string|null;template?:{name:string}|null};
+export type WorkoutSessionStatus = 'in_progress'|'completed'|'abandoned';
+export type WorkoutSession = {id:string;user_id:string;workout_template_id:string|null;assignment_id:string|null;name_snapshot:string;started_at:string;completed_at:string|null;status:WorkoutSessionStatus;notes:string|null;created_at:string;updated_at:string;exercise_count?:number};
+export type WorkoutTargets = {sets:number|null;reps_min:number|null;reps_max:number|null;duration_seconds:number|null;distance_meters:number|null;rest_seconds:number|null};
+export type WorkoutSessionExercise = {id:string;workout_session_id:string;exercise_id:string|null;exercise_name_snapshot:string;tracking_type_snapshot:ExerciseTrackingType;position:number;targets_snapshot:WorkoutTargets;notes:string|null;created_at:string};
+export type WorkoutSetLog = {id:string;workout_session_exercise_id:string;set_number:number;reps:number|null;weight_kg:number|null;duration_seconds:number|null;distance_meters:number|null;rpe:number|null;completed:boolean;notes:string|null;created_at:string;updated_at:string};
+export type TrainingSummary = {today:string;completed_7d:number;completed_30d:number;last_completed_at:string|null;assigned_7d:number;assigned_completed_7d:number};
