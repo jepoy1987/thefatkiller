@@ -415,6 +415,66 @@ export type Database = {
           },
         ]
       }
+      food_photo_analyses: {
+        Row: {
+          attempts: number
+          cleanup_claim: string | null
+          cleanup_lease_until: string | null
+          completed_at: string | null
+          confirmed_log_ids: string[] | null
+          created_at: string
+          error_code: string | null
+          expires_at: string
+          id: string
+          model: string | null
+          prompt_version: string
+          provider: string | null
+          result_json: Json | null
+          started_at: string
+          status: string
+          storage_path: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          cleanup_claim?: string | null
+          cleanup_lease_until?: string | null
+          completed_at?: string | null
+          confirmed_log_ids?: string[] | null
+          created_at?: string
+          error_code?: string | null
+          expires_at?: string
+          id: string
+          model?: string | null
+          prompt_version?: string
+          provider?: string | null
+          result_json?: Json | null
+          started_at?: string
+          status?: string
+          storage_path?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          cleanup_claim?: string | null
+          cleanup_lease_until?: string | null
+          completed_at?: string | null
+          confirmed_log_ids?: string[] | null
+          created_at?: string
+          error_code?: string | null
+          expires_at?: string
+          id?: string
+          model?: string | null
+          prompt_version?: string
+          provider?: string | null
+          result_json?: Json | null
+          started_at?: string
+          status?: string
+          storage_path?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       foods: {
         Row: {
           brand: string | null
@@ -1785,6 +1845,22 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      claim_food_photo_cleanup: {
+        Args: { p_limit?: number }
+        Returns: Database["public"]["Tables"]["food_photo_analyses"]["Row"][]
+      }
+      complete_food_photo_cleanup: {
+        Args: { p_id: string; p_user_id: string; p_claim: string; p_path: string | null }
+        Returns: boolean
+      }
+      claim_food_photo: {
+        Args: { p_id: string; p_retry?: boolean; p_user_id: string }
+        Returns: Json
+      }
+      clear_food_photo_storage: {
+        Args: { p_id: string; p_path: string; p_user_id: string }
+        Returns: boolean
+      }
       complete_onboarding: {
         Args: {
           p_activity_level: Database["public"]["Enums"]["activity_level"]
@@ -1828,6 +1904,33 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      confirm_food_photo: {
+        Args: {
+          p_id: string
+          p_items: Json
+          p_logged_at: string
+          p_meal_type: Database["public"]["Enums"]["meal_type"]
+          p_notes?: string
+        }
+        Returns: string[]
+      }
+      expire_food_photo: {
+        Args: { p_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      finish_food_photo: {
+        Args: {
+          p_attempt: number
+          p_deleted: boolean
+          p_error: string
+          p_id: string
+          p_model: string
+          p_provider: string
+          p_result: Json
+          p_user_id: string
+        }
+        Returns: boolean
       }
       generate_due_notifications: { Args: never; Returns: Json }
       get_accountability_score_input: { Args: never; Returns: Json }

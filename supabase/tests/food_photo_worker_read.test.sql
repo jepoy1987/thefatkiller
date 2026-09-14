@@ -1,0 +1,11 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions,auth;
+select plan(4);
+select ok(has_table_privilege('service_role','public.food_photo_analyses','SELECT'),'Worker has explicit analysis SELECT privilege');
+set local role service_role;
+select lives_ok($$select id from public.food_photo_analyses limit 1$$,'Trusted pre-claim cleanup read succeeds');
+reset role;
+select ok(not has_table_privilege('anon','public.food_photo_analyses','SELECT'),'Anonymous table reads remain blocked');
+select ok(not has_table_privilege('authenticated','public.food_photo_analyses','UPDATE'),'User writes remain blocked');
+select * from finish();rollback;
