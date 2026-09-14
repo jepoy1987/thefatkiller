@@ -184,3 +184,14 @@ export const workoutTemplateSchema=z.object({id:z.string().uuid().optional(),nam
 export const workoutAssignmentSchema=z.object({client_id:z.string().uuid().optional(),workout_template_id:z.string().uuid(),assigned_for:z.string().date().nullable().optional(),due_at:z.string().datetime({offset:true}).nullable().optional(),notes:text(1000)}).strict();
 export const workoutSetSchema=z.object({session_exercise_id:z.string().uuid(),set_number:z.coerce.number().int().min(1).max(100),reps:optionalNumber(10000),weight_kg:optionalNumber(2000),duration_seconds:optionalNumber(86400,true),distance_meters:optionalNumber(1000000),rpe:z.preprocess(v=>v===''||v==null?null:v,z.coerce.number().min(1).max(10).nullable()),completed:z.boolean().default(true),notes:text(1000)}).strict().refine(v=>v.reps!=null||v.duration_seconds!=null||v.distance_meters!=null,{message:'Enter reps, duration, or distance.'});
 export const trainingProgramSchema=z.object({id:z.string().uuid().optional(),name:z.string().trim().min(2).max(120),description:text(1000),duration_weeks:optionalNumber(104,true),workouts:z.array(z.object({workout_template_id:z.string().uuid(),week_number:optionalNumber(104,true),day_number:optionalNumber(7,true)}).strict()).min(1).max(60)}).strict();
+
+
+/** Calendar-only dates. The caller supplies today from the authenticated profile timezone. */
+export const reportPeriodSchema = z.object({
+ preset:z.enum(['7','30','90','custom']), start:z.string().date(), end:z.string().date(), today:z.string().date(),
+}).strict().superRefine((period,ctx)=>{
+ const days=Math.round((Date.parse(period.end+'T12:00:00Z')-Date.parse(period.start+'T12:00:00Z'))/86400000)+1;
+ if(period.start<'1900-01-01'||days<1||days>365)ctx.addIssue({code:'custom',path:['start'],message:'Choose an ordered range of 1 to 365 days, starting in 1900 or later.'});
+ if(period.end>period.today)ctx.addIssue({code:'custom',path:['end'],message:'End date cannot be in the future for this timezone.'});
+ if(period.preset!=='custom'&&(days!==Number(period.preset)||period.end!==period.today))ctx.addIssue({code:'custom',path:['preset'],message:'Preset dates must end today and match the selected duration.'});
+});

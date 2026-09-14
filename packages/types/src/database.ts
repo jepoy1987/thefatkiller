@@ -1761,6 +1761,11 @@ export type Database = {
           water_ml: number
         }[]
       }
+      get_report_context: { Args: { p_client_id?: string }; Returns: Json }
+      get_report_data: {
+        Args: { p_client_id?: string; p_end: string; p_start: string }
+        Returns: Json
+      }
       get_training_summary: { Args: never; Returns: Json }
       has_current_feature: {
         Args: { p_feature_code: string }
