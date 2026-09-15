@@ -10,7 +10,7 @@ import { requireUser } from './session';
 export function dateInTimeZone(timeZone: string, now = new Date()) { return new Intl.DateTimeFormat('en-CA', { timeZone, year:'numeric', month:'2-digit', day:'2-digit' }).format(now); }
 
 export async function getDailyNutrition(date?: string) {
-  const supabase = createClient(); const user = await requireUser(supabase);
+  const supabase = (await createClient()); const user = await requireUser(supabase);
   const [profile, goal] = await Promise.all([getProfile(supabase, user.id), getActiveGoal(supabase)]);
   if (!profile.onboarding_completed || !goal) redirect('/onboarding');
   const selectedDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : dateInTimeZone(profile.timezone);
@@ -32,6 +32,6 @@ export async function getDailyNutrition(date?: string) {
 }
 
 export async function getTodayNutritionTotals() {
-  const supabase=createClient(); const user=await requireUser(supabase); const profile=await getProfile(supabase,user.id); const date=dateInTimeZone(profile.timezone);
+  const supabase=(await createClient()); const user=await requireUser(supabase); const profile=await getProfile(supabase,user.id); const date=dateInTimeZone(profile.timezone);
   const { data,error }=await supabase.rpc('get_daily_nutrition',{p_date:date}).single(); if(error) throw new Error('Today’s nutrition could not be loaded.'); return (data ?? emptyNutritionTotals()) as NutrientTotals;
 }

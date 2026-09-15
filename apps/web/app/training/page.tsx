@@ -12,7 +12,10 @@ import { ActionForm } from '../../features/training/forms';
 import { getTrainingFoundation } from '../../lib/data/training';
 import { deleteExercise } from '../../server/actions/training';
 
-export default async function TrainingPage({ searchParams }: { searchParams: { q?: string; category?: string; equipment?: string } }) {
+export default async function TrainingPage(
+  props: { searchParams: Promise<{ q?: string; category?: string; equipment?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const foundation = await getTrainingFoundation(searchParams);
   if (!foundation.data) return <AppShell active="training"><div className="grid gap-5"><PageHeader title="Training" description="Build workouts and track your training with a plan that includes workouts." /><Alert variant="warning">Training is not included in your current plan.</Alert><Link href="/settings/billing" className={buttonStyles({ className: 'w-fit' })}>View plans</Link></div></AppShell>;
   const { profile, exercises, templates, assignments, history, today } = foundation.data;

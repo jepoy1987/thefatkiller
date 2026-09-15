@@ -32,25 +32,25 @@ async function symptomLogs(supabase: WebSupabaseClient, limit = 50) {
 }
 
 export async function getActiveMedicationProfile() {
-  const supabase = createClient(); const access = await requireGLP1Access(supabase);
+  const supabase = (await createClient()); const access = await requireGLP1Access(supabase);
   if (!access.allowed) redirect('/settings/billing');
   return activeProfile(supabase);
 }
 
 export async function getDoseLogs(limit = 50) {
-  const supabase = createClient(); const access = await requireGLP1Access(supabase);
+  const supabase = (await createClient()); const access = await requireGLP1Access(supabase);
   if (!access.allowed) redirect('/settings/billing');
   return doseLogs(supabase, limit);
 }
 
 export async function getSymptomLogs(limit = 50) {
-  const supabase = createClient(); const access = await requireGLP1Access(supabase);
+  const supabase = (await createClient()); const access = await requireGLP1Access(supabase);
   if (!access.allowed) redirect('/settings/billing');
   return symptomLogs(supabase, limit);
 }
 
 export async function getGLP1Foundation() {
-  const supabase = createClient(); const access = await requireGLP1Access(supabase);
+  const supabase = (await createClient()); const access = await requireGLP1Access(supabase);
   if (!access.allowed) return { ...access, profile: null, medicationProfile: null, doseLogs: [], symptomLogs: [] };
   const [profile, medicationProfile, doses, symptoms] = await Promise.all([
     getProfile(supabase, access.user.id), activeProfile(supabase), doseLogs(supabase), symptomLogs(supabase),

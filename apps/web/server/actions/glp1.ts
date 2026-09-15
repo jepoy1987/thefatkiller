@@ -14,7 +14,7 @@ const finish = (message: string) => { revalidatePath(path); revalidatePath('/das
 const nullable = (value: unknown) => value === '' || value == null ? null : value;
 
 async function context() {
-  const supabase = createClient(); const access = await requireGLP1Access(supabase);
+  const supabase = (await createClient()); const access = await requireGLP1Access(supabase);
   if (!access.allowed) fail('GLP-1 Journal is not included in your current plan.');
   return { supabase, user: access.user };
 }

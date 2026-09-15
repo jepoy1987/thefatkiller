@@ -17,11 +17,11 @@ const deleteSetSchema = z.object({ session_exercise_id: z.string().uuid(), set_n
 const notesSchema = z.object({ id: z.string().uuid(), notes: z.string().trim().max(2000) }).strict();
 
 async function command(operation: string, form: FormData, schema: z.ZodTypeAny): Promise<TrainingActionState> {
-  const supabase = createClient(); const access = await requireTrainingAccess(supabase);
+  const supabase = (await createClient()); const access = await requireTrainingAccess(supabase);
   if (!access.allowed) return { error: 'Training is not included in your current plan.' };
   let input: Record<string, unknown>;
   try {
-    input = form.has('payload') ? JSON.parse(String(form.get('payload'))) : Object.fromEntries(Array.from(form.entries()).filter(([key]) => !key.startsWith('$ACTION_')));
+    input = form.has('payload') ? JSON.parse(String(form.get('payload'))) : Object.fromEntries(Array.from(form.entries()).filter(([key]) => !key.startsWith('$ACTION_') && key !== 'request_key'));
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error();
     if (operation === 'save_set' || operation === 'save_template') {
       const profile = await getProfile(supabase, access.user.id);
@@ -36,7 +36,7 @@ async function command(operation: string, form: FormData, schema: z.ZodTypeAny):
   } catch { return { error: 'The entry could not be read. Please check your fields.' }; }
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Please check your fields.' };
-  const { data, error } = await supabase.rpc('training_mutate', { operation, payload: parsed.data });
+  const { data, error } = await (operation === 'start' || operation === 'complete' ? supabase.rpc('replay_safe_mutation', { p_key: String(form.get('request_key') ?? ''), p_operation: `training_${operation}`, p_input: parsed.data }) : supabase.rpc('training_mutate', { operation, payload: parsed.data }));
   if (error) {
     if (error.code === '23503') return { error: 'This item is used by a workout, program, or assignment. Archive the workout to retain its history.' };
     if (error.code === '42501') return { error: 'You no longer have access to this item or active coach relationship.' };

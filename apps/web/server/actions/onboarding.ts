@@ -22,7 +22,7 @@ export async function completeOnboarding(data: FormData) {
     daily_step_target: formValue(data, 'daily_step_target'),
   });
   if (!parsed.success) return redirectWithError('/onboarding', parsed.error.issues[0]?.message ?? 'Invalid profile');
-  const supabase = createClient();
+  const supabase = (await createClient());
   await requireUser(supabase);
   const { error } = await saveOnboarding(supabase, parsed.data);
   if (error) redirectWithError('/onboarding', error.message);

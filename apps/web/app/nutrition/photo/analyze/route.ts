@@ -12,7 +12,7 @@ export async function POST(request:NextRequest){
  // validation; accepting only a matching hostname would permit cross-scheme origins.
  const expectedOrigin=`${request.nextUrl.protocol}//${request.headers.get('host')}`;
  if(request.headers.get('origin')!==expectedOrigin)return NextResponse.json({error:'Invalid request origin.'},{status:403});
- const client=createClient();const {data:{user}}=await client.auth.getUser();
+ const client=(await createClient());const {data:{user}}=await client.auth.getUser();
  if(!user)return NextResponse.json({error:'Sign in to analyze a photo.'},{status:401});
  if(!hasFeature(await getCurrentEntitlements(client),'ai_food_photo'))return NextResponse.json({error:'Photo logging is not included in your current access. Manual logging is available.'},{status:403});
  if(foodPhotoMode()==='disabled')return NextResponse.json({error:'Photo analysis is not available yet. Please log manually.'},{status:409});

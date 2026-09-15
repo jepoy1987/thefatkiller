@@ -22,6 +22,7 @@ delete from public.body_measurements where user_id='eeeeeeee-eeee-4eee-8eee-eeee
 select throws_ok($$insert into public.weight_entries(user_id,weight_kg) values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',88)$$,'42501',null,'B cannot insert A weight');
 select throws_ok($$insert into public.body_measurements(user_id,measurement_type,value) values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','waist',1)$$,'42501',null,'B cannot insert A measurement');
 select throws_ok($$insert into public.progress_photos(user_id,storage_path) values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','x')$$,'42501',null,'B cannot insert A photo');
+select public.reserve_progress_upload('ffffffff-ffff-4fff-8fff-ffffffffffff/b.jpg');
 select lives_ok($$insert into storage.objects(bucket_id,name,owner_id) values('progress-photos','ffffffff-ffff-4fff-8fff-ffffffffffff/b.jpg','ffffffff-ffff-4fff-8fff-ffffffffffff')$$,'B uploads to own folder');
 select throws_ok($$insert into storage.objects(bucket_id,name,owner_id) values('progress-photos','eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee/b.jpg','ffffffff-ffff-4fff-8fff-ffffffffffff')$$,'42501',null,'B cannot upload to A folder');
 select is((select count(*)::int from storage.objects where bucket_id='progress-photos'),1,'B sees only own object');

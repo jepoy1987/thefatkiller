@@ -25,7 +25,7 @@ export async function analyzeFoodPhoto(userId:string,id:string,retry:boolean,ima
  const client=worker();await cleanupFoodPhotos(userId);
  return runFoodPhoto(image,{
   claim:async()=>{const {data,error}=await client.rpc('claim_food_photo',{p_id:id,p_user_id:userId,p_retry:retry});if(error)throw new Error(error.code==='54000'?'Analysis limit reached. Try later or log manually.':'Analysis unavailable.');return data as unknown as {claimed:boolean;analysis:FoodPhotoAnalysis};},
-  upload:async(path,bytes)=>{const {error}=await client.storage.from('food-analysis').upload(path,bytes,{contentType:'image/jpeg',upsert:false});if(error)throw new FoodPhotoError('upload_failed');},
+  upload:async(path,bytes)=>{const reservation=await client.rpc('reserve_food_upload',{p_user_id:userId,p_path:path});if(reservation.error)throw new FoodPhotoError('upload_failed');const {error}=await client.storage.from('food-analysis').upload(path,bytes,{contentType:'image/jpeg',upsert:false});if(error)throw new FoodPhotoError('upload_failed');},
   remove:async(path)=>{const {error}=await client.storage.from('food-analysis').remove([path]);if(error)throw new FoodPhotoError('cleanup_failed');},
   finish:async(a,result,error,deleted)=>{const r=await client.rpc('finish_food_photo',{p_id:a.id,p_user_id:userId,p_attempt:a.attempts,p_result:result?JSON.parse(JSON.stringify(result)):null,p_provider:mode==='local_mock'?'local_mock':'openai',p_model:mode==='local_mock'?'fixture':process.env.AI_FOOD_MODEL!,p_error:error??'',p_deleted:deleted});if(r.error||!r.data)throw new Error('Analysis could not be recorded. Retry explicitly.');},
   provider:mode==='local_mock'?async()=>mockResult:openAIPhotoProvider({apiKey:process.env.OPENAI_API_KEY!,model:process.env.AI_FOOD_MODEL!}),

@@ -9,7 +9,8 @@ import Link from 'next/link';
 import { doseSummary, journalDateTime, weekdayLabels } from '../../features/glp1/domain';
 import { Alert } from '../../components/ui/alert';
 
-export default async function DashboardPage({searchParams}:{searchParams:{message?:string}}) {
+export default async function DashboardPage(props:{searchParams: Promise<{message?:string}>}) {
+  const searchParams = await props.searchParams;
   const { dashboard, glp1, coaching, training, insights } = await getDashboardFoundation();
   return <AppShell active="today"><div className="grid gap-8">
     {searchParams.message?<Alert variant="success">{searchParams.message}</Alert>:null}

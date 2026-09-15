@@ -1,13 +1,14 @@
+import { cache } from 'react';
 import type { UserGoal } from '@tfk/types';
 import type { GoalSettingsInput, OnboardingInput } from '@tfk/validation';
 import { heightToCentimeters, waterToMilliliters, weightToKilograms } from '@tfk/validation';
 import type { WebSupabaseClient } from './client';
 
-export async function getActiveGoal(supabase: WebSupabaseClient): Promise<UserGoal | null> {
+export const getActiveGoal = cache(async function getActiveGoal(supabase: WebSupabaseClient): Promise<UserGoal | null> {
   const { data, error } = await supabase.from('user_goals').select('*').eq('is_active', true).maybeSingle();
   if (error) throw new Error('Your active goal could not be loaded.');
   return data as UserGoal | null;
-}
+});
 
 export async function saveOnboarding(supabase: WebSupabaseClient, input: OnboardingInput) {
   return supabase.rpc('complete_onboarding', {

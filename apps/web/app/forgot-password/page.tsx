@@ -5,7 +5,8 @@ import { FormField, Input } from '../../components/ui/form';
 import { SubmitButton } from '../../components/forms/submit-button';
 import { forgotPassword } from '../../server/actions/auth';
 
-export default function ForgotPasswordPage({ searchParams }: { searchParams: { error?: string; message?: string } }) {
+export default async function ForgotPasswordPage(props: { searchParams: Promise<{ error?: string; message?: string }> }) {
+  const searchParams = await props.searchParams;
   return (
     <AuthShell eyebrow="Account recovery" title="Reset your password" description="We’ll send a secure reset link to your account email." footer={<Link className="font-bold text-primary hover:underline" href="/login">Back to log in</Link>}>
       <div className="grid gap-4">{searchParams.error ? <Alert variant="error">{searchParams.error}</Alert> : null}{searchParams.message ? <Alert variant="success">{searchParams.message}</Alert> : null}</div>

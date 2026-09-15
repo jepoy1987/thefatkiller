@@ -13,7 +13,7 @@ import { getTrainingTodaySummary } from './training';
 import { getTodayCoaching } from './coaching';
 
 export async function getDashboardFoundation() {
-  const supabase = createClient();
+  const supabase = (await createClient());
   const user = await requireUser(supabase);
   const [profile, goal, latestWeight, nutrition, accountability, glp1, coaching, training, insights] = await Promise.all([getProfile(supabase, user.id), getActiveGoal(supabase), getLatestWeight(supabase), getTodayNutritionTotals(), getAccountabilitySummary(), getGLP1TodaySummary(supabase), getTodayCoaching(supabase), getTrainingTodaySummary(supabase), getLatestInsightForToday(supabase)]);
   if (!profile.onboarding_completed || !goal) redirect('/onboarding');
@@ -21,7 +21,7 @@ export async function getDashboardFoundation() {
 }
 
 export async function getOnboardingFoundation() {
-  const supabase = createClient();
+  const supabase = (await createClient());
   const user = await requireUser(supabase);
   const [profile, goal] = await Promise.all([getProfile(supabase, user.id), getActiveGoal(supabase)]);
   if (profile.onboarding_completed && goal) redirect('/dashboard');

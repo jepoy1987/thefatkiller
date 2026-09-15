@@ -12,7 +12,7 @@ export default function LoginScreen() {
     const parsed = loginSchema.safeParse({ email, password });
     if (!parsed.success) return setMessage(parsed.error.issues[0]?.message ?? 'Invalid login');
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
-    setMessage(error?.message ?? '');
+    setMessage(error ? 'Email or password is incorrect, or the account is unavailable.' : '');
   };
 
   return (

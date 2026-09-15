@@ -1893,6 +1893,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      reserve_progress_upload: { Args: { p_path: string }; Returns: boolean }
+      reserve_food_upload: { Args: { p_user_id: string; p_path: string }; Returns: boolean }
+      request_account_deletion: { Args: { p_confirmation: string }; Returns: boolean }
+      replay_safe_mutation: { Args: { p_key: string; p_operation: string; p_input: Json }; Returns: Json }
+      prune_mutation_receipts: { Args: { p_limit?: number }; Returns: number }
       get_weekly_insight_source: { Args: never; Returns: Json }
       finish_weekly_insight: {
         Args: {

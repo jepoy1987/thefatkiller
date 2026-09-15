@@ -6,7 +6,7 @@ import { createClient } from '../../lib/data/client';
 import { requireUser } from '../../lib/data/session';
 import { getProfile } from '../../lib/data/profile';
 export async function confirmPhotoReview(id:string,input:unknown){
- const client=createClient();const user=await requireUser(client);const profile=await getProfile(client,user.id);
+ const client=(await createClient());const user=await requireUser(client);const profile=await getProfile(client,user.id);
  try{
   if(!input||typeof input!=='object')return {error:'Invalid review.'};
   const value=input as Record<string,unknown>;
