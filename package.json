@@ -8,6 +8,10 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "backup:storage": "python3 scripts/storage-backup.py export",
+    "backup:verify": "python3 scripts/storage-backup.py verify",
+    "backup:prune-food": "python3 scripts/storage-backup.py prune-food",
+    "backup:test": "python3 scripts/test-storage-backup.py && supabase test db --local supabase/tests/storage_backup.test.sql && python3 scripts/test-backup-restore.py",
     "db:types": "supabase gen types typescript --local --schema public > packages/types/src/database.ts",
     "db:types:remote": "bash -lc 'test -n \"${SUPABASE_PROJECT_ID}\" || { echo \"SUPABASE_PROJECT_ID is required\"; exit 1; }; supabase gen types typescript --project-id \"${SUPABASE_PROJECT_ID}\" --schema public > packages/types/src/database.ts'",
     "db:test": "supabase test db"

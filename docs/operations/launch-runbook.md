@@ -45,9 +45,9 @@ Staging activation procedure, only after separate approval:
 
 ## Backup and restore
 
-Actual staging/Production paid backup entitlement and a successful restore have NOT been established by this audit. Do not claim backups exist. Supabase docs describe Pro daily backup retention of 7 days; PITR requires applicable paid configuration and retention. Free-tier projects need regular secure exports. Database backups contain Storage metadata, NOT object bytes. Maintain a separate encrypted object backup/inventory and access controls.
+Staging backup capability was verified on 2026-09-15: linked organization Pro, seven completed daily physical backups, PITR disabled. Storage bytes require separate protection. Production backup settings were not inspected. The extended local fixture recovery passed 15/15; a real cloud restore and delivered failure alerts remain unverified.
 
-Before launch: agree RPO/RTO, responsible operator, off-site encrypted destination, retention, restore cadence and costs. Restore a backup into an isolated project; restore matching Storage bytes; compare counts/checksums and RLS; run owner/coach isolation tests; verify auth recovery and worker configuration without sending notifications or AI requests. Record actual elapsed recovery time. Keep live credentials and jobs disabled in the restored project until deliberate cutover.
+Use the [backup, restore and alert-delivery runbook](backup-restore-runbook.md) for scope, independent Storage export, retention, credentials, proposed RPO/RTO, safe new-project cloud rehearsal and alert acceptance. No operational exporter or alert delivery was activated. `CLOUD_RESTORE_MANUAL_STEP_REQUIRED` remains a launch step.
 
 ## Incident procedures
 
@@ -60,7 +60,7 @@ Before launch: agree RPO/RTO, responsible operator, off-site encrypted destinati
 
 ## Monitoring
 
-Data SDK failures emit fixed operation name, HTTP status and elapsed milliseconds; latest-weight diagnostics emit sanitized provider error code only. No user IDs, query strings, signed URLs, raw health fields or provider payloads. AI logs retain status/model/latency/token metadata only. Cleanup endpoint logs a fixed failure event. Alert routing/retention/on-call ownership is not configured yet and is a launch requirement. Suggested signals: sustained 5xx, elevated auth/RPC failures, provider error/cost spikes, cleanup eligible backlog/oldest age, and missed scheduler ticks. Set thresholds from a controlled soak; do not claim an alert works until delivered and acknowledged.
+Data SDK failures emit fixed operation name, HTTP status and elapsed milliseconds; latest-weight diagnostics emit sanitized provider error code only. No user IDs, query strings, signed URLs, raw health fields or provider payloads. AI logs retain status/model/latency/token metadata only. Cleanup endpoint logs a fixed failure event. Alert routing/retention/on-call ownership is not configured yet and is a launch requirement. The [backup and alert-delivery runbook](backup-restore-runbook.md#failure-handling-and-delivered-alerts) specifies worker/backup freshness checks, delivery, escalation and acceptance tests. Suggested signals: sustained 5xx, elevated auth/RPC failures, provider error/cost spikes, cleanup eligible backlog/oldest age, and missed scheduler ticks. Set thresholds from a controlled soak; do not claim an alert works until delivered and acknowledged.
 
 ## Privacy and deletion
 
