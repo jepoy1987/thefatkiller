@@ -9,18 +9,18 @@ Disposable local mature Premium fixture: 400 weights, 4,800 food logs, 3,200 wat
 | Route | Before median ms | After median ms | After SDK reads |
 |---|---:|---:|---:|
 | /dashboard | 75 | 68 | 19 |
-| /progress | 111 | 64 | 13 |
-| /nutrition | 66 | 63 | 13 |
+| /progress | 111 | 65 | 13 |
+| /nutrition | 66 | 66 | 13 |
 | /check-ins | 70 | 66 | 12 |
-| /glp1 | 67 | 56 | 9 |
-| /training | 75 | 63 | 12 |
-| /notifications | 66 | 69 | 7 |
-| /reports | 75 | 67 | 7 |
+| /glp1 | 67 | 58 | 9 |
+| /training | 75 | 62 | 12 |
+| /notifications | 66 | 68 | 7 |
+| /reports | 75 | 71 | 7 |
 | /insights | 67 | 58 | 7 |
-| /coaching | 62 | 54 | 6 |
-| /settings/profile | 63 | 56 | 6 |
+| /coaching | 62 | 55 | 6 |
+| /settings/profile | 63 | 57 | 6 |
 
-All measured routes returned 200. Progress improved most (111→64 ms); small route differences are not statistically established gains. Local network does not reproduce the user's 2–3 second remote freeze. Initial project region iad1 versus staging ap-northeast-1 creates cross-region round trips; branch vercel.json requests hnd1. Verify the new deployment region and authenticated navigation before declaring the remote problem resolved.
+All measured routes returned 200. Progress improved most (111→65 ms); small route differences are not statistically established gains. Local network does not reproduce the user's 2–3 second remote freeze. Initial project region iad1 versus staging ap-northeast-1 creates cross-region round trips; branch vercel.json requests hnd1. Verify the new deployment region and authenticated navigation before declaring the remote problem resolved.
 
 Navigation initially had no loading/error boundaries; AppShell was rendered after page-loader completion. Now all primary sections have a lightweight streaming skeleton, root transition feedback, modified-click preservation and accessible text status. Two DOM interaction tests verify pending appears before a suspended destination resolves and modified clicks remain native. The sub-150 ms test is DOM/synthetic timing, NOT a measured browser paint SLA. Next Link prefetch remains enabled; loading boundaries let it prefetch shell/fallback rather than all heavy data. No fake delay.
 
@@ -40,7 +40,7 @@ Historical Sprint 13 logs contain only generic getLatestWeight failure, without 
 - Staging additionally has Supabase's rls_auto_enable event-trigger function. Advisor labels its grants as RPC exposure; actual return type is event_trigger and ordinary calls are not valid. It is not an application data RPC. No platform-owned trigger change was made. Private worker tables and user_roles intentionally have RLS/no direct read policies.
 - A later approved staging-only Auth phase replaced the stale Site URL and exact web callbacks with the Sprint 14 Preview origin, set the 12-character lower/upper/number/symbol policy, and enabled leaked-password protection. Existing rate limits were retained. Production Auth was not changed; native recovery remains physical-device QA.
 - Keys remain server-only; signature/current-value scan of all reachable Git history found no matches. This is a scoped scan, not proof against every possible unknown secret format. Service-role operations remain confined to verified server worker paths (AI claim/finish/private Storage cleanup), never generic arbitrary-user browser commands.
-- Weekly and food AI retain strict schema, deterministic safety, grounding/section validation, explicit generation, timeout, leases/rate budgets and completed-result reuse. No new paid calls. Prior real-model/Preview acceptance is historical evidence; the framework upgrade still needs authenticated Preview smoke.
+- Weekly and food AI retain strict schema, deterministic safety, grounding/section validation, explicit generation, timeout, leases/rate budgets and completed-result reuse. No new paid calls. Current authenticated Preview smoke passed for both route/configuration gates; paid result acceptance remains manual and separately approved.
 - Additive migration 20260915025001_sprint_14_report_rate_limit.sql adds durable per-owner 30/rolling-minute report budget. Clock refreshed after lock, bounded 30 timestamps, fixed-snapshot isolation fails closed, authorization/range checks precede quota. No indexes added without evidence; latest-weight EXPLAIN under RLS returned an indexed limit in ~0.02 ms locally.
 - Notifications retain their existing cap, dedupe and manual/cron overlap controls. Food photos retain attempt/day budgets and leases. Auth reset remains provider-rate-limited; CAPTCHA and custom delivery configuration still require launch review. A later lifecycle phase added per-account reservation-backed Storage quotas for progress and temporary food photos without deleting existing objects.
 - Mutation pending/disabled feedback exists on important forms. A later lifecycle phase added durable owner-bound request IDs, payload fingerprints and atomic replay receipts for food, saved-meal, water and training start/complete mutations. Local loss-of-response, conflict, expiry, isolation, rollback and concurrency tests passed; this does not deduplicate intentionally distinct requests.
@@ -50,13 +50,13 @@ Historical Sprint 13 logs contain only generic getLatestWeight failure, without 
 
 Baseline 25 migrations reset cleanly. 25→26 local upgrade and 26-from-zero reset passed. Existing applied migrations untouched, no history repair/revert/mark. New quota table uses auth cascade; remote staging receives only the new migration after local pass. Existing 48-table fingerprints compared around staging work. Legacy entitlement test was corrected to count only its fixture users, because existing staging coach roles must not cause a false failure.
 
-Local: full DB/security 551/551 (including eight new report-budget checks), report concurrency 3/3, notification concurrency 7/7, real Storage 10/10, photo concurrency 3/3, retention 8/8, real scheduler/endpoint 2/2. Cleanup test scheduler and temporary secret removed. No remote scheduler activation. These are short functional concurrency/tick tests, not a multi-day soak. Approved staging soak is still required before retention is operationally guaranteed remotely.
+Local: full DB/security 591/591, report concurrency 3/3, notification concurrency 7/7, real Storage 10/10, photo concurrency 3/3, retention 8/8, mutation replay 10/10, quota concurrency 2/2, account deletion 14/14, and real cleanup scheduler/endpoint 2/2. Cleanup test scheduler and temporary secret were removed. No remote scheduler activation. These are short functional concurrency/tick tests, not a multi-day soak. Approved staging soak is still required before retention is operationally guaranteed remotely.
 
 ## Operations / launch requirements
 
 See ../operations/launch-runbook.md for environment matrix, Production project procedure, scheduler activation/disable, backups/Storage recovery, credential incidents, provider outage, deployment rollback, privacy, deletion, domains and Stripe integration.
 
-Dedicated Production project is not created; live credentials/jobs/migrations are not configured. Staging daily database backup and local Storage export/restore tooling are verified, while Storage object bytes remain outside database backups. The external encrypted Storage destination is intentionally deferred: hourly Storage RPO, the four-hour recovery target, cloud restore and delivered backup alerts are not proven. The user-facing account-deletion/Storage cleanup implementation is locally verified, but its remote worker cadence and monitoring remain inactive. Stripe commercial terms/prices/webhooks remain future work; the existing entitlement resolver can remain. The canonical Production application origin is `https://app.thefatkiller.com`; its read-only Vercel/DNS/TLS/destination audit and remaining activation steps are recorded in the launch runbook. Do not claim full disaster-recovery or Production launch readiness.
+Dedicated Production project is not created; live credentials/jobs/migrations are not configured. Staging daily database backup and local Storage export/restore tooling are verified, while Storage object bytes remain outside database backups. The external encrypted Storage destination is intentionally deferred: hourly Storage RPO, the four-hour recovery target and cloud restore are not proven. Alert delivery is separately deferred: the sanitized hooks remain, but no destination is configured, none of the three required failure paths is delivery-tested, and independent monitoring is pending. These deferrals do not block remaining Sprint 14 code/manual QA. The user-facing account-deletion/Storage cleanup implementation is locally verified, but its remote worker cadence and monitoring remain inactive. Stripe commercial terms/prices/webhooks remain future work; the existing entitlement resolver can remain. The canonical Production application origin is `https://app.thefatkiller.com`; its read-only Vercel/DNS/TLS/destination audit and remaining activation steps are recorded in the launch runbook. Do not claim full disaster-recovery, complete operational alert readiness or Production launch readiness.
 
 ## QA limits and disposition
 
@@ -69,4 +69,4 @@ evidence are recorded in [sprint-14-final-manual-qa.md](sprint-14-final-manual-q
 
 References: https://nextjs.org/docs/14/app/building-your-application/caching ; https://nextjs.org/docs/app/guides/upgrading/version-15 ; https://github.com/vercel/next.js/security/advisories/GHSA-2xp9-vwfh-vxw4 ; https://supabase.com/docs/guides/auth/password-security ; https://supabase.com/docs/guides/platform/backups .
 
-Final local workspace tests: 342/342 (web 256 + shared 86), including 12 hardening and two navigation tests. Final isolated benchmark retained 200 responses on all routes (Progress 62 ms median); type resolution is explicitly isolated from the mobile React 18 workspace. The full staging rollback rerun passed 551/551 after the fixture-scope correction. No Next/React/sharp advisories or web/website dependency paths remained in the final audit; repository-wide Expo/mobile advisories remain (1 critical, 24 high, 9 moderate, 1 low at audit time).
+Final local workspace tests: 359/359 (web 271 + shared 88), including the hardening/navigation additions. Final isolated benchmark retained 200 responses on all routes (Progress 65 ms median) and 10/10 concurrent authenticated cache isolation; type resolution is explicitly isolated from the mobile React 18 workspace. The final local database/security rerun passed 591/591. No Next/React/sharp advisories or web/website dependency paths remained in the final audit; repository-wide Expo/mobile advisories remain (1 critical, 24 high, 9 moderate, 1 low at audit time).

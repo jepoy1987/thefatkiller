@@ -9,6 +9,13 @@ prerequisite. Consequently, hourly Storage RPO, the four-hour recovery target,
 cloud restore and delivered backup alerts remain unproven. Do not infer full
 disaster-recovery readiness from the local tooling tests.
 
+Alert delivery is also intentionally **DEFERRED**. No destination exists, and
+backup, notification-scheduler and food-photo-cleanup failure alerts have not
+been delivery-tested. Independent monitoring remains pending. The sanitized
+hooks stay implemented and locally tested; this deferral does not block the
+remaining Sprint 14 code/QA work, but complete operational alert readiness must
+not be claimed before Production activation.
+
 Base HEAD: `6d01efda61358fa48f91271f529dc0f3ce6999c1`, branch `feature/sprint-14-launch-hardening`. This phase adds documentation, read-only backup inventory RPCs and offline operational tooling; no scheduler activation, cloud restore, deployment, Production configuration or merge.
 
 ## Live staging evidence
@@ -66,7 +73,7 @@ No SQL migration or application behavior changed. The requested relevant backup 
 
 1. **CLOUD_RESTORE_MANUAL_STEP_REQUIRED:** authorize a disposable paid cloud recovery target and execute the new-project procedure, never overwrite staging. Verify DB/Auth/RLS, Storage recovery and actual recovery time.
 2. When the deferral is lifted, approve the independent remote encrypted Storage destination/runner, `age` key custody, progress retention/deletion handling and per-food-archive expiry lifecycle. Apply the inventory migration to the approved environment, run a supervised export/independent verify, then separately approve hourly export plus food pruning and freshness monitoring. Current operational Storage RPO is not bounded.
-3. Name the alert recipient/destination and independent monitor, then delivery-test failed/missing notification work, food cleanup failure, stale backups, export/checksum failure, escalation, acknowledgement and monitor heartbeat loss. Logs and payload validation do not establish delivery. No alert message or paid service was configured.
+3. When the alert deferral is lifted, name the alert recipient/destination and independent monitor, then delivery-test failed/missing notification work, food cleanup failure, stale backups, export/checksum failure, escalation, acknowledgement and monitor heartbeat loss. Logs and payload validation do not establish delivery. No alert message or paid service was configured.
 4. Accept recovery objectives: healthy daily DB RPO up to 24 hours, proposed hourly progress-object export, provisional 4-hour end-to-end RTO. These are targets, not measured cloud guarantees.
 
 See [operational runbook](../operations/backup-restore-runbook.md) for the procedures and official sources. Production remained untouched/unverified. Staging schedulers stayed disabled. PR #16 was not merged; this task stops at the backup phase.

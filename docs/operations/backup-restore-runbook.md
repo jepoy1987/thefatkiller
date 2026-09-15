@@ -122,6 +122,22 @@ Run `python3 scripts/test-backup-restore.py` with local Docker/Supabase availabl
 
 Current delivery readiness: **INTEGRATION POINT PREPARED; DESTINATION NOT CONFIGURED / NOT DELIVERY-TESTED**. `scripts/ops_alert.py` emits a fixed, sanitized `tfk.ops-alert.v1` payload for `backup_failure`, `notification_scheduler_failure` and `food_cleanup_failure`. It requires an HTTPS endpoint from `TFK_OPS_ALERT_WEBHOOK_URL`, supports a secret-manager-injected bearer token, contains no arbitrary error text/recipient, and refuses delivery when unconfigured. The Storage exporter invokes it on failure only when a destination is configured. The notification and cleanup schedulers must invoke the same command from their independent monitor/orchestrator on failure. No recipient, webhook, email address, Slack channel or service was selected.
 
+Alert delivery is intentionally **DEFERRED** and does not block the remaining
+Sprint 14 code or QA work. Keep the sanitized hooks and validation tests, but do
+not configure email/SMTP, Slack, Discord, SMS or a third-party monitor solely
+for delivery. This remains a Production operational risk and prerequisite:
+
+| Alert capability | Current status |
+| --- | --- |
+| Alert destination | **Not configured** |
+| Backup failure delivery | **Not delivery-tested** |
+| Notification scheduler failure delivery | **Not delivery-tested** |
+| Food-photo cleanup failure delivery | **Not delivery-tested** |
+| Independent monitoring and heartbeat | **Pending** |
+
+Do not describe the integration hook or its local payload tests as complete
+operational alert readiness.
+
 Validate payload shape without delivery:
 
 ```sh

@@ -2,16 +2,15 @@
 
 Status: `MANUAL_AUTHENTICATED_QA_REQUIRED`
 
-Prepared 2026-09-15 for PR #16 at commit
-`90bd95a899f3da0f86184a3acf64925abebcdc07`. After the staging-only provider
-environment audit, Vercel reports replacement deployment
-`5SX8S7gBFRp5pjtx1t5wSwF47odB` as Ready/Latest for the branch. Use this exact
+Prepared 2026-09-15 for PR #16 and reconfirmed against branch commit
+`956a321586d8ddf1d434ac1ae261549341f6f039`. Vercel reports deployment
+`CmQNTwS4BMUPxL3dBzXCkdgv8Y7K` as Ready/Latest for the branch. Use this exact
 Preview origin:
 
 `https://thefatkiller-web-git-feature-sprint-14-laun-9d09ee-projects-tam.vercel.app`
 
 The immutable deployment URL is
-`https://thefatkiller-ohf8cmhb5-projects-tam.vercel.app`. Confirm the stable
+`https://thefatkiller-bmpu1yfns-projects-tam.vercel.app`. Confirm the stable
 origin still resolves to the commit above before recording final acceptance.
 Do not perform this checklist against Production.
 
@@ -24,7 +23,8 @@ Do not perform this checklist against Production.
   AI Food Photo, Check-Ins, GLP-1 Journal, Training, Reports, Notifications,
   AI Weekly Insights, Coaching, Profile settings and Billing in Chromium. Each
   completed with its expected heading and controls; no blank or frozen route
-  was observed during this read-only pass.
+  was observed during the current read-only pass. This is page-load evidence,
+  not acceptance of the primary mutation/error paths in the checklist below.
 - Real browser-window spot checks at 390 px, tablet size and desktop showed the
   intended mobile horizontal navigation below the desktop breakpoint and the
   fixed side navigation at desktop size. Today, Progress, Reports and
@@ -43,6 +43,9 @@ Do not perform this checklist against Production.
   environment. Full keyboard and route matrices remain manual in every engine.
 - No staging data was changed, no paid AI generation was requested, and no
   email, scheduler, Production or deployment setting was touched.
+- The current deployment log window showed zero warnings, errors or fatals and
+  no visible 5xx. The stable Preview origin completed a TLS-verified request and
+  returned the expected unauthenticated redirect to `/login`.
 - Vercel contains `OPENAI_API_KEY`, `AI_FOOD_MODEL` and
   `SUPABASE_SERVICE_ROLE_KEY` as secret variables scoped to Preview and exactly
   `feature/sprint-14-launch-hardening`, matching the Sprint 13 branch's required
@@ -63,6 +66,14 @@ Required automated gates passed during preparation: lint 10/10 workspaces,
 typecheck 10/10 workspaces, unit tests 359/359, focused Auth/navigation/report/
 training tests 51/51, and production builds 2/2 applications. `git diff
 --check` passed. Turbo reused valid local cache entries where available.
+
+The final local reconfirmation also passed 591/591 database/security tests,
+86/86 focused Weekly Insight tests, replay 10/10, account deletion 14/14,
+Storage quota concurrency 2/2, notification concurrency 7/7, real Storage
+10/10, food-photo concurrency 3/3, retention 8/8, and the real local cleanup
+endpoint/scheduler 2/2. The scheduled test removed its temporary job, secret
+and fixtures. No remote scheduler was activated; a short local tick is not the
+required remote soak.
 
 At initial preparation, AI Food Photo said "Photo analysis is not available
 yet" and disabled upload/analyze. The staging-only environment audit and fresh

@@ -73,6 +73,14 @@ Use the [backup, restore and alert-delivery runbook](backup-restore-runbook.md) 
 
 Data SDK failures emit fixed operation name, HTTP status and elapsed milliseconds; latest-weight diagnostics emit sanitized provider error code only. No user IDs, query strings, signed URLs, raw health fields or provider payloads. AI logs retain status/model/latency/token metadata only. Cleanup endpoint logs a fixed failure event. Alert routing/retention/on-call ownership is not configured yet and is a launch requirement. The [backup and alert-delivery runbook](backup-restore-runbook.md#failure-handling-and-delivered-alerts) specifies worker/backup freshness checks, delivery, escalation and acceptance tests. Suggested signals: sustained 5xx, elevated auth/RPC failures, provider error/cost spikes, cleanup eligible backlog/oldest age, and missed scheduler ticks. Set thresholds from a controlled soak; do not claim an alert works until delivered and acknowledged.
 
+Alert delivery is intentionally deferred while no dedicated destination exists.
+The existing sanitized hooks remain in place, but backup, notification-scheduler
+and food-photo-cleanup failures are not delivery-tested, and independent
+monitoring is pending. This does not block the remaining Sprint 14 code/manual
+QA; it remains an explicit Production launch risk. Do not configure a new
+email/SMTP, chat, SMS or third-party monitoring service solely to clear this
+item, and do not claim complete operational alert readiness.
+
 ## Privacy and deletion
 
 Owner health/progress/nutrition/check-ins/GLP-1, photos, private insights and coaching records remain protected by RLS and existing relationship/category-sharing rules. Weekly AI receives allowlisted aggregate activity only, not GLP-1, medications, notes, photos or auth/billing IDs. Photo AI receives the normalized submitted image and returns editable estimates; store:false is used. Current successful photos are deleted; abandoned/failed objects need the scheduled 24-hour cleanup operationally active.
