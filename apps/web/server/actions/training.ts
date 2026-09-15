@@ -17,7 +17,7 @@ const deleteSetSchema = z.object({ session_exercise_id: z.string().uuid(), set_n
 const notesSchema = z.object({ id: z.string().uuid(), notes: z.string().trim().max(2000) }).strict();
 
 async function command(operation: string, form: FormData, schema: z.ZodTypeAny): Promise<TrainingActionState> {
-  const supabase = createClient(); const access = await requireTrainingAccess(supabase);
+  const supabase = (await createClient()); const access = await requireTrainingAccess(supabase);
   if (!access.allowed) return { error: 'Training is not included in your current plan.' };
   let input: Record<string, unknown>;
   try {

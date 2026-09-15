@@ -12,7 +12,7 @@ export async function requireTrainingAccess(supabase: WebSupabaseClient) {
   return { user, allowed: hasFeature(entitlements, 'workouts') };
 }
 async function client() {
-  const supabase = createClient(); const access = await requireTrainingAccess(supabase);
+  const supabase = (await createClient()); const access = await requireTrainingAccess(supabase);
   if (!access.allowed) redirect('/training');
   return { supabase, user: access.user };
 }
@@ -89,7 +89,7 @@ export async function getTrainingTodaySummary(supabase: WebSupabaseClient) {
   return { summary, assignments: (assignments.data ?? []) as unknown as WorkoutAssignment[] };
 }
 export async function getTrainingFoundation(filters: { q?: string; category?: string; equipment?: string } = {}) {
-  const supabase = createClient(); const access = await requireTrainingAccess(supabase);
+  const supabase = (await createClient()); const access = await requireTrainingAccess(supabase);
   if (!access.allowed) return { ...access, data: null };
   const [profile, exercises, templates, assignments, history, today] = await Promise.all([
     getProfile(supabase, access.user.id), getExerciseLibrary(filters), getWorkoutTemplates(), getWorkoutAssignments(), getWorkoutHistory(), getTrainingTodaySummary(supabase),
@@ -98,7 +98,7 @@ export async function getTrainingFoundation(filters: { q?: string; category?: st
   return { ...access, data: { profile, exercises, templates, assignments, history, today: today! } };
 }
 export async function getCoachClientTrainingSummary(clientId: string) {
-  const supabase = createClient(); const access = await requireTrainingAccess(supabase);
+  const supabase = (await createClient()); const access = await requireTrainingAccess(supabase);
   if (!access.allowed) return null;
   const { data, error } = await supabase.rpc('get_coach_client_training_summary', { client_id: clientId });
   if (error?.code === '42501') return null;

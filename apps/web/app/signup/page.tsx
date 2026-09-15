@@ -5,7 +5,8 @@ import { FormField, Input } from '../../components/ui/form';
 import { SubmitButton } from '../../components/forms/submit-button';
 import { signup } from '../../server/actions/auth';
 
-export default function SignupPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function SignupPage(props: { searchParams: Promise<{ error?: string }> }) {
+  const searchParams = await props.searchParams;
   return (
     <AuthShell eyebrow="Start with clarity" title="Create your account" description="Set your daily targets once, then keep the plan simple." footer={<>Already have an account? <Link className="font-bold text-primary hover:underline" href="/login">Log in</Link></>}>
       {searchParams.error ? <Alert variant="error">{searchParams.error}</Alert> : null}

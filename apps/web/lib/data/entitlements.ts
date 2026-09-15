@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { BillingProvider, EntitlementLimits, EntitlementSet, Feature, FeatureCode, Plan, PlanCode, PlanEntitlement, SubscriptionStatus } from '@tfk/types';
 import type { WebSupabaseClient } from './client';
 import { createClient } from './client';
@@ -17,7 +18,7 @@ type EntitlementRpcRow = {
   is_internal_test: boolean;
 };
 
-export async function getCurrentEntitlements(supabase: WebSupabaseClient): Promise<EntitlementSet> {
+export const getCurrentEntitlements = cache(async function getCurrentEntitlements(supabase: WebSupabaseClient): Promise<EntitlementSet> {
   const { data, error } = await supabase.rpc('get_current_entitlements').single();
   if (error || !data) throw new Error('Your plan access could not be loaded.');
   const row = data as EntitlementRpcRow;
@@ -33,10 +34,10 @@ export async function getCurrentEntitlements(supabase: WebSupabaseClient): Promi
     trialEndsAt: row.trial_ends_at,
     isInternalTest: row.is_internal_test,
   };
-}
+});
 
 export async function getBillingFoundation() {
-  const supabase = createClient();
+  const supabase = (await createClient());
   await requireUser(supabase);
   const [entitlements, plansResult, featuresResult, matrixResult] = await Promise.all([
     getCurrentEntitlements(supabase),

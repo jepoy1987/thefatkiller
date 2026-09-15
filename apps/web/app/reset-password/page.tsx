@@ -11,9 +11,10 @@ import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ResetPasswordPage({ searchParams }: { searchParams: { error?: string } }) {
-  if (cookies().get('tfk_recovery')?.value !== '1') redirect('/forgot-password?error=Start%20from%20a%20valid%20password%20recovery%20link.');
-  await requireUser(createClient());
+export default async function ResetPasswordPage(props: { searchParams: Promise<{ error?: string }> }) {
+  const searchParams = await props.searchParams;
+  if ((await cookies()).get('tfk_recovery')?.value !== '1') redirect('/forgot-password?error=Start%20from%20a%20valid%20password%20recovery%20link.');
+  await requireUser((await createClient()));
   return <AuthShell eyebrow="Account recovery" title="Choose a new password" description="Set a secure password for future sign-ins." footer={<Link className="font-bold text-primary hover:underline" href="/dashboard">Return to dashboard</Link>}>
     {searchParams.error ? <Alert variant="error">{searchParams.error}</Alert> : null}
     <form action={updateRecoveredPassword} className="mt-5 grid gap-5">

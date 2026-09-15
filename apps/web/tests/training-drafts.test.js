@@ -14,7 +14,7 @@ globalThis.HTMLInputElement = dom.window.HTMLInputElement;
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const React = await import('react');
 const { createRoot } = await import('react-dom/client');
-const { Simulate } = await import('react-dom/test-utils');
+
 const runtime = await import('react/jsx-runtime');
 const api = await import('@tfk/api');
 const validation = await import('@tfk/validation');
@@ -74,7 +74,7 @@ async function fixture(numbers) {
   const button = label => [...element.querySelectorAll('button')].find(node => node.textContent === label);
   const form = label => { const node = button(label)?.closest('form'); assert.ok(node, `Missing ${label}`); return node; };
   const input = (label, name = 'reps') => form(label).querySelector(`[name="${name}"]`);
-  const change = async (label, value, name = 'reps') => React.act(async () => { const node = input(label, name); node.value = value; Simulate.change(node); });
+  const change = async (label, value, name = 'reps') => React.act(async () => { const node = input(label, name); Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(node, value); node.dispatchEvent(new window.Event('input', {bubbles:true})); });
   const submit = async label => React.act(async () => { const node = form(label); await submitActions.get(node.getAttribute('action'))(new dom.window.FormData(node)); });
   const dirty = () => element.textContent.includes('You have unsaved entries');
   const completeEnabled = () => !button('Complete workout').closest('fieldset').disabled;

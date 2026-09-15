@@ -15,8 +15,9 @@ import { PhotoReview } from '../../../../features/food-photo/review';
 import { PhotoUpload } from '../../../../features/food-photo/upload';
 import { localPhotoTime } from '../../../../features/food-photo/domain';
 import { foodPhotoMode } from '../../../../server/food-photo/service';
-export default async function FoodPhotoReviewPage({params}:{params:{analysisId:string}}){
- const client=createClient();const user=await requireUser(client);if(!z.string().uuid().safeParse(params.analysisId).success)notFound();
+export default async function FoodPhotoReviewPage(props:{params: Promise<{analysisId:string}>}) {
+ const params = await props.params;
+ const client=(await createClient());const user=await requireUser(client);if(!z.string().uuid().safeParse(params.analysisId).success)notFound();
  const {data,error}=await client.from('food_photo_analyses').select('*').eq('id',params.analysisId).eq('user_id',user.id).maybeSingle();if(error||!data)notFound();
  const a=data as FoodPhotoAnalysis;const allowed=hasFeature(await getCurrentEntitlements(client),'ai_food_photo');const profile=await getProfile(client,user.id);const parsed=foodPhotoResultSchema.safeParse(a.result_json);
  const retry=allowed&&a.attempts<3&&(a.status==='failed'||a.status==='pending'&&Date.parse(a.started_at)<Date.now()-120000);

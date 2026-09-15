@@ -6,7 +6,8 @@ import { PageHeader } from '../../components/ui/headings';
 import { JournalHistory, MedicationLogging, MedicationSetup, SymptomLogging } from '../../features/glp1/components';
 import { getGLP1Foundation } from '../../lib/data/glp1';
 
-export default async function GLP1Page({ searchParams }: { searchParams: { error?: string; message?: string } }) {
+export default async function GLP1Page(props: { searchParams: Promise<{ error?: string; message?: string }> }) {
+  const searchParams = await props.searchParams;
   const data = await getGLP1Foundation();
   if (!data.allowed) return <AppShell active="glp1" glp1Entitled={false}><div className="grid gap-6"><PageHeader eyebrow="Optional journal" title="GLP-1 Journal" description="This journal is available with a plan that includes GLP-1 tracking."/><Alert variant="warning">Your current plan does not include GLP-1 Journal.</Alert><Link href="/settings/billing" className={buttonStyles({ className: 'w-fit' })}>View plans</Link></div></AppShell>;
   const now=new Date().toISOString();

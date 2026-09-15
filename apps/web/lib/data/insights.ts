@@ -10,7 +10,7 @@ export async function requireInsightAccess(supabase:WebSupabaseClient) {
  return {user,allowed:hasFeature(entitlements,'ai_insights')};
 }
 export async function getInsightFoundation(){
- const supabase=createClient();const access=await requireInsightAccess(supabase);
+ const supabase=(await createClient());const access=await requireInsightAccess(supabase);
  if(!access.allowed)return {...access,input:null,history:[] as WeeklyInsight[]};
  const [source,history]=await Promise.all([
   supabase.rpc('get_weekly_insight_source'),
@@ -20,7 +20,7 @@ export async function getInsightFoundation(){
  return {...access,input:buildWeeklyInsightInput(source.data),history:(history.data??[]) as unknown as WeeklyInsight[]};
 }
 export async function getInsightDetail(id:string){
- const supabase=createClient();const access=await requireInsightAccess(supabase);
+ const supabase=(await createClient());const access=await requireInsightAccess(supabase);
  if(!access.allowed||!/^[0-9a-f-]{36}$/i.test(id))notFound();
  const {data,error}=await supabase.from('weekly_insights').select('*').eq('user_id',access.user.id).eq('id',id).maybeSingle();
  if(error||!data)notFound();

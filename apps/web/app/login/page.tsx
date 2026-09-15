@@ -5,7 +5,8 @@ import { FormField, Input } from '../../components/ui/form';
 import { SubmitButton } from '../../components/forms/submit-button';
 import { login } from '../../server/actions/auth';
 
-export default function LoginPage({ searchParams }: { searchParams: { error?: string; message?: string } }) {
+export default async function LoginPage(props: { searchParams: Promise<{ error?: string; message?: string }> }) {
+  const searchParams = await props.searchParams;
   return (
     <AuthShell eyebrow="Welcome back" title="Log in to your plan" description="Pick up where you left off and see what matters today." footer={<>New to TFK? <Link className="font-bold text-primary hover:underline" href="/signup">Create an account</Link></>}>
       <div className="grid gap-4">{searchParams.error ? <Alert variant="error">{searchParams.error}</Alert> : null}{searchParams.message ? <Alert variant="success">{searchParams.message}</Alert> : null}</div>

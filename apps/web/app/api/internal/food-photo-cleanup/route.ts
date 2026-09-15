@@ -1,5 +1,6 @@
 import { NextResponse,type NextRequest } from 'next/server';
 import { cleanupAuthorized,cleanupFoodPhotoBatch } from '../../../../server/food-photo/cleanup';
+import { logDataFailure } from '../../../../server/observability';
 export const runtime='nodejs';
 export const maxDuration=60;
 export async function POST(request:NextRequest){
@@ -7,5 +8,5 @@ export async function POST(request:NextRequest){
  const url=process.env.SUPABASE_URL??process.env.NEXT_PUBLIC_SUPABASE_URL;
  if(!process.env.SUPABASE_SERVICE_ROLE_KEY||!url)return NextResponse.json({error:'Cleanup unavailable'},{status:503});
  try{const result=await cleanupFoodPhotoBatch({url,key:process.env.SUPABASE_SERVICE_ROLE_KEY});
- return NextResponse.json(result,{status:result.failed?503:200});}catch{return NextResponse.json({error:'Cleanup failed'},{status:503});}
+ if(result.failed)logDataFailure('food_photo_cleanup');return NextResponse.json(result,{status:result.failed?503:200});}catch{logDataFailure('food_photo_cleanup');return NextResponse.json({error:'Cleanup failed'},{status:503});}
 }

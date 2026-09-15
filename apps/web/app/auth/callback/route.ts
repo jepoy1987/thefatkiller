@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
-import { getAppOrigin } from '../../../lib/origin';
+import { getAppOrigin, safeRedirectPath } from '../../../lib/origin';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   const next = requestUrl.searchParams.get('next');
-  const destination = next?.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
+  const destination = safeRedirectPath(next);
   const response = NextResponse.redirect(new URL(destination, appUrl));
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

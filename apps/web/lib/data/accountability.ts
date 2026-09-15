@@ -7,7 +7,7 @@ import { getProfile } from './profile';
 import { requireUser } from './session';
 
 export async function getAccountabilityFoundation() {
-  const supabase = createClient();
+  const supabase = (await createClient());
   const user = await requireUser(supabase);
   const [profile, goal] = await Promise.all([getProfile(supabase, user.id), getActiveGoal(supabase)]);
   if (!profile.onboarding_completed || !goal) redirect('/onboarding');

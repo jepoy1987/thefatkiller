@@ -8,7 +8,7 @@ import { generateInsightForAuthenticatedOwner } from '../insights/service';
 
 export type InsightActionState={error?:string};
 export async function generateWeeklyInsight(_:InsightActionState,form:FormData):Promise<InsightActionState>{
- const supabase=createClient();const access=await requireInsightAccess(supabase);
+ const supabase=(await createClient());const access=await requireInsightAccess(supabase);
  if(!access.allowed)return {error:'Weekly insights are not included in your current plan.'};
  const fields=Array.from(form.keys()).filter(key=>!key.startsWith('$ACTION_'));
  if(fields.some(key=>key!=='consent')||form.get('consent')!=='on')return {error:'Confirm sharing the structured summary to generate your insight.'};

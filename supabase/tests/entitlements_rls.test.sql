@@ -52,7 +52,7 @@ select throws_ok($$select public.admin_assign_internal_plan('62626262-6262-4626-
 
 reset role;
 select throws_ok($$insert into public.user_subscriptions(user_id,plan_id,status,provider) select '62626262-6262-4626-8626-626262626262',id,'trialing','manual' from public.plans where code='premium'$$,'23505',null,'only one non-terminal subscription is allowed');
-select is((select count(*)::int from public.user_roles where role='coach'),0,'roles remain separate from Coach plan assignments');
+select is((select count(*)::int from public.user_roles where role='coach' and user_id in ('61616161-6161-4616-8616-616161616161','62626262-6262-4626-8626-626262626262')),0,'fixture roles remain separate from Coach plan assignments');
 
 select * from finish();
 rollback;

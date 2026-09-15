@@ -19,7 +19,7 @@ export async function updateGoalSettings(data: FormData) {
     daily_step_target: formValue(data, 'daily_step_target'),
   });
   if (!parsed.success) return redirectWithError('/settings/goals', parsed.error.issues[0]?.message ?? 'Invalid goal settings');
-  const supabase = createClient();
+  const supabase = (await createClient());
   await requireUser(supabase);
   const { error } = await saveGoalSettings(supabase, parsed.data);
   if (error) redirectWithError('/settings/goals', error.message);
