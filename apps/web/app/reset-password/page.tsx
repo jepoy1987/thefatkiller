@@ -18,8 +18,8 @@ export default async function ResetPasswordPage(props: { searchParams: Promise<{
   return <AuthShell eyebrow="Account recovery" title="Choose a new password" description="Set a secure password for future sign-ins." footer={<Link className="font-bold text-primary hover:underline" href="/dashboard">Return to dashboard</Link>}>
     {searchParams.error ? <Alert variant="error">{searchParams.error}</Alert> : null}
     <form action={updateRecoveredPassword} className="mt-5 grid gap-5">
-      <FormField id="new-password" label="New password" hint="Use at least 8 characters."><Input id="new-password" name="password" required minLength={8} type="password" autoComplete="new-password" /></FormField>
-      <FormField id="confirm-password" label="Confirm new password"><Input id="confirm-password" name="confirm_password" required minLength={8} type="password" autoComplete="new-password" /></FormField>
+      <FormField id="new-password" label="New password" hint="Use 12+ characters with upper/lowercase letters, a number, and a symbol."><Input id="new-password" name="password" required minLength={12} type="password" autoComplete="new-password" /></FormField>
+      <FormField id="confirm-password" label="Confirm new password"><Input id="confirm-password" name="confirm_password" required minLength={12} type="password" autoComplete="new-password" /></FormField>
       <SubmitButton className="w-full" pendingLabel="Saving…">Save password</SubmitButton>
     </form>
   </AuthShell>;

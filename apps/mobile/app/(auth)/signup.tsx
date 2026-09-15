@@ -12,7 +12,7 @@ export default function SignupScreen() {
     const parsed = signupSchema.safeParse({ email, password });
     if (!parsed.success) return setMessage(parsed.error.issues[0]?.message ?? 'Invalid signup');
     const { error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.password });
-    setMessage(error?.message ?? 'Check your email to confirm your account.');
+    setMessage(error ? 'Account creation is temporarily unavailable. Please wait and try again.' : 'Check your email to confirm your account.');
   };
 
   return (
@@ -20,7 +20,7 @@ export default function SignupScreen() {
       <Text style={{ fontSize: 32, fontWeight: '700', marginBottom: 8 }}>Create account</Text>
       <Text style={{ fontSize: 14, color: '#475569', marginBottom: 20 }}>Start your TFK account.</Text>
       <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, padding: 12, marginBottom: 12 }} />
-      <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, padding: 12, marginBottom: 16 }} />
+      <TextInput placeholder="Password (12+ with upper/lowercase, number, symbol)" secureTextEntry value={password} onChangeText={setPassword} style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, padding: 12, marginBottom: 16 }} />
       {!!message && <Text style={{ color: message.startsWith('Check') ? '#15803d' : '#b91c1c', marginBottom: 12 }}>{message}</Text>}
       <Pressable onPress={submit} style={{ backgroundColor: '#0f172a', borderRadius: 8, padding: 14, alignItems: 'center' }}>
         <Text style={{ color: '#fff', fontWeight: '600' }}>Create account</Text>

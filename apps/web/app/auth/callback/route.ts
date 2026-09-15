@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
   );
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, appUrl));
+  if (error) return NextResponse.redirect(new URL('/login?error=Confirmation%20link%20is%20invalid%20or%20expired.', appUrl));
 
   return response;
 }

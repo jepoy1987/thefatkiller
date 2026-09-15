@@ -11,7 +11,7 @@ export default function ForgotPasswordScreen() {
     const parsed = emailSchema.safeParse(email);
     if (!parsed.success) return setMessage('Enter a valid email address.');
     const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, { redirectTo: 'tfk://auth/callback' });
-    setMessage(error?.message ?? 'If the account exists, a reset link has been sent.');
+    setMessage(error ? 'Reset email could not be sent right now. Please wait and try again.' : 'If the account exists, a reset link has been sent.');
   };
 
   return (

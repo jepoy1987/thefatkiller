@@ -92,9 +92,16 @@ export const glp1SymptomLogSchema = z.object({
 
 export const emailSchema = z.string().email();
 
+export const newPasswordSchema = z.string()
+  .min(12, 'Password must be at least 12 characters.')
+  .regex(/[a-z]/, 'Password must include a lowercase letter.')
+  .regex(/[A-Z]/, 'Password must include an uppercase letter.')
+  .regex(/[0-9]/, 'Password must include a number.')
+  .regex(/[^A-Za-z0-9]/, 'Password must include a symbol.');
+
 export const signupSchema = z.object({
   email: emailSchema,
-  password: z.string().min(8),
+  password: newPasswordSchema,
   first_name: z.string().min(1).max(80).optional(),
   last_name: z.string().min(1).max(80).optional(),
   display_name: z.string().min(1).max(80).optional(),
@@ -102,11 +109,12 @@ export const signupSchema = z.object({
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(8),
+  // Existing credentials must remain usable after the creation policy changes.
+  password: z.string().min(1, 'Password is required.'),
 });
 
 export const resetPasswordSchema = z.object({
-  password: z.string().min(8, 'Password must be at least 8 characters.'),
+  password: newPasswordSchema,
   confirm_password: z.string().min(1, 'Confirm your new password.'),
 }).refine((value) => value.password === value.confirm_password, {
   message: 'Passwords do not match.', path: ['confirm_password'],

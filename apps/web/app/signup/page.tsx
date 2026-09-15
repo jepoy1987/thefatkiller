@@ -10,7 +10,7 @@ export default async function SignupPage(props: { searchParams: Promise<{ error?
   return (
     <AuthShell eyebrow="Start with clarity" title="Create your account" description="Set your daily targets once, then keep the plan simple." footer={<>Already have an account? <Link className="font-bold text-primary hover:underline" href="/login">Log in</Link></>}>
       {searchParams.error ? <Alert variant="error">{searchParams.error}</Alert> : null}
-      <form action={signup} className="mt-5 grid gap-5"><FormField id="signup-email" label="Email address"><Input id="signup-email" name="email" required autoComplete="email" type="email" placeholder="you@example.com" /></FormField><FormField id="signup-password" label="Password" hint="Use at least 8 characters."><Input id="signup-password" name="password" required autoComplete="new-password" minLength={8} type="password" placeholder="Create a secure password" /></FormField><SubmitButton className="w-full" pendingLabel="Creating account…">Create account</SubmitButton></form>
+      <form action={signup} className="mt-5 grid gap-5"><FormField id="signup-email" label="Email address"><Input id="signup-email" name="email" required autoComplete="email" type="email" placeholder="you@example.com" /></FormField><FormField id="signup-password" label="Password" hint="Use 12+ characters with upper/lowercase letters, a number, and a symbol."><Input id="signup-password" name="password" required autoComplete="new-password" minLength={12} type="password" placeholder="Create a secure password" /></FormField><SubmitButton className="w-full" pendingLabel="Creating account…">Create account</SubmitButton></form>
     </AuthShell>
   );
 }
