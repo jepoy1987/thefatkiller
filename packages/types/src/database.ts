@@ -34,6 +34,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      weekly_insights: {
+        Row: {
+          attempts: number
+          created_at: string
+          error_code: string | null
+          generated_at: string | null
+          generated_text: string | null
+          id: string
+          input_snapshot: Json
+          insight_json: Json | null
+          model: string | null
+          period_end: string
+          period_start: string
+          prompt_version: string
+          retry_after: string | null
+          status: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          generated_at?: string | null
+          generated_text?: string | null
+          id?: string
+          input_snapshot: Json
+          insight_json?: Json | null
+          model?: string | null
+          period_end: string
+          period_start: string
+          prompt_version: string
+          retry_after?: string | null
+          status?: string
+          timezone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          generated_at?: string | null
+          generated_text?: string | null
+          id?: string
+          input_snapshot?: Json
+          insight_json?: Json | null
+          model?: string | null
+          period_end?: string
+          period_start?: string
+          prompt_version?: string
+          retry_after?: string | null
+          status?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       body_measurements: {
         Row: {
           created_at: string
@@ -1833,6 +1893,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_weekly_insight_source: { Args: never; Returns: Json }
+      finish_weekly_insight: {
+        Args: {
+          p_attempt: number
+          p_error?: string
+          p_id: string
+          p_model: string
+          p_result: Json
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      claim_weekly_insight: {
+        Args: { p_input: Json; p_user_id: string }
+        Returns: Json
+      }
       admin_assign_coach_client: {
         Args: { target_client_user_id: string; target_coach_user_id: string }
         Returns: string

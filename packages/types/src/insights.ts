@@ -1,0 +1,23 @@
+import type { GoalType, TFKScore, UnitSystem } from './index';
+export type WeeklyInsightStatus = 'pending' | 'completed' | 'failed';
+export type WeeklyInsightCategory = 'progress' | 'nutrition' | 'hydration' | 'habits' | 'daily_check_ins' | 'weekly_check_ins' | 'training' | 'coaching' | 'score';
+export type WeeklyInsightDataAvailability = Record<WeeklyInsightCategory, boolean>;
+export type WeeklyInsightInput = {
+  period: { start: string; end: string; dates: string[]; timezone: string; includes_today: true; as_of: string };
+  profile: { unit_system: UnitSystem; goal_type: GoalType | null };
+  availability: WeeklyInsightDataAvailability;
+  progress: { starting_weight: number | null; latest_weight: number | null; change: number | null; weigh_ins: number; weight_unit: 'kg' | 'lb' } | null;
+  nutrition: { logged_days: number; calorie_target_days: number | null; protein_target_days: number | null; calorie_target: number | null; protein_target_g: number | null } | null;
+  hydration: { logged_days: number; target_days: number | null; target_ml: number | null } | null;
+  habits: { opportunities: number; completed: number; completion_pct: number | null } | null;
+  daily_check_ins: { completed_days: number } | null;
+  weekly_check_ins: { completed_weeks: number; eligible_weeks: number } | null;
+  training: { assigned: number; assigned_completed: number; completed: number; completed_days: number } | null;
+  coaching: { active_goals: number; completed_goals: number } | null;
+  score: TFKScore | null;
+};
+export type WeeklyInsightWin = { title: string; evidence: string; category: WeeklyInsightCategory };
+export type WeeklyInsightWatchItem = WeeklyInsightWin;
+export type WeeklyInsightFocusItem = { title: string; reason: string; category: WeeklyInsightCategory };
+export type WeeklyInsightResult = { headline: string; summary: string; wins: WeeklyInsightWin[]; watch_items: WeeklyInsightWatchItem[]; next_week_focus: WeeklyInsightFocusItem[]; data_gaps: string[] };
+export type WeeklyInsight = { id: string; user_id: string; period_start: string; period_end: string; timezone: string; status: WeeklyInsightStatus; model: string | null; prompt_version: string; input_snapshot: WeeklyInsightInput; insight_json: WeeklyInsightResult | null; generated_text: string | null; error_code: string | null; generated_at: string | null; created_at: string; updated_at: string; attempts: number; retry_after: string | null };

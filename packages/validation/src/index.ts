@@ -185,6 +185,35 @@ export const workoutAssignmentSchema=z.object({client_id:z.string().uuid().optio
 export const workoutSetSchema=z.object({session_exercise_id:z.string().uuid(),set_number:z.coerce.number().int().min(1).max(100),reps:optionalNumber(10000),weight_kg:optionalNumber(2000),duration_seconds:optionalNumber(86400,true),distance_meters:optionalNumber(1000000),rpe:z.preprocess(v=>v===''||v==null?null:v,z.coerce.number().min(1).max(10).nullable()),completed:z.boolean().default(true),notes:text(1000)}).strict().refine(v=>v.reps!=null||v.duration_seconds!=null||v.distance_meters!=null,{message:'Enter reps, duration, or distance.'});
 export const trainingProgramSchema=z.object({id:z.string().uuid().optional(),name:z.string().trim().min(2).max(120),description:text(1000),duration_weeks:optionalNumber(104,true),workouts:z.array(z.object({workout_template_id:z.string().uuid(),week_number:optionalNumber(104,true),day_number:optionalNumber(7,true)}).strict()).min(1).max(60)}).strict();
 
+const count = z.number().int().nonnegative();
+const value = z.number().finite().nonnegative().nullable();
+const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const categories = ['progress', 'nutrition', 'hydration', 'habits', 'daily_check_ins', 'weekly_check_ins', 'training', 'coaching', 'score'] as const;
+export const weeklyInsightInputSchema = z.object({
+  period: z.object({ start: date, end: date, dates: z.array(date).length(7), timezone: z.string().min(1).max(100), includes_today: z.literal(true), as_of: z.string().datetime({ offset: true }) }).strict(),
+  profile: z.object({ unit_system: z.enum(['metric','imperial']), goal_type: z.enum(['lose_weight','maintain_weight','gain_weight']).nullable() }).strict(),
+  availability: z.object(Object.fromEntries(categories.map(key => [key,z.boolean()])) as Record<typeof categories[number], z.ZodBoolean>).strict(),
+  progress: z.object({ starting_weight: value, latest_weight: value, change: z.number().finite().nullable(), weigh_ins: count, weight_unit: z.enum(['kg','lb']) }).strict().nullable(),
+  nutrition: z.object({ logged_days: count.max(7), calorie_target_days: count.max(7).nullable(), protein_target_days: count.max(7).nullable(), calorie_target: value, protein_target_g: value }).strict().nullable(),
+  hydration: z.object({ logged_days: count.max(7), target_days: count.max(7).nullable(), target_ml: value }).strict().nullable(),
+  habits: z.object({ opportunities: count, completed: count, completion_pct: z.number().min(0).max(100).nullable() }).strict().nullable(),
+  daily_check_ins: z.object({ completed_days: count.max(7) }).strict().nullable(),
+  weekly_check_ins: z.object({ completed_weeks: count.max(2), eligible_weeks: count.min(1).max(2) }).strict().nullable(),
+  training: z.object({ assigned: count, assigned_completed: count, completed: count, completed_days: count.max(7) }).strict().nullable(),
+  coaching: z.object({ active_goals: count, completed_goals: count }).strict().nullable(),
+  score: z.object({ overall: count.max(100), label: z.enum(['Excellent','Strong','Building','Inconsistent','Needs attention']), breakdown: z.object({ nutrition:count.max(30),hydration:count.max(15),habits:count.max(30),checkIns:count.max(15),progress:count.max(10) }).strict(), windowDays:z.literal(7) }).strict().nullable(),
+}).strict().superRefine((input,ctx) => {
+  for (const category of categories) if (input.availability[category] !== (input[category] !== null)) ctx.addIssue({code:'custom',message:'Availability must match supplied categories',path:[category]});
+  const expected = Array.from({length:7},(_,i)=>{const d=new Date(input.period.start+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+i);return Number.isNaN(d.valueOf())?'':d.toISOString().slice(0,10);});
+  if (expected.join()!==input.period.dates.join() || expected[6]!==input.period.end) ctx.addIssue({code:'custom',message:'Exactly seven consecutive local dates required'});
+});
+const insightText = (max:number) => z.string().trim().min(1).max(max).refine(s=>!/[<>]|https?:\/\/|```/.test(s),'Plain text only');
+const evidenceItem = z.object({ title:insightText(100), evidence:insightText(240), category:z.enum(categories) }).strict();
+export const weeklyInsightOutputSchema = z.object({
+  headline:insightText(120),summary:insightText(700),wins:z.array(evidenceItem).max(4),watch_items:z.array(evidenceItem).max(4),
+  next_week_focus:z.array(z.object({title:insightText(100),reason:insightText(240),category:z.enum(categories)}).strict()).min(1).max(3),
+  data_gaps:z.array(insightText(240)).max(12),
+}).strict();
 
 /** Calendar-only dates. The caller supplies today from the authenticated profile timezone. */
 export const reportPeriodSchema = z.object({

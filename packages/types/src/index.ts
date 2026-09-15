@@ -120,6 +120,7 @@ export type AuthUser = {
 export type DailyScoreSignal = { date: string; calories: number; calorieTarget: number; protein: number; proteinTarget: number; water: number; waterTarget: number; habitCompleted: number; habitAvailable: number; checkedIn: boolean; logged?: boolean };
 export type ScoreInput = { days: DailyScoreSignal[]; progressLogged: boolean; windowDays?: number };
 export type * from './training';
+export type * from './insights';
 
 export type * from './reports';
 export type { Notification, NotificationType, ReminderPreferences, ReminderCategory, ReminderEvaluationResult, DueReminder, NotificationChannel } from './notifications';
