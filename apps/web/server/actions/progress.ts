@@ -65,6 +65,8 @@ export async function uploadProgressPhoto(data: FormData) {
   }
   const extension = photoFile.name.split('.').pop()?.toLowerCase() ?? 'jpg';
   const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
+  const reservation = await supabase.rpc('reserve_progress_upload', { p_path: path });
+  if (reservation.error) redirectWithError('/progress', 'Your Storage allowance could not be reserved. Remove a photo or try again later.');
   const upload = await supabase.storage.from('progress-photos').upload(path, photoFile, { contentType: photoFile.type, upsert: false });
   if (upload.error) redirectWithError('/progress', 'Photo upload failed.');
   const weight = input.weight === '' || input.weight === undefined ? null : weightToKilograms(input.weight, formValue(data, 'unit_system') === 'imperial' ? 'imperial' : 'metric');

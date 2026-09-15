@@ -29,7 +29,7 @@ function useFormState(action, initial) {
 const wrapper = ({ children }) => React.createElement('div', null, children);
 async function load(file, imports) {
   const source = await readFile(new URL(file, import.meta.url), 'utf8');
-  const context = { exports: {}, HTMLInputElement: dom.window.HTMLInputElement, require(name) {
+  const context = { exports: {}, crypto: globalThis.crypto, HTMLInputElement: dom.window.HTMLInputElement, require(name) {
     if (name === 'react') return React;
     if (name === 'react/jsx-runtime') return runtime;
     if (name in imports) return imports[name];
@@ -40,6 +40,7 @@ async function load(file, imports) {
 }
 const { ActionForm } = await load('../features/training/forms.tsx', {
   'react-dom': { useFormState },
+  '../../components/forms/request-key': await load('../components/forms/request-key.tsx', {}),
   '../../components/forms/submit-button': { SubmitButton: ({ children }) => React.createElement('button', { type: 'submit' }, children) },
   '../../components/ui/alert': { Alert: wrapper },
 });
