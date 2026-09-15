@@ -5,6 +5,27 @@ non-Production scopes. It does not authorize Production setup, DNS changes,
 Production migrations or credentials, scheduler activation, deployment
 promotion, or merge.
 
+## Owner-accepted deferred launch risks
+
+The owner accepted the authenticated Sprint 14 application QA on 2026-09-15
+and confirmed the original navigation delay is materially resolved. The items
+below do not block the PR #16 code merge, but remain Production risks or
+prerequisites and must not be described as complete:
+
+- external encrypted Storage backup destination;
+- hourly Storage backup execution;
+- proven four-hour recovery target;
+- cloud restore rehearsal;
+- alert destination and delivery testing;
+- independent monitoring;
+- Firefox testing;
+- an exhaustive screen-reader matrix; and
+- native mobile recovery on a physical device.
+
+Before real-user activation, complete these items or obtain an explicit launch
+risk acceptance for each still-open item. This acceptance does not authorize a
+Production mutation, scheduler activation, deployment promotion or merge.
+
 ## Environment contract
 
 | Setting | Local | Preview / staging | Production setup (approval required) |
@@ -38,6 +59,13 @@ Observed architecture: Vercel project thefatkiller-web, Next.js, apps/web root, 
 Notification evaluator: public.generate_due_notifications(), bounded users/candidates, per-user locks, rolling cap, dedupe, quiet hours and preference opt-in. Local concurrency/adversarial tests exercise manual/cron overlap. No historical preference backfill. Round-robin throughput at >100 configured users needs a capacity review before activating at scale.
 
 Food cleanup: expired pending/failed photos eligible after 24 hours; Storage API deletion, bounded batches, leases/fencing, expected owner/id/attempt path, idempotent missing-object deletion. Completed/confirmed current objects are not prematurely deleted. Local real pg_cron tick proved deletion; test job/secret were removed. Retention is not an operational guarantee remotely until an approved persistent job runs.
+
+The owner confirms the previous bounded staging scheduler soak passed. Its
+recorded post-soak evidence shows all 48 table fingerprints plus the additional
+food-photo, weekly-insight and notification fingerprints matched baseline. A
+current read-only staging check showed no installed Cron job, consistent with
+the recorded configured 0/active 0 state. Remote schedulers remain disabled;
+no activation occurred during final acceptance.
 
 Staging activation procedure, only after separate approval:
 - Capture baseline fingerprints and counts. Confirm exact deployed endpoint, migrated versions, feature flags, reminder opt-in population and no queued historical flood.

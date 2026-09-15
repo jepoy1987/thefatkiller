@@ -50,7 +50,7 @@ Historical Sprint 13 logs contain only generic getLatestWeight failure, without 
 
 Baseline 25 migrations reset cleanly. 25→26 local upgrade and 26-from-zero reset passed. Existing applied migrations untouched, no history repair/revert/mark. New quota table uses auth cascade; remote staging receives only the new migration after local pass. Existing 48-table fingerprints compared around staging work. Legacy entitlement test was corrected to count only its fixture users, because existing staging coach roles must not cause a false failure.
 
-Local: full DB/security 591/591, report concurrency 3/3, notification concurrency 7/7, real Storage 10/10, photo concurrency 3/3, retention 8/8, mutation replay 10/10, quota concurrency 2/2, account deletion 14/14, and real cleanup scheduler/endpoint 2/2. Cleanup test scheduler and temporary secret were removed. No remote scheduler activation. These are short functional concurrency/tick tests, not a multi-day soak. Approved staging soak is still required before retention is operationally guaranteed remotely.
+Local: full DB/security 591/591, report concurrency 3/3, notification concurrency 7/7, real Storage 10/10, photo concurrency 3/3, retention 8/8, mutation replay 10/10, quota concurrency 2/2, account deletion 14/14, and real cleanup scheduler/endpoint 2/2. Cleanup test scheduler and temporary secret were removed. The owner confirms the previous bounded staging scheduler soak passed, and the recorded 48-table and feature fingerprints match its post-soak baseline. Current staging reconfirmation shows no installed Cron job, consistent with the recorded configured 0/active 0 state. No remote scheduler was activated during final acceptance. Persistent Production cadence, monitoring and retention guarantees remain prerequisites rather than code-merge gates.
 
 ## Operations / launch requirements
 
@@ -58,11 +58,18 @@ See ../operations/launch-runbook.md for environment matrix, Production project p
 
 Dedicated Production project is not created; live credentials/jobs/migrations are not configured. Staging daily database backup and local Storage export/restore tooling are verified, while Storage object bytes remain outside database backups. The external encrypted Storage destination is intentionally deferred: hourly Storage RPO, the four-hour recovery target and cloud restore are not proven. Alert delivery is separately deferred: the sanitized hooks remain, but no destination is configured, none of the three required failure paths is delivery-tested, and independent monitoring is pending. These deferrals do not block remaining Sprint 14 code/manual QA. The user-facing account-deletion/Storage cleanup implementation is locally verified, but its remote worker cadence and monitoring remain inactive. Stripe commercial terms/prices/webhooks remain future work; the existing entitlement resolver can remain. The canonical Production application origin is `https://app.thefatkiller.com`; its read-only Vercel/DNS/TLS/destination audit and remaining activation steps are recorded in the launch runbook. Do not claim full disaster-recovery, complete operational alert readiness or Production launch readiness.
 
-## QA limits and disposition
+## Final acceptance disposition
 
-Automated checks cover all existing feature suites plus 12 hardening and two navigation tests. Accessibility code review covers status labels, reduced-motion skeletons, keyboard native link behavior, focus rings and existing chart text equivalents. Actual 390px/tablet/desktop visual review, screen-reader behavior and Chromium/WebKit/Firefox cross-browser flow must be recorded separately; DOM tests do not prove those.
+At application HEAD `b10183bb82f4d29197e6220d70157a16f8ed0761`, the final objective gates passed: lint 10/10 workspaces, typecheck 10/10, unit tests 359/359, production builds 2/2, `git diff --check`, database/security 591/591 and schema lint with no errors. Focused Auth/navigation/AI regression tests passed 170/170. The local backup manifest, checksum and restore suite passed, including missing, corrupted and unexpected-object detection. The current Preview deployment was Ready; its inspected log window had zero warnings, errors or fatals and no relevant 5xx.
 
-Authenticated Preview page-load, responsive spot-check and navigation evidence is recorded in the final manual-QA checklist. The AI Food Photo configuration gate is cleared and non-paid file selection is verified; no paid analysis was performed. Complete primary-action, responsive, keyboard/screen-reader and browser matrices remain manual, as do approved paid-provider acceptance tests. No Production verification. This sprint must not be declared READY_FOR_PRODUCTION_SETUP while these and the listed launch prerequisites remain open.
+Accessibility code review and automation cover status labels, reduced-motion skeletons, keyboard-native link behavior, focus rings and chart text equivalents. The owner personally accepted the important authenticated flows and confirmed the original two-to-three-second navigation issue is materially resolved. The AI Food Photo configuration gate and non-paid file selection are verified; no paid analysis was performed. Firefox, an exhaustive screen-reader matrix and native mobile recovery are accepted/deferred risks, not claims of completion or code-merge blockers. No Production verification was performed.
+
+No unresolved P0/P1 application, data-isolation or security defect was found.
+PR #16 is therefore `READY_TO_MERGE_WITH_PRODUCTION_PREREQUISITES`; this is
+not a claim that Production is configured or operationally ready. External
+encrypted Storage backup, hourly execution, four-hour recovery proof, cloud
+restore rehearsal, delivered alerts and independent monitoring remain explicit
+Production risks/prerequisites.
 
 The final authenticated operator matrix and bounded automated preparation
 evidence are recorded in [sprint-14-final-manual-qa.md](sprint-14-final-manual-qa.md).

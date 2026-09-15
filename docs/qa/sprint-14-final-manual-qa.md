@@ -1,18 +1,32 @@
 # Sprint 14 final manual QA
 
-Status: `MANUAL_AUTHENTICATED_QA_REQUIRED`
+Status: `MANUAL_AUTHENTICATED_QA_PASSED`
 
-Prepared 2026-09-15 for PR #16 and reconfirmed against branch commit
-`956a321586d8ddf1d434ac1ae261549341f6f039`. Vercel reports deployment
-`CmQNTwS4BMUPxL3dBzXCkdgv8Y7K` as Ready/Latest for the branch. Use this exact
+Prepared 2026-09-15 for PR #16 and finally reconfirmed against branch commit
+`b10183bb82f4d29197e6220d70157a16f8ed0761`. Vercel reported deployment
+`5TvXNJ7JUKjviFDghN6gmWLAa2fU` as Ready/Latest for that branch head. Use this exact
 Preview origin:
 
 `https://thefatkiller-web-git-feature-sprint-14-laun-9d09ee-projects-tam.vercel.app`
 
 The immutable deployment URL is
-`https://thefatkiller-bmpu1yfns-projects-tam.vercel.app`. Confirm the stable
-origin still resolves to the commit above before recording final acceptance.
-Do not perform this checklist against Production.
+`https://thefatkiller-4d6gcqwhy-projects-tam.vercel.app`. The stable origin was
+confirmed against that deployment during final acceptance. Do not perform this
+checklist against Production.
+
+## Owner acceptance — 2026-09-15
+
+The owner personally completed and accepted the important authenticated Sprint
+14 flows. The original two-to-three-second navigation problem is materially
+resolved, and immediate navigation feedback remains visible. This acceptance,
+together with the automated evidence below, satisfies the authenticated manual
+QA gate for PR #16.
+
+The detailed matrices in this document remain useful regression checklists;
+they are not a claim that every permutation was exercised. Firefox testing, an
+exhaustive screen-reader matrix, and native mobile recovery on a physical
+device are explicitly accepted/deferred for this merge and remain documented
+launch risks. They must not be described as complete.
 
 ## Evidence already collected
 
@@ -40,7 +54,8 @@ Do not perform this checklist against Production.
   regression asserts it is a `role=status` update before an unresolved route.
 - Safari loaded the authenticated Today, Progress and Reports routes, including
   forms and report chart alternatives. Firefox is not installed in the current
-  environment. Full keyboard and route matrices remain manual in every engine.
+  environment. The owner accepted the important authenticated flows; exhaustive
+  cross-browser, keyboard and screen-reader permutations remain deferred.
 - No staging data was changed, no paid AI generation was requested, and no
   email, scheduler, Production or deployment setting was touched.
 - The current deployment log window showed zero warnings, errors or fatals and
@@ -64,16 +79,20 @@ Do not perform this checklist against Production.
 
 Required automated gates passed during preparation: lint 10/10 workspaces,
 typecheck 10/10 workspaces, unit tests 359/359, focused Auth/navigation/report/
-training tests 51/51, and production builds 2/2 applications. `git diff
+AI tests 170/170, and production builds 2/2 applications. `git diff
 --check` passed. Turbo reused valid local cache entries where available.
 
-The final local reconfirmation also passed 591/591 database/security tests,
-86/86 focused Weekly Insight tests, replay 10/10, account deletion 14/14,
+The final pre-merge reconfirmation against application HEAD
+`b10183bb82f4d29197e6220d70157a16f8ed0761` passed 591/591
+database/security tests, 170/170 focused Auth/navigation/AI tests, replay
+10/10, account deletion 14/14,
 Storage quota concurrency 2/2, notification concurrency 7/7, real Storage
 10/10, food-photo concurrency 3/3, retention 8/8, and the real local cleanup
 endpoint/scheduler 2/2. The scheduled test removed its temporary job, secret
-and fixtures. No remote scheduler was activated; a short local tick is not the
-required remote soak.
+and fixtures. Schema lint returned no errors. The owner confirms the previous
+bounded staging scheduler soak passed; the current staging state has no
+configured or active remote cron job. No scheduler was activated during final
+acceptance.
 
 At initial preparation, AI Food Photo said "Photo analysis is not available
 yet" and disabled upload/analyze. The staging-only environment audit and fresh
@@ -120,9 +139,9 @@ Repeat the complete route checklist at:
   fixed and readable, main content does not sit underneath it, and wide grids
   retain sensible reading order.
 
-Rotate/reload once at each size and repeat one mutation after resizing. The
-window-size spot checks above are preparation evidence, not a complete manual
-responsive acceptance matrix.
+Rotate/reload once at each size and repeat one mutation after resizing when
+running this checklist again. The window-size spot checks above are preparation
+evidence, not a claim of an exhaustive responsive permutation matrix.
 
 ## Keyboard and accessibility matrix
 
@@ -159,6 +178,10 @@ to the invoking control after it closes.
   matrices; it was unavailable for this preparation pass.
 - Safari/WebKit: repeat the complete matrices. The preparation pass covered
   authenticated Today, Progress and Reports at desktop size only.
+
+The owner accepted the important authenticated flows for Sprint 14. Firefox
+and exhaustive screen-reader coverage above are deferred follow-up risk, not a
+PR #16 code-merge blocker.
 
 Stop and file a blocker for any failed primary action, inaccessible control,
 unannounced critical error, focus loss/trap, page-level horizontal overflow,
