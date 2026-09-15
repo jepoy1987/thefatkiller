@@ -11,7 +11,7 @@ Sprint 14 prepares configuration; it does not authorize Production setup, DNS ch
 | OPENAI_API_KEY | optional developer secret | approved branch scope | separate budgeted project/key; explicit approval |
 | AI_WEEKLY_MODEL | pinned approved model | gpt-5.4-nano-2026-03-17 | approve same pin after setup QA |
 | AI_FOOD_MODEL | pinned approved model | gpt-5.4-mini-2026-03-17 | approve same pin after setup QA |
-| NEXT_PUBLIC_APP_URL | localhost:3001 | exact Preview URL / allowed branch URL | approved canonical application domain |
+| NEXT_PUBLIC_APP_URL | localhost:3001 | `https://thefatkiller-web-git-feature-sprint-14-laun-9d09ee-projects-tam.vercel.app` | `https://app.thefatkiller.com` |
 | FOOD_PHOTO_CLEANUP_SECRET | generated temporary test secret | disabled until scheduler approval | independently rotated >=32 characters, no public prefix |
 | TFK_PERFORMANCE_LOGS | optional metadata-only profiling | temporary branch profiling if needed | disabled unless sampling/log budget approved |
 | Future Stripe secrets | test-mode only | test-mode webhook signing secret | live secret and endpoint secret after commercial requirements |
@@ -26,7 +26,7 @@ Observed architecture: Vercel project thefatkiller-web, Next.js, apps/web root, 
 2. Create an empty project; record identifiers without credentials. Keep application jobs disabled.
 3. Use the reviewed complete migration inventory (26 after Sprint 14) and production-safe catalog seeds only. Never seed QA users, internal Premium grants, photos, coaching data or test insights.
 4. Rehearse both zero-to-current and 25-to-26 upgrade locally; compare migration versions and function definitions. Apply forward migrations with the standard CLI; never repair/mark/revert history to make parity appear clean.
-5. Configure Auth exact redirect allow-list, email provider, password/recovery protections and approved domain. Enable leaked-password protection before public launch if supported by purchased plan; owner approval is required for the setting change.
+5. Configure the dedicated Production Supabase Auth project with Site URL `https://app.thefatkiller.com` and only the exact web callbacks `https://app.thefatkiller.com/auth/callback` and `https://app.thefatkiller.com/auth/recovery-callback` plus any separately reviewed native callback. Do not use a temporary Vercel deployment URL or wildcard. Configure the approved email provider and password/recovery protections, and enable leaked-password protection before public launch if supported by the purchased plan. These are planned settings, not current Production state.
 6. Configure only the approved environment's credentials; use separate AI spend limits, alerts, and rotation ownership.
 7. Back up database AND Storage objects, prove a restore, then perform explicitly authorized Production security/route QA. Release/scheduler activation is a separate decision.
 
@@ -72,8 +72,38 @@ Auth user deletion cascades many database rows, but it does not itself prove pri
 
 Current resolver consumes user_subscriptions and plan_entitlements, with internal/manual providers explicitly distinct from paid checkout. Future Checkout uses authenticated owner and server-selected price IDs. Verify webhook signature on raw bytes; persist event ID uniquely and process transactionally; map only trusted customer/subscription-to-user associations; handle checkout, renewal, cancellation, delinquency and out-of-order delivery. Update user_subscriptions; continue existing resolver/RLS. No major entitlement redesign is indicated, but prices, trials, taxes, refunds, countries and payment terms require decisions before implementation. Internal test grants are not evidence of payment.
 
-## Domains and remaining approvals
+## Production application domain
 
-Choose a canonical app domain and separate marketing origin after ownership/commercial review; configure exact Auth callbacks and redirects, TLS and redirect policy. Do not change DNS in this sprint. Deployment Protection must be reviewed for QA usability and access restriction; it is not a replacement for app authorization.
+The canonical Production application origin is `https://app.thefatkiller.com`.
+Keep the verified Sprint 14 Preview origin and its exact callback URLs for
+staging; never replace staging with this Production hostname. Temporary Vercel
+deployment URLs may be used for deployment diagnosis, but must not become the
+long-term Production Site URL or Auth callbacks.
+
+Read-only readiness audit on 2026-09-15:
+
+| Check | Observed result | Disposition |
+| --- | --- | --- |
+| Project attachment | Vercel dashboard lists `app.thefatkiller.com` on team `projects-tam`, project `thefatkiller-web`, as `Valid Configuration` and `Production`. Local linkage names the same project. | Attached to the intended project; no attach/move action required. |
+| DNS | Cloudflare and Google public resolvers return `app.thefatkiller.com` as a CNAME to `dea61c18f652e0f9.vercel-dns-016.com`; it resolves to Vercel edge addresses `216.150.1.1` and `216.150.16.1`. Vercel reports the configuration valid. | DNS currently reaches Vercel; no DNS change was made. Re-check immediately before activation. |
+| TLS | HTTPS negotiates a Let's Encrypt certificate whose CN and SAN are `app.thefatkiller.com`, valid 2026-09-15 06:55:57 UTC through 2026-12-14 06:55:56 UTC. Chain/hostname verification succeeds and the response includes HSTS. | SSL is currently valid and Vercel-managed; re-check issuance/renewal and hostname coverage at activation. |
+| Redirects | `http://app.thefatkiller.com/` returns 308 to HTTPS. The canonical HTTPS root returns 307 to `/login`. `https://thefatkiller-web.vercel.app/` returns 308 to `https://app.thefatkiller.com/`. | Canonicalization is working for the app and project default hostname. Re-test callback paths and `next` rejection after Production Auth configuration. |
+| Current destination | The domain is currently assigned to Vercel Production deployment `9PWS1An3EEvrAqHN1adDdDWk2KQr`, a Ready/Latest `main` deployment of commit `ff9179d06cafc4c5151ebceef4b79bb5b5aa7cc8`. | The hostname already points at a Production deployment. Do not treat attachment as launch approval or promote another deployment without authorization. |
+| Apex and `www` | `thefatkiller.com` resolves separately through Cloudflare; `www.thefatkiller.com` is a CNAME to `sites.ludicrous.cloud`. Both HTTPS roots currently return 404 and neither redirects to the app. | They are not Production Auth origins and must not be added to the Auth allow-list merely as aliases. Before launch, the domain owner must decide whether they intentionally remain separate, serve marketing, or redirect; implement and verify that decision in the owning platform as a separate approved change. |
+
+Before Production activation:
+
+1. Obtain explicit Production authorization and confirm the intended release commit, deployment, environment ownership and rollback target; do not assume the deployment currently serving the domain is the Sprint 14 release.
+2. Create and migrate the dedicated Production Supabase project using the procedure above, with jobs disabled and no staging identities or credentials.
+3. Configure `NEXT_PUBLIC_APP_URL=https://app.thefatkiller.com` and the dedicated Production Supabase public/server credentials only in the Production environment, then deploy through the approved release workflow.
+4. Configure the Production Supabase Auth Site URL and the two exact app callback URLs above. Preserve any native callback only after its own review. Do not add wildcard, Preview, apex or `www` web callbacks.
+5. Verify TLS, HTTP-to-HTTPS, `/login`, confirmation/recovery callback handling, malicious redirect rejection and no role/plan grants. Obtain approval before sending a real recovery email.
+6. Decide and verify the separately hosted apex/`www` experience so an intentional marketing route or redirect replaces the current public 404s if required.
+7. Complete the remaining backup/restore, delivered-alert, scheduler, data-retention, account-deletion, observability and authenticated release QA gates elsewhere in this runbook before declaring Production active.
+
+This audit was read-only. It did not change DNS, domain attachment, Vercel
+environment variables, Supabase Production configuration, deployments or
+promotion. Deployment Protection must still be reviewed for QA usability and
+access restriction; it is not a replacement for application authorization.
 
 Sources: https://supabase.com/docs/guides/platform/backups ; https://supabase.com/docs/guides/auth/password-security ; https://supabase.com/docs/guides/auth/rate-limits ; https://supabase.com/docs/guides/deployment/going-into-prod .

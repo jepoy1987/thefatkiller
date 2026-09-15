@@ -30,9 +30,31 @@ Required public variables are:
 The URL variables must point to the staging URL above, and both clients must
 use the same staging publishable key.
 
+The currently approved hosted web origin remains the Sprint 14 Preview URL:
+
+`https://thefatkiller-web-git-feature-sprint-14-laun-9d09ee-projects-tam.vercel.app`
+
+Its exact `/auth/callback` and `/auth/recovery-callback` URLs remain the hosted
+staging Auth redirects. Do not replace the staging Site URL or redirects with
+the Production hostname.
+
 ## Production
 
-Production uses the live Supabase project for the public website, authenticated app, and mobile app. Never embed service-role secrets in client code.
+The canonical Production application origin is:
+
+`https://app.thefatkiller.com`
+
+The planned dedicated Production Supabase Auth configuration is exact and has
+not been applied:
+
+- Site URL: `https://app.thefatkiller.com`
+- allowed callback: `https://app.thefatkiller.com/auth/callback`
+- allowed recovery callback: `https://app.thefatkiller.com/auth/recovery-callback`
+
+Do not use a temporary Vercel deployment URL as the long-term Production Site
+URL and do not add wildcard redirects. Production uses its dedicated live
+Supabase project for the authenticated web and mobile apps; it must never reuse
+staging credentials or data. Never embed service-role secrets in client code.
 
 ## Deployment credentials
 

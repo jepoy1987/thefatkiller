@@ -56,13 +56,16 @@ Local: full DB/security 551/551 (including eight new report-budget checks), repo
 
 See ../operations/launch-runbook.md for environment matrix, Production project procedure, scheduler activation/disable, backups/Storage recovery, credential incidents, provider outage, deployment rollback, privacy, deletion, domains and Stripe integration.
 
-Dedicated Production project is not created; live credentials/jobs/migrations are not configured. Current backup plan/restore evidence unverified; database backups exclude object bytes. User-facing/account deletion with Storage cleanup is missing. Stripe commercial terms/prices/webhooks remain future work; existing entitlement resolver can remain. Domain ownership/canonical app URL and approval for Auth hardening, backups, alerts and jobs are outstanding.
+Dedicated Production project is not created; live credentials/jobs/migrations are not configured. Current backup plan/restore evidence unverified; database backups exclude object bytes. User-facing/account deletion with Storage cleanup is missing. Stripe commercial terms/prices/webhooks remain future work; existing entitlement resolver can remain. The canonical Production application origin is now defined as `https://app.thefatkiller.com`; its read-only Vercel/DNS/TLS/destination audit and remaining activation steps are recorded in the launch runbook. Production Auth, backups, delivered alerts and jobs remain unconfigured.
 
 ## QA limits and disposition
 
 Automated checks cover all existing feature suites plus 12 hardening and two navigation tests. Accessibility code review covers status labels, reduced-motion skeletons, keyboard native link behavior, focus rings and existing chart text equivalents. Actual 390px/tablet/desktop visual review, screen-reader behavior and Chromium/WebKit/Firefox cross-browser flow must be recorded separately; DOM tests do not prove those.
 
 Authenticated Preview before/after click-to-paint measurements, provider/food-photo smoke and full navigation loop are pending. No Production verification. This sprint must not be declared READY_FOR_PRODUCTION_SETUP while these and the listed launch blockers remain open. Final delivery report records Preview URL/commit, deployment health and final totals without rewriting this report for every generated deployment URL.
+
+The final authenticated operator matrix and bounded automated preparation
+evidence are recorded in [sprint-14-final-manual-qa.md](sprint-14-final-manual-qa.md).
 
 References: https://nextjs.org/docs/14/app/building-your-application/caching ; https://nextjs.org/docs/app/guides/upgrading/version-15 ; https://github.com/vercel/next.js/security/advisories/GHSA-2xp9-vwfh-vxw4 ; https://supabase.com/docs/guides/auth/password-security ; https://supabase.com/docs/guides/platform/backups .
 
