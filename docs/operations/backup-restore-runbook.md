@@ -2,6 +2,25 @@
 
 Verified 2026-09-15 for TFH Staging (`nxppfepdgvevlmthzacc`), Sprint 14. This is a recovery runbook and a record of limited rehearsal evidence, not authorization to modify Production. Executable Storage export, archive verification, retention-prune and alert-hook tooling now exists in the repository. No remote destination, alert recipient/service or scheduler was configured or activated in this phase.
 
+Remote Storage backup provisioning is intentionally **DEFERRED**. This does not
+block the remaining Sprint 14 implementation and QA work, but it remains an
+explicit Production launch prerequisite and risk. Current recovery posture:
+
+| Evidence or capability | Current status |
+| --- | --- |
+| Supabase database backup | Active on staging; completed daily physical backups observed |
+| Storage bytes in database backup | **Not covered** |
+| Storage export/restore tooling | Implemented and locally verified |
+| External encrypted Storage destination | **Not configured** |
+| Hourly Storage RPO | **Not achieved** |
+| Four-hour recovery target | **Not proven** |
+| Cloud restore rehearsal | **Pending — `CLOUD_RESTORE_MANUAL_STEP_REQUIRED`** |
+| Backup alert delivery | **Pending; integration point only** |
+
+Do not describe this state as full disaster-recovery readiness. Provisioning
+Cloudflare R2, S3 or another external Storage provider requires a separate
+owner decision and is not part of the current continuation.
+
 ## Verified capability and recovery scope
 
 The linked organization API reports **Pro**. The staging backup API returns seven `COMPLETED` physical backups, one per day from September 8–14, latest `2026-09-14T16:54:15.419Z`. `walg_enabled=true`; **`pitr_enabled=false`**. WAL-G alone is not proof of PITR. The observed inventory matches Pro's documented seven-day daily-backup retention. Daily timing is observed around 16:54–16:57 UTC, not a promised fixed execution time. Monitor freshness rather than assuming a backup ran.

@@ -2,6 +2,13 @@
 
 Decision: **BACKUP_NEEDS_MANUAL_CLOUD_VERIFICATION**.
 
+Provisioning disposition: the external encrypted Storage destination is
+intentionally **DEFERRED**. The deferral does not block continued Sprint 14
+hardening or manual QA, but it does remain a Production launch risk and
+prerequisite. Consequently, hourly Storage RPO, the four-hour recovery target,
+cloud restore and delivered backup alerts remain unproven. Do not infer full
+disaster-recovery readiness from the local tooling tests.
+
 Base HEAD: `6d01efda61358fa48f91271f529dc0f3ce6999c1`, branch `feature/sprint-14-launch-hardening`. This phase adds documentation, read-only backup inventory RPCs and offline operational tooling; no scheduler activation, cloud restore, deployment, Production configuration or merge.
 
 ## Live staging evidence
@@ -58,7 +65,7 @@ No SQL migration or application behavior changed. The requested relevant backup 
 ## Remaining launch steps
 
 1. **CLOUD_RESTORE_MANUAL_STEP_REQUIRED:** authorize a disposable paid cloud recovery target and execute the new-project procedure, never overwrite staging. Verify DB/Auth/RLS, Storage recovery and actual recovery time.
-2. Approve the independent remote encrypted Storage destination/runner, `age` key custody, progress retention/deletion handling and per-food-archive expiry lifecycle. Apply the inventory migration to the approved environment, run a supervised export/independent verify, then schedule hourly export plus food pruning and freshness monitoring. Current operational Storage RPO is not bounded.
+2. When the deferral is lifted, approve the independent remote encrypted Storage destination/runner, `age` key custody, progress retention/deletion handling and per-food-archive expiry lifecycle. Apply the inventory migration to the approved environment, run a supervised export/independent verify, then separately approve hourly export plus food pruning and freshness monitoring. Current operational Storage RPO is not bounded.
 3. Name the alert recipient/destination and independent monitor, then delivery-test failed/missing notification work, food cleanup failure, stale backups, export/checksum failure, escalation, acknowledgement and monitor heartbeat loss. Logs and payload validation do not establish delivery. No alert message or paid service was configured.
 4. Accept recovery objectives: healthy daily DB RPO up to 24 hours, proposed hourly progress-object export, provisional 4-hour end-to-end RTO. These are targets, not measured cloud guarantees.
 

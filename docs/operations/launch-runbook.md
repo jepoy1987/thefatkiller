@@ -1,6 +1,9 @@
 # Launch operations and environment separation
 
-Sprint 14 prepares configuration; it does not authorize Production setup, DNS changes, migration, credentials, schedulers, deployment, or verification.
+Sprint 14 prepares and verifies launch controls in explicitly approved
+non-Production scopes. It does not authorize Production setup, DNS changes,
+Production migrations or credentials, scheduler activation, deployment
+promotion, or merge.
 
 ## Environment contract
 
@@ -24,8 +27,8 @@ Observed architecture: Vercel project thefatkiller-web, Next.js, apps/web root, 
 
 1. Obtain owner approval for project, organization/plan, region, commercial domain, data residency, RPO/RTO and spend.
 2. Create an empty project; record identifiers without credentials. Keep application jobs disabled.
-3. Use the reviewed complete migration inventory (26 after Sprint 14) and production-safe catalog seeds only. Never seed QA users, internal Premium grants, photos, coaching data or test insights.
-4. Rehearse both zero-to-current and 25-to-26 upgrade locally; compare migration versions and function definitions. Apply forward migrations with the standard CLI; never repair/mark/revert history to make parity appear clean.
+3. Use the reviewed complete migration inventory (30 after the lifecycle and backup hardening phases) and production-safe catalog seeds only. Never seed QA users, internal Premium grants, photos, coaching data or test insights.
+4. Rehearse both zero-to-current and the actual predecessor-to-current upgrade path locally; compare migration versions and function definitions. Apply forward migrations with the standard CLI; never repair/mark/revert history to make parity appear clean.
 5. Configure the dedicated Production Supabase Auth project with Site URL `https://app.thefatkiller.com` and only the exact web callbacks `https://app.thefatkiller.com/auth/callback` and `https://app.thefatkiller.com/auth/recovery-callback` plus any separately reviewed native callback. Do not use a temporary Vercel deployment URL or wildcard. Configure the approved email provider and password/recovery protections, and enable leaked-password protection before public launch if supported by the purchased plan. These are planned settings, not current Production state.
 6. Configure only the approved environment's credentials; use separate AI spend limits, alerts, and rotation ownership.
 7. Back up database AND Storage objects, prove a restore, then perform explicitly authorized Production security/route QA. Release/scheduler activation is a separate decision.
@@ -47,6 +50,14 @@ Staging activation procedure, only after separate approval:
 
 Staging backup capability was verified on 2026-09-15: linked organization Pro, seven completed daily physical backups, PITR disabled. Storage bytes require separate protection. Production backup settings were not inspected. The extended local fixture recovery passed 15/15; a real cloud restore and delivered failure alerts remain unverified.
 
+Remote Storage provisioning is intentionally deferred and does not block the
+remaining Sprint 14 implementation/manual-QA work. It still blocks a claim of
+full disaster-recovery or Production launch readiness: database backups do not
+contain Storage object bytes; the implemented exporter/verifier is locally
+verified only; no external encrypted destination exists; hourly Storage RPO is
+not achieved; the four-hour recovery target is not proven; and cloud restore
+plus backup-alert delivery remain pending.
+
 Use the [backup, restore and alert-delivery runbook](backup-restore-runbook.md) for scope, independent Storage export, retention, credentials, proposed RPO/RTO, safe new-project cloud rehearsal and alert acceptance. No operational exporter or alert delivery was activated. `CLOUD_RESTORE_MANUAL_STEP_REQUIRED` remains a launch step.
 
 ## Incident procedures
@@ -66,7 +77,16 @@ Data SDK failures emit fixed operation name, HTTP status and elapsed millisecond
 
 Owner health/progress/nutrition/check-ins/GLP-1, photos, private insights and coaching records remain protected by RLS and existing relationship/category-sharing rules. Weekly AI receives allowlisted aggregate activity only, not GLP-1, medications, notes, photos or auth/billing IDs. Photo AI receives the normalized submitted image and returns editable estimates; store:false is used. Current successful photos are deleted; abandoned/failed objects need the scheduled 24-hour cleanup operationally active.
 
-Auth user deletion cascades many database rows, but it does not itself prove private Storage bytes are deleted. There is no complete user-facing account-deletion workflow. This is a launch blocker: implement/approve an operator process that authenticates the request, disables sessions/jobs, enumerates owner-only private object paths, deletes via Storage API, checks relationships/retained shared artifacts, deletes DB/auth data, and verifies residue. Never delete storage.objects metadata directly. Backups/legal retention need an approved policy; this report does not make a legal compliance claim.
+The implemented user-facing account-deletion workflow requires the exact
+confirmation phrase, queues the authenticated owner, revokes refresh sessions,
+freezes writes, and uses the bounded trusted worker to delete exact private
+Storage paths before Auth deletion and database cascades. Local Auth/Storage E2E
+and worker tests passed. Remote operational completion still requires an
+approved worker cadence or operator process, monitoring, and residue checks;
+no scheduler is active. Never delete `storage.objects` metadata directly.
+Backups/legal retention need an approved policy, including deletion handling in
+future remote object archives; this report does not make a legal compliance
+claim.
 
 ## Stripe readiness
 
@@ -99,7 +119,7 @@ Before Production activation:
 4. Configure the Production Supabase Auth Site URL and the two exact app callback URLs above. Preserve any native callback only after its own review. Do not add wildcard, Preview, apex or `www` web callbacks.
 5. Verify TLS, HTTP-to-HTTPS, `/login`, confirmation/recovery callback handling, malicious redirect rejection and no role/plan grants. Obtain approval before sending a real recovery email.
 6. Decide and verify the separately hosted apex/`www` experience so an intentional marketing route or redirect replaces the current public 404s if required.
-7. Complete the remaining backup/restore, delivered-alert, scheduler, data-retention, account-deletion, observability and authenticated release QA gates elsewhere in this runbook before declaring Production active.
+7. Complete the remaining backup/restore, delivered-alert, scheduler, data-retention, operational account-deletion, observability and authenticated release QA gates elsewhere in this runbook before declaring Production active.
 
 This audit was read-only. It did not change DNS, domain attachment, Vercel
 environment variables, Supabase Production configuration, deployments or

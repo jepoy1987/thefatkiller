@@ -1,10 +1,37 @@
 # Sprint 14 Auth hardening evidence
 
-Status: `AUTH_CHANGES_REQUIRE_APPROVAL`
+Status: `AUTH_STAGING_HARDENED`
 
-Audit date: 2026-09-15. Project: TFH Staging (`nxppfepdgvevlmthzacc`). This evidence was collected with read-only CLI/API queries and HTTP navigation. No Supabase Auth setting, Vercel setting, Production environment, scheduler, or cloud restore was changed.
+Audit date: 2026-09-15. Project: TFH Staging (`nxppfepdgvevlmthzacc`).
+The initial evidence below was collected read-only; a later explicitly approved
+staging-only phase applied and verified the hardening settings. Production,
+schedulers and cloud restore remained untouched.
 
-## Staging URL audit
+## Applied staging result
+
+- Site URL:
+  `https://thefatkiller-web-git-feature-sprint-14-laun-9d09ee-projects-tam.vercel.app`
+- Allowed redirects: the exact Sprint 14 `/auth/callback` and
+  `/auth/recovery-callback`, both localhost equivalents, and
+  `tfk://auth/callback`.
+- The two stale Sprint 8 web callbacks were removed only after the Sprint 14
+  replacements were verified. No wildcard redirect was added.
+- Minimum password length is 12 with lowercase, uppercase, number and symbol
+  required. This matches application signup/reset validation; login does not
+  force-reset or reject an existing user solely because their current password
+  predates the stronger policy.
+- Leaked-password protection is enabled. The current dashboard recheck confirms
+  both this control and the password policy.
+- Auth rate limits were left unchanged because custom SMTP/delivery is not yet
+  configured.
+- Callback/recovery-marker/open-redirect behavior remains covered by the
+  focused automated suite. A real recovery email and native physical-device
+  recovery remain manual acceptance items.
+
+No Auth configuration grants roles, subscriptions or Premium access; those
+remain database-controlled. No staging reset was performed.
+
+## Pre-change staging URL audit (historical)
 
 The configured Site URL is:
 
@@ -24,7 +51,7 @@ Current exact redirect allow-list and disposition:
 
 No wildcard redirect is configured. After the final local commit is pushed, the approval request must identify the exact successful Sprint 14 Preview origin and propose adding both `<origin>/auth/callback` and `<origin>/auth/recovery-callback` before removing the two Sprint 8 entries. Keep the old hosted callbacks until the replacement is added and QA no longer depends on the old deployment.
 
-## Remote Auth configuration observed
+## Pre-change remote Auth configuration (historical)
 
 - Signup and email provider: enabled; anonymous signup disabled.
 - Email confirmation: required (`mailer_autoconfirm=false`); unverified email sign-in disabled; secure email change enabled.
@@ -40,9 +67,13 @@ No wildcard redirect is configured. After the final local commit is pushed, the 
 
 Staging is on Pro, so leaked-password protection and paid session controls are available. Enabling leaked-password protection causes Supabase to reject compromised credentials during password-based signup, sign-in, and password changes/recovery; application error handling remains generic to avoid account disclosure.
 
-## Proposed password and session policy
+## Applied password and retained session policy
 
-With approval, set remote minimum password length to **12** and require lowercase, uppercase, number, and symbol character classes. Local signup/reset validation and user hints already match this proposal; login deliberately remains compatible with existing credentials. Enable leaked-password protection. Then test signup, login, recovery, and password change with disposable accounts, including a rejected weak password and a known-compromised test value. Do not use a real user's password.
+The approved staging change set the remote minimum password length to **12**,
+required lowercase, uppercase, number and symbol character classes, and enabled
+leaked-password protection. Local signup/reset validation and user hints match;
+login deliberately remains compatible with existing credentials. No real
+personal compromised password was used for verification.
 
 Keep the current one-hour JWT expiry, refresh rotation, and ten-second reuse interval for launch unless product/security owners choose a documented inactivity or absolute session duration. Supabase's default global logout is used. A logout failure no longer silently redirects to login. Remember that access JWTs can remain usable until expiry, so a high-risk forced-revocation workflow would need a separate session-row check; no custom session architecture was added here.
 
@@ -70,14 +101,10 @@ Supabase session cookies are refreshed in middleware via `getUser()`, and protec
 
 Auth code contains no role, subscription, entitlement, admin-grant, or service-role mutation. Existing database tests exercise anonymous/authenticated isolation, role-guarded RPCs, coach/client relationships, and plan entitlements. A successful login alone therefore grants none of admin, coach, or Premium.
 
-## Exact approval boundary
+## Remaining approval boundary
 
-No remote changes are authorized by this commit. A separate approval is required to:
-
-1. replace the Site URL with the exact active Sprint 14 staging origin;
-2. add that origin's exact confirmation and recovery callbacks, then remove the two exact Sprint 8 callbacks after QA moves;
-3. set minimum length 12 and require lower/upper/number/symbol;
-4. enable leaked-password protection; and
-5. later adjust the email-send limit only after an approved email destination/provider and measured capacity exist.
-
-Production configuration remains out of scope.
+The staging Site URL, redirect replacement, password policy and leaked-password
+control are complete. Separate approval is still required to send a real
+recovery email, change rate limits, configure custom email delivery, or perform
+native physical-device recovery QA. Production configuration remains out of
+scope and must use `https://app.thefatkiller.com`, not the Preview origin.
