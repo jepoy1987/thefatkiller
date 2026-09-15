@@ -6,7 +6,7 @@ function scenario({storageFails=false,unsafe=false,ready=true,rows=true}={}){con
  if(path.endsWith('claim_account_deletions'))body=[{user_id:uid,lease}];
  else if(path.endsWith('account_deletion_objects'))body=rows?[{bucket_id:'food-analysis',name:`${unsafe?lease:uid}/photo.jpg`}]:[];
  else if(path.includes('/storage/')){if(storageFails)return {ok:false};body=[];}
- else if(path.endsWith('account_deletion_ready'))body=ready;
+ else if(path.endsWith('account_deletion_ready')||path.endsWith('prepare_account_deletion'))body=ready;
  else if(path.includes('/admin/users/'))body={};else throw Error('unexpected');
  return {ok:true,status:200,json:async()=>body};};return {calls,run:()=>processAccountDeletions({url:'http://localhost:54321',key:'fixture'},fetcher)};}
 test('Storage failure preserves Auth identity for recovery',async()=>{const s=scenario({storageFails:true});assert.equal((await s.run()).failed,1);assert.ok(!s.calls.some(p=>p.includes('/admin/users/')));});

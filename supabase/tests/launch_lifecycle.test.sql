@@ -1,6 +1,6 @@
 begin;
 set local search_path=public,extensions;
-select plan(20);
+select plan(22);
 insert into auth.users(id,aud,role,email,raw_app_meta_data,raw_user_meta_data) values
 ('a1511111-1111-4111-8111-111111111111','authenticated','authenticated','lifecycle-a@local.test','{}','{}'),
 ('a1522222-2222-4222-8222-222222222222','authenticated','authenticated','lifecycle-b@local.test','{}','{}');
@@ -34,5 +34,7 @@ set local role authenticated;
 select lives_ok($$insert into public.water_logs(user_id,amount_ml) values('a1522222-2222-4222-8222-222222222222',250)$$,'Other account unaffected');
 reset role;
 select ok(not public.account_deletion_ready('a1511111-1111-4111-8111-111111111111',gen_random_uuid()),'Invalid lease cannot authorize deletion');
+select ok(not has_function_privilege('authenticated','public.prepare_account_deletion(uuid,uuid)','EXECUTE'),'Client cannot prepare arbitrary account deletion');
+select ok(not public.prepare_account_deletion('a1511111-1111-4111-8111-111111111111',gen_random_uuid()),'Preparation requires current worker lease');
 select * from finish();
 rollback;

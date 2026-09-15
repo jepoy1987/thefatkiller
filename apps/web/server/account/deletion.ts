@@ -24,6 +24,7 @@ export async function processAccountDeletions(config: { url: string; key: string
         if(paths.length) await call(`/storage/v1/object/${bucket}`,{prefixes:paths},'DELETE');
       }
       if(await call('/rest/v1/rpc/account_deletion_ready',args)!==true){pending++;continue;}
+      if(await call('/rest/v1/rpc/prepare_account_deletion',args)!==true){pending++;continue;}
       // Admin deletion only after bytes are gone. Cascades remove the queue too.
       await call(`/auth/v1/admin/users/${claim.user_id}`,undefined,'DELETE');
       completed++;

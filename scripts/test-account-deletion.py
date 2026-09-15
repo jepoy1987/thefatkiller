@@ -22,6 +22,9 @@ try:
   for bucket in ['progress-photos','food-analysis']:
    path=f'{u}/{uuid.uuid4()}.jpg';paths.append((bucket,path));http('/storage/v1/object/'+bucket+'/'+path,image,binary=True)
   sql(f"insert into public.water_logs(user_id,amount_ml) values('{u}',250);")
+ # Owned training dependencies previously blocked the Auth cascade (RESTRICT FK).
+ exercise=str(uuid.uuid4());template=str(uuid.uuid4());program=str(uuid.uuid4())
+ sql(f"insert into public.exercises(id,owner_user_id,name,category,equipment,tracking_type) values('{exercise}','{users[0]}','Deletion exercise','strength','none','bodyweight');insert into public.workout_templates(id,owner_user_id,name) values('{template}','{users[0]}','Deletion workout');insert into public.workout_template_items(workout_template_id,exercise_id,position) values('{template}','{exercise}',0);insert into public.training_programs(id,owner_user_id,name) values('{program}','{users[0]}','Deletion program');insert into public.training_program_workouts(program_id,workout_template_id,position) values('{program}','{template}',0);")
  try:http('/rest/v1/rpc/request_account_deletion',{'p_confirmation':'wrong'},tokens[0]);raise AssertionError('Missing confirmation accepted')
  except urllib.error.HTTPError as e:assert e.code==400
  assert http('/rest/v1/rpc/request_account_deletion',{'p_confirmation':'DELETE MY ACCOUNT'},tokens[0]) is True
@@ -37,12 +40,14 @@ try:
  result=json.loads(out.stdout);assert result['completed']==1,result
  assert sql(f"select count(*) from auth.users where id='{users[0]}';")=='0'
  assert sql(f"select count(*) from public.water_logs where user_id='{users[0]}';")=='0'
+ assert sql(f"select count(*) from public.workout_templates where id='{template}';")=='0'
+ assert sql(f"select count(*) from public.exercises where id='{exercise}';")=='0'
  assert sql(f"select count(*) from storage.objects where split_part(name,'/',1)='{users[0]}';")=='0'
  assert sql(f"select count(*) from storage.objects where split_part(name,'/',1)='{users[1]}';")=='2'
  assert sql(f"select count(*) from public.water_logs where user_id='{users[1]}';")=='1'
  out=subprocess.run(['node','--experimental-strip-types','scripts/delete-accounts.mjs','--local'],capture_output=True,text=True)
  assert json.loads(out.stdout)['examined']==0
- print('Account deletion local E2E: 12/12 passed (confirmation, repeated request, write freeze, session revocation, real Storage/Auth removal, other-owner isolation, rerun)')
+ print('Account deletion local E2E: 14/14 passed (confirmation, repeated request, write freeze, session revocation, real Storage/Auth removal, other-owner isolation, rerun)')
 finally:
  for bucket,path in paths:
   http('/storage/v1/object/'+bucket,{'prefixes':[path]},method='DELETE')
