@@ -97,10 +97,19 @@ test('pricing is explicitly not final and exposes no invented prices or checkout
 
 function componentHarness(file, exportName, extraMocks = {}) {
   const states = [];
+  const refs = [];
+  const effects = [];
   let cursor = 0;
+  let refCursor = 0;
+  let cleanups = [];
   const reactMock = {
-    useEffect() {},
+    useEffect(effect) { effects.push(effect); },
     useMemo(factory) { return factory(); },
+    useRef(initial) {
+      const index = refCursor++;
+      if (!(index in refs)) refs[index] = { current: initial };
+      return refs[index];
+    },
     useState(initial) {
       const index = cursor++;
       if (!(index in states)) states[index] = typeof initial === 'function' ? initial() : initial;
@@ -124,7 +133,11 @@ function componentHarness(file, exportName, extraMocks = {}) {
     if (id in mocks) return mocks[id];
     throw new Error(`Unexpected test import: ${id}`);
   }, moduleRecord, moduleRecord.exports);
-  return { render() { cursor = 0; return moduleRecord.exports[exportName](); } };
+  return {
+    render() { cursor = 0; refCursor = 0; effects.length = 0; return moduleRecord.exports[exportName](); },
+    runEffects() { cleanups = effects.map((effect) => effect()).filter((cleanup) => typeof cleanup === 'function'); },
+    cleanup() { cleanups.forEach((cleanup) => cleanup()); cleanups = []; },
+  };
 }
 
 function childrenOf(node) {
@@ -160,6 +173,75 @@ test('help search filters results and shows a useful empty state', () => {
   tree = harness.render();
   assert.match(textOf(tree), /No articles found/);
   assert.match(textOf(tree), /Clear filters/);
+});
+
+test('help article disclosures expose readable content and correct ARIA state', () => {
+  const harness = componentHarness(join(root, 'components', 'help-center.tsx'), 'HelpCenter');
+  let tree = harness.render();
+  let trigger = walk(tree, (node) => node.type === 'button' && node.props['aria-controls'] === 'help-article-use-today-dashboard')[0];
+  assert.equal(trigger.props.type, 'button');
+  assert.equal(trigger.props['aria-expanded'], false);
+  assert.equal(walk(tree, (node) => node.props?.id === 'help-article-use-today-dashboard').length, 0);
+
+  trigger.props.onClick();
+  tree = harness.render();
+  trigger = walk(tree, (node) => node.props?.['aria-controls'] === 'help-article-use-today-dashboard')[0];
+  assert.equal(trigger.props['aria-expanded'], true);
+  const panel = walk(tree, (node) => node.props?.id === 'help-article-use-today-dashboard')[0];
+  assert.equal(panel.props.role, 'region');
+  assert.match(textOf(panel), /keeps nutrition, water, habits, check-ins, weight, and progress together/i);
+});
+
+test('help article disclosures support Enter and Space keyboard activation', () => {
+  const harness = componentHarness(join(root, 'components', 'help-center.tsx'), 'HelpCenter');
+  let tree = harness.render();
+  let trigger = walk(tree, (node) => node.props?.['aria-controls'] === 'help-article-create-account')[0];
+  let prevented = 0;
+
+  trigger.props.onKeyDown({ key: 'Enter', preventDefault() { prevented += 1; } });
+  tree = harness.render();
+  trigger = walk(tree, (node) => node.props?.['aria-controls'] === 'help-article-create-account')[0];
+  assert.equal(trigger.props['aria-expanded'], true);
+
+  trigger.props.onKeyDown({ key: ' ', preventDefault() { prevented += 1; } });
+  tree = harness.render();
+  trigger = walk(tree, (node) => node.props?.['aria-controls'] === 'help-article-create-account')[0];
+  assert.equal(trigger.props['aria-expanded'], false);
+  assert.equal(prevented, 2);
+});
+
+test('Command+K and Ctrl+K focus Help search and clean up their listener', () => {
+  const listeners = new Map();
+  const originalDocument = global.document;
+  global.document = {
+    addEventListener(type, listener) { listeners.set(type, listener); },
+    removeEventListener(type, listener) { if (listeners.get(type) === listener) listeners.delete(type); },
+  };
+
+  try {
+    const harness = componentHarness(join(root, 'components', 'help-center.tsx'), 'HelpCenter');
+    const tree = harness.render();
+    const input = walk(tree, (node) => node.type === 'input' && node.props.id === 'help-search')[0];
+    let focusCount = 0;
+    input.props.ref.current = { focus() { focusCount += 1; } };
+    harness.runEffects();
+
+    const keydown = listeners.get('keydown');
+    let prevented = 0;
+    keydown({ key: 'k', metaKey: true, ctrlKey: false, altKey: false, shiftKey: false, target: null, preventDefault() { prevented += 1; } });
+    keydown({ key: 'k', metaKey: false, ctrlKey: true, altKey: false, shiftKey: false, target: null, preventDefault() { prevented += 1; } });
+    assert.equal(focusCount, 2);
+    assert.equal(prevented, 2);
+
+    keydown({ key: 'k', metaKey: true, ctrlKey: false, altKey: false, shiftKey: false, target: { tagName: 'TEXTAREA', isContentEditable: false }, preventDefault() { prevented += 1; } });
+    assert.equal(focusCount, 2);
+    assert.equal(prevented, 2);
+
+    harness.cleanup();
+    assert.equal(listeners.has('keydown'), false);
+  } finally {
+    global.document = originalDocument;
+  }
 });
 
 test('mobile menu button exposes and opens the navigation panel', () => {
