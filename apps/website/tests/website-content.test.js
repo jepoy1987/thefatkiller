@@ -43,15 +43,26 @@ test('all required App Router pages exist', () => {
   }
 });
 
-test('favicon exists and is included in the production build', { timeout: 120_000 }, () => {
+test('favicon exists and is included in the production build', { timeout: 130_000 }, () => {
   const favicon = readFileSync(join(root, 'app', 'favicon.ico'));
   assert.deepEqual([...favicon.subarray(0, 6)], [0, 0, 1, 0, 1, 0]);
 
+  const buildTimeout = 120_000;
   const build = spawnSync(process.execPath, [require.resolve('next/dist/bin/next'), 'build'], {
     cwd: root,
     encoding: 'utf8',
+    timeout: buildTimeout,
+    killSignal: 'SIGKILL',
   });
-  assert.equal(build.status, 0, `${build.stdout}\n${build.stderr}`);
+  if (build.error?.code === 'ETIMEDOUT') {
+    assert.fail(`next build timed out after ${buildTimeout}ms and was killed with SIGKILL`);
+  }
+  if (build.error) {
+    assert.fail(`next build could not start: ${build.error.message}`);
+  }
+  if (build.status !== 0) {
+    assert.fail(`next build exited unsuccessfully with status ${build.status ?? 'unknown'}${build.signal ? ` after signal ${build.signal}` : ''}\n${build.stdout}\n${build.stderr}`);
+  }
 
   const routes = JSON.parse(readFileSync(join(root, '.next', 'routes-manifest.json'), 'utf8'));
   assert.ok(routes.staticRoutes.some((route) => route.page === '/favicon.ico'));
