@@ -7,93 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
-      weekly_insights: {
-        Row: {
-          attempts: number
-          created_at: string
-          error_code: string | null
-          generated_at: string | null
-          generated_text: string | null
-          id: string
-          input_snapshot: Json
-          insight_json: Json | null
-          model: string | null
-          period_end: string
-          period_start: string
-          prompt_version: string
-          retry_after: string | null
-          status: string
-          timezone: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          attempts?: number
-          created_at?: string
-          error_code?: string | null
-          generated_at?: string | null
-          generated_text?: string | null
-          id?: string
-          input_snapshot: Json
-          insight_json?: Json | null
-          model?: string | null
-          period_end: string
-          period_start: string
-          prompt_version: string
-          retry_after?: string | null
-          status?: string
-          timezone: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          attempts?: number
-          created_at?: string
-          error_code?: string | null
-          generated_at?: string | null
-          generated_text?: string | null
-          id?: string
-          input_snapshot?: Json
-          insight_json?: Json | null
-          model?: string | null
-          period_end?: string
-          period_start?: string
-          prompt_version?: string
-          retry_after?: string | null
-          status?: string
-          timezone?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       body_measurements: {
         Row: {
           created_at: string
@@ -289,6 +204,126 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      conversation_ai_settings: {
+        Row: {
+          consent_purpose: string | null
+          consent_status: Database["public"]["Enums"]["ai_consent_status"]
+          consent_version: string | null
+          consented_at: string | null
+          conversation_id: string
+          disabled_at: string | null
+          disabled_by: string | null
+          disabled_reason: string | null
+          mode: Database["public"]["Enums"]["conversation_ai_mode"]
+          paused_at: string | null
+          paused_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          consent_purpose?: string | null
+          consent_status?: Database["public"]["Enums"]["ai_consent_status"]
+          consent_version?: string | null
+          consented_at?: string | null
+          conversation_id: string
+          disabled_at?: string | null
+          disabled_by?: string | null
+          disabled_reason?: string | null
+          mode?: Database["public"]["Enums"]["conversation_ai_mode"]
+          paused_at?: string | null
+          paused_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          consent_purpose?: string | null
+          consent_status?: Database["public"]["Enums"]["ai_consent_status"]
+          consent_version?: string | null
+          consented_at?: string | null
+          conversation_id?: string
+          disabled_at?: string | null
+          disabled_by?: string | null
+          disabled_reason?: string | null
+          mode?: Database["public"]["Enums"]["conversation_ai_mode"]
+          paused_at?: string | null
+          paused_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_ai_settings_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: true
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          joined_at: string
+          left_at: string | null
+          participant_role: Database["public"]["Enums"]["conversation_participant_role"]
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          joined_at?: string
+          left_at?: string | null
+          participant_role: Database["public"]["Enums"]["conversation_participant_role"]
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          joined_at?: string
+          left_at?: string | null
+          participant_role?: Database["public"]["Enums"]["conversation_participant_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          relationship_id: string
+          status: Database["public"]["Enums"]["conversation_status"]
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          relationship_id: string
+          status?: Database["public"]["Enums"]["conversation_status"]
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          relationship_id?: string
+          status?: Database["public"]["Enums"]["conversation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "coach_client_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_check_ins: {
         Row: {
@@ -862,6 +897,86 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      message_receipts: {
+        Row: {
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_receipts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          ai_assistance_audit_id: string | null
+          author_user_id: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          origin: Database["public"]["Enums"]["message_origin"]
+          reply_to_message_id: string | null
+        }
+        Insert: {
+          ai_assistance_audit_id?: string | null
+          author_user_id?: string | null
+          body: string
+          conversation_id: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          origin: Database["public"]["Enums"]["message_origin"]
+          reply_to_message_id?: string | null
+        }
+        Update: {
+          ai_assistance_audit_id?: string | null
+          author_user_id?: string | null
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          origin?: Database["public"]["Enums"]["message_origin"]
+          reply_to_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_message_id_conversation_id_fkey"
+            columns: ["reply_to_message_id", "conversation_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id", "conversation_id"]
+          },
+        ]
       }
       milestones: {
         Row: {
@@ -1531,6 +1646,66 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_insights: {
+        Row: {
+          attempts: number
+          created_at: string
+          error_code: string | null
+          generated_at: string | null
+          generated_text: string | null
+          id: string
+          input_snapshot: Json
+          insight_json: Json | null
+          model: string | null
+          period_end: string
+          period_start: string
+          prompt_version: string
+          retry_after: string | null
+          status: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          generated_at?: string | null
+          generated_text?: string | null
+          id?: string
+          input_snapshot: Json
+          insight_json?: Json | null
+          model?: string | null
+          period_end: string
+          period_start: string
+          prompt_version: string
+          retry_after?: string | null
+          status?: string
+          timezone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          generated_at?: string | null
+          generated_text?: string | null
+          id?: string
+          input_snapshot?: Json
+          insight_json?: Json | null
+          model?: string | null
+          period_end?: string
+          period_start?: string
+          prompt_version?: string
+          retry_after?: string | null
+          status?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       weight_entries: {
         Row: {
           created_at: string
@@ -1893,27 +2068,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      reserve_progress_upload: { Args: { p_path: string }; Returns: boolean }
-      reserve_food_upload: { Args: { p_user_id: string; p_path: string }; Returns: boolean }
-      request_account_deletion: { Args: { p_confirmation: string }; Returns: boolean }
-      replay_safe_mutation: { Args: { p_key: string; p_operation: string; p_input: Json }; Returns: Json }
-      prune_mutation_receipts: { Args: { p_limit?: number }; Returns: number }
-      get_weekly_insight_source: { Args: never; Returns: Json }
-      finish_weekly_insight: {
-        Args: {
-          p_attempt: number
-          p_error?: string
-          p_id: string
-          p_model: string
-          p_result: Json
-          p_user_id: string
-        }
+      account_deletion_objects: {
+        Args: { p_lease: string; p_user_id: string }
+        Returns: {
+          bucket_id: string
+          name: string
+        }[]
+      }
+      account_deletion_ready: {
+        Args: { p_lease: string; p_user_id: string }
         Returns: boolean
       }
-      claim_weekly_insight: {
-        Args: { p_input: Json; p_user_id: string }
-        Returns: Json
-      }
+      account_storage_active: { Args: never; Returns: boolean }
       admin_assign_coach_client: {
         Args: { target_client_user_id: string; target_coach_user_id: string }
         Returns: string
@@ -1926,20 +2092,60 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
-      claim_food_photo_cleanup: {
+      claim_account_deletions: {
         Args: { p_limit?: number }
-        Returns: Database["public"]["Tables"]["food_photo_analyses"]["Row"][]
-      }
-      complete_food_photo_cleanup: {
-        Args: { p_id: string; p_user_id: string; p_claim: string; p_path: string | null }
-        Returns: boolean
+        Returns: {
+          lease: string
+          user_id: string
+        }[]
       }
       claim_food_photo: {
         Args: { p_id: string; p_retry?: boolean; p_user_id: string }
         Returns: Json
       }
+      claim_food_photo_cleanup: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          cleanup_claim: string | null
+          cleanup_lease_until: string | null
+          completed_at: string | null
+          confirmed_log_ids: string[] | null
+          created_at: string
+          error_code: string | null
+          expires_at: string
+          id: string
+          model: string | null
+          prompt_version: string
+          provider: string | null
+          result_json: Json | null
+          started_at: string
+          status: string
+          storage_path: string | null
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "food_photo_analyses"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      claim_weekly_insight: {
+        Args: { p_input: Json; p_user_id: string }
+        Returns: Json
+      }
       clear_food_photo_storage: {
         Args: { p_id: string; p_path: string; p_user_id: string }
+        Returns: boolean
+      }
+      complete_food_photo_cleanup: {
+        Args: {
+          p_claim: string
+          p_id: string
+          p_path: string
+          p_user_id: string
+        }
         Returns: boolean
       }
       complete_onboarding: {
@@ -2013,6 +2219,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      finish_weekly_insight: {
+        Args: {
+          p_attempt: number
+          p_error?: string
+          p_id: string
+          p_model: string
+          p_result: Json
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       generate_due_notifications: { Args: never; Returns: Json }
       get_accountability_score_input: { Args: never; Returns: Json }
       get_client_coaching_summary: { Args: never; Returns: Json }
@@ -2052,16 +2269,35 @@ export type Database = {
           water_ml: number
         }[]
       }
+      get_or_create_conversation: {
+        Args: { p_relationship_id: string }
+        Returns: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          relationship_id: string
+          status: Database["public"]["Enums"]["conversation_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_report_context: { Args: { p_client_id?: string }; Returns: Json }
       get_report_data: {
         Args: { p_client_id?: string; p_end: string; p_start: string }
         Returns: Json
       }
       get_training_summary: { Args: never; Returns: Json }
+      get_weekly_insight_source: { Args: never; Returns: Json }
       has_current_feature: {
         Args: { p_feature_code: string }
         Returns: boolean
       }
+      has_progress_reservation: { Args: { p_path: string }; Returns: boolean }
       log_saved_meal: {
         Args: {
           p_logged_at: string
@@ -2097,6 +2333,24 @@ export type Database = {
       }
       mark_all_notifications_read: { Args: never; Returns: number }
       notification_unread_count: { Args: never; Returns: number }
+      prepare_account_deletion: {
+        Args: { p_lease: string; p_user_id: string }
+        Returns: boolean
+      }
+      prune_mutation_receipts: { Args: { p_limit?: number }; Returns: number }
+      replay_safe_mutation: {
+        Args: { p_input: Json; p_key: string; p_operation: string }
+        Returns: Json
+      }
+      request_account_deletion: {
+        Args: { p_confirmation: string }
+        Returns: boolean
+      }
+      reserve_food_upload: {
+        Args: { p_path: string; p_user_id: string }
+        Returns: boolean
+      }
+      reserve_progress_upload: { Args: { p_path: string }; Returns: boolean }
       save_coach_goal: {
         Args: {
           p_category: Database["public"]["Enums"]["coach_goal_category"]
@@ -2149,6 +2403,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      send_message: {
+        Args: { p_body: string; p_conversation_id: string }
+        Returns: {
+          ai_assistance_audit_id: string | null
+          author_user_id: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          origin: Database["public"]["Enums"]["message_origin"]
+          reply_to_message_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_coach_goal_status: {
         Args: {
           p_goal_id: string
@@ -2180,6 +2455,38 @@ export type Database = {
       set_notification_read: {
         Args: { p_id: string; p_read: boolean }
         Returns: boolean
+      }
+      storage_backup_candidate_current: {
+        Args: {
+          p_bucket: string
+          p_path: string
+          p_source_id: string
+          p_storage_id: string
+          p_storage_updated_at: string
+        }
+        Returns: boolean
+      }
+      storage_backup_candidates: {
+        Args: {
+          p_after_bucket?: string
+          p_after_path?: string
+          p_limit?: number
+        }
+        Returns: {
+          application_owner_id: string
+          bucket_id: string
+          food_expires_at: string
+          food_status: string
+          object_path: string
+          source_created_at: string
+          source_id: string
+          source_table: string
+          storage_created_at: string
+          storage_id: string
+          storage_metadata: Json
+          storage_owner_id: string
+          storage_updated_at: string
+        }[]
       }
       training_mutate: {
         Args: { operation: string; payload: Json }
@@ -2264,6 +2571,7 @@ export type Database = {
         | "moderately_active"
         | "very_active"
         | "extra_active"
+      ai_consent_status: "not_requested" | "granted" | "declined" | "revoked"
       app_role: "user" | "coach" | "admin"
       billing_provider: "internal" | "stripe" | "apple" | "google" | "manual"
       coach_goal_category:
@@ -2278,6 +2586,9 @@ export type Database = {
       coach_goal_priority: "low" | "normal" | "high"
       coach_goal_status: "active" | "completed" | "archived"
       coach_relationship_status: "invited" | "active" | "paused" | "ended"
+      conversation_ai_mode: "off" | "coach_draft" | "client_facing"
+      conversation_participant_role: "client" | "coach"
+      conversation_status: "active" | "closed"
       food_source: "manual" | "system" | "provider" | "barcode"
       glp1_dose_event_type: "taken" | "missed" | "skipped"
       glp1_dose_unit: "mg" | "mcg" | "units" | "other"
@@ -2310,6 +2621,7 @@ export type Database = {
         | "left_thigh"
         | "right_thigh"
         | "body_fat"
+      message_origin: "client" | "coach" | "ai_assistant" | "system"
       milestone_type: "first_weight" | "five_weights" | "goal_reached"
       progress_photo_type: "front" | "side" | "back" | "other"
       progress_source:
@@ -2451,9 +2763,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       activity_level: [
@@ -2463,6 +2772,7 @@ export const Constants = {
         "very_active",
         "extra_active",
       ],
+      ai_consent_status: ["not_requested", "granted", "declined", "revoked"],
       app_role: ["user", "coach", "admin"],
       billing_provider: ["internal", "stripe", "apple", "google", "manual"],
       coach_goal_category: [
@@ -2478,6 +2788,9 @@ export const Constants = {
       coach_goal_priority: ["low", "normal", "high"],
       coach_goal_status: ["active", "completed", "archived"],
       coach_relationship_status: ["invited", "active", "paused", "ended"],
+      conversation_ai_mode: ["off", "coach_draft", "client_facing"],
+      conversation_participant_role: ["client", "coach"],
+      conversation_status: ["active", "closed"],
       food_source: ["manual", "system", "provider", "barcode"],
       glp1_dose_event_type: ["taken", "missed", "skipped"],
       glp1_dose_unit: ["mg", "mcg", "units", "other"],
@@ -2513,6 +2826,7 @@ export const Constants = {
         "right_thigh",
         "body_fat",
       ],
+      message_origin: ["client", "coach", "ai_assistant", "system"],
       milestone_type: ["first_weight", "five_weights", "goal_reached"],
       progress_photo_type: ["front", "side", "back", "other"],
       progress_source: [
