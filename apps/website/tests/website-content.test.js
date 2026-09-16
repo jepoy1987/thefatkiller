@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const { readFileSync, readdirSync, statSync } = require('node:fs');
 const { join } = require('node:path');
+const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const ts = require('typescript');
 
@@ -40,6 +41,22 @@ test('all required App Router pages exist', () => {
     const page = join(root, 'app', route, 'page.tsx');
     assert.doesNotThrow(() => readFileSync(page));
   }
+});
+
+test('favicon exists and is included in the production build', { timeout: 120_000 }, () => {
+  const favicon = readFileSync(join(root, 'app', 'favicon.ico'));
+  assert.deepEqual([...favicon.subarray(0, 6)], [0, 0, 1, 0, 1, 0]);
+
+  const build = spawnSync(process.execPath, [require.resolve('next/dist/bin/next'), 'build'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.equal(build.status, 0, `${build.stdout}\n${build.stderr}`);
+
+  const routes = JSON.parse(readFileSync(join(root, '.next', 'routes-manifest.json'), 'utf8'));
+  assert.ok(routes.staticRoutes.some((route) => route.page === '/favicon.ico'));
+  assert.deepEqual(readFileSync(join(root, '.next', 'server', 'app', 'favicon.ico.body')), favicon);
+  assert.match(readFileSync(join(root, '.next', 'server', 'app', 'index.html'), 'utf8'), /<link rel="icon" href="\/favicon\.ico" type="image\/x-icon" sizes="64x64"\/>/);
 });
 
 test('literal internal links resolve to App Router pages', () => {
