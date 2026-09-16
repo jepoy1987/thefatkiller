@@ -900,27 +900,37 @@ export type Database = {
       }
       message_receipts: {
         Row: {
+          conversation_id: string
           message_id: string
           read_at: string
           user_id: string
         }
         Insert: {
+          conversation_id: string
           message_id: string
           read_at?: string
           user_id: string
         }
         Update: {
+          conversation_id?: string
           message_id?: string
           read_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "message_receipts_message_id_fkey"
-            columns: ["message_id"]
+            foreignKeyName: "message_receipts_conversation_id_user_id_fkey"
+            columns: ["conversation_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_participants"
+            referencedColumns: ["conversation_id", "user_id"]
+          },
+          {
+            foreignKeyName: "message_receipts_message_id_conversation_id_fkey"
+            columns: ["message_id", "conversation_id"]
             isOneToOne: false
             referencedRelation: "messages"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "conversation_id"]
           },
         ]
       }

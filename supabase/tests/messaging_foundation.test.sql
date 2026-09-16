@@ -70,6 +70,13 @@ select throws_ok(
   $$insert into public.messages(conversation_id,origin,body) values(current_setting('qa.conversation_a')::uuid,'system','spoof')$$,
   '42501',null,'client cannot directly spoof system origin');
 select throws_ok($$select public.send_message(current_setting('qa.conversation_a')::uuid,'   ')$$,'22023',null,'empty message rejected');
+select throws_ok($$select public.send_message(current_setting('qa.conversation_a')::uuid,E'\t\t')$$,'22023',null,'tab-only message rejected');
+select throws_ok($$select public.send_message(current_setting('qa.conversation_a')::uuid,E'\n\n')$$,'22023',null,'LF-only message rejected');
+select throws_ok($$select public.send_message(current_setting('qa.conversation_a')::uuid,E'\r\n\r\n')$$,'22023',null,'CRLF-only message rejected');
+select throws_ok($$select public.send_message(current_setting('qa.conversation_a')::uuid,E' \t\r\n ')$$,'22023',null,'mixed whitespace-only message rejected');
+select lives_ok(
+  $$select public.send_message(current_setting('qa.conversation_a')::uuid,E'normal\tinternal\nwhitespace')$$,
+  'normal internal whitespace is allowed');
 select throws_ok($$select public.send_message(current_setting('qa.conversation_a')::uuid,repeat('x',4001))$$,'22023',null,'oversized message rejected');
 
 -- An assigned coach is still isolated from other coaches' conversations.
@@ -94,7 +101,8 @@ select throws_ok($$select public.send_message(current_setting('qa.conversation_a
 set local role authenticated;
 select set_config('request.jwt.claim.sub','b4444444-4444-4444-8444-444444444444',true);
 select lives_ok(
-  $$insert into public.message_receipts(message_id,user_id) values(current_setting('qa.client_message')::uuid,'b4444444-4444-4444-8444-444444444444')$$,
+  $$insert into public.message_receipts(message_id,conversation_id,user_id)
+    values(current_setting('qa.client_message')::uuid,current_setting('qa.conversation_a')::uuid,'b4444444-4444-4444-8444-444444444444')$$,
   'receiving coach can create receipt');
 select lives_ok(
   $$update public.message_receipts set read_at=read_at+interval '1 second'
@@ -102,11 +110,13 @@ select lives_ok(
   'receiving coach can update own receipt');
 select set_config('request.jwt.claim.sub','b1111111-1111-4111-8111-111111111111',true);
 select throws_ok(
-  $$insert into public.message_receipts(message_id,user_id) values(current_setting('qa.client_message')::uuid,'b1111111-1111-4111-8111-111111111111')$$,
-  '42501',null,'message author cannot create own receiving receipt');
+  $$insert into public.message_receipts(message_id,conversation_id,user_id)
+    values(current_setting('qa.client_message')::uuid,current_setting('qa.conversation_a')::uuid,'b1111111-1111-4111-8111-111111111111')$$,
+  '23514',null,'message author cannot create own receiving receipt');
 select throws_ok(
-  $$insert into public.message_receipts(message_id,user_id) values(current_setting('qa.coach_message')::uuid,'b2222222-2222-4222-8222-222222222222')$$,
-  '42501',null,'receipt cannot be written for another user');
+  $$insert into public.message_receipts(message_id,conversation_id,user_id)
+    values(current_setting('qa.coach_message')::uuid,current_setting('qa.conversation_a')::uuid,'b2222222-2222-4222-8222-222222222222')$$,
+  '23514',null,'receipt cannot be written for another user');
 select set_config('qa.receipt_at',(select read_at::text from public.message_receipts
   where message_id=current_setting('qa.client_message')::uuid),true);
 select lives_ok(
@@ -115,8 +125,19 @@ select lives_ok(
   'sender receipt update attempt is safely filtered');
 select is((select read_at::text from public.message_receipts
   where message_id=current_setting('qa.client_message')::uuid),current_setting('qa.receipt_at'),'sender cannot update the receiver receipt');
+reset role;
+select throws_ok(
+  $$insert into public.message_receipts(message_id,conversation_id,user_id)
+    values(current_setting('qa.client_message')::uuid,current_setting('qa.conversation_a')::uuid,'b1111111-1111-4111-8111-111111111111')$$,
+  '23514',null,'database trigger rejects a privileged author receipt');
+select throws_ok(
+  $$insert into public.message_receipts(message_id,conversation_id,user_id)
+    values(current_setting('qa.client_message')::uuid,current_setting('qa.conversation_a')::uuid,'b6666666-6666-4666-8666-666666666666')$$,
+  '23514',null,'database trigger rejects a privileged nonparticipant receipt');
 
 -- Public roles cannot mutate messages; the table trigger also protects future grants.
+set local role authenticated;
+select set_config('request.jwt.claim.sub','b1111111-1111-4111-8111-111111111111',true);
 select throws_ok($$update public.messages set body='changed' where id=current_setting('qa.client_message')::uuid$$,'42501',null,'authenticated message update denied');
 select throws_ok($$delete from public.messages where id=current_setting('qa.client_message')::uuid$$,'42501',null,'authenticated message delete denied');
 reset role;
@@ -124,6 +145,7 @@ select throws_ok($$update public.messages set origin='coach' where id=current_se
 select throws_ok($$update public.messages set author_user_id='b4444444-4444-4444-8444-444444444444' where id=current_setting('qa.client_message')::uuid$$,'55000',null,'author is immutable');
 select throws_ok($$update public.messages set conversation_id=current_setting('qa.conversation_b')::uuid where id=current_setting('qa.client_message')::uuid$$,'55000',null,'conversation is immutable');
 select throws_ok($$update public.messages set created_at=now()-interval '1 day' where id=current_setting('qa.client_message')::uuid$$,'55000',null,'created_at is immutable');
+select throws_ok($$delete from public.messages where id=current_setting('qa.client_message')::uuid$$,'55000',null,'privileged message deletion is blocked outside trusted cleanup');
 
 -- Composite FK prevents a reply from crossing conversation boundaries.
 select throws_ok(
@@ -175,6 +197,52 @@ select throws_ok(
     values(current_setting('qa.conversation_b')::uuid,current_setting('qa.client_message')::uuid,'disabled-scaffold','none','phase-a')$$,
   '23503',null,'generated message provenance cannot cross conversation boundaries');
 
+-- The existing account-deletion authority freezes every messaging write path,
+-- including a coach writing into a queued client's conversation.
+set local role authenticated;
+select set_config('request.jwt.claim.sub','b4444444-4444-4444-8444-444444444444',true);
+select set_config('qa.coach_message_b',(
+  public.send_message(current_setting('qa.conversation_b')::uuid,'Before deletion queue')
+).id::text,true);
+select set_config('request.jwt.claim.sub','b2222222-2222-4222-8222-222222222222',true);
+insert into public.message_receipts(message_id,conversation_id,user_id)
+values(
+  current_setting('qa.coach_message_b')::uuid,
+  current_setting('qa.conversation_b')::uuid,
+  'b2222222-2222-4222-8222-222222222222'
+);
+reset role;
+insert into private.account_deletions(user_id)
+values('b2222222-2222-4222-8222-222222222222');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','b2222222-2222-4222-8222-222222222222',true);
+select throws_ok(
+  $$select public.get_or_create_conversation('ba222222-2222-4222-8222-222222222222')$$,
+  '42501',null,'queued actor cannot create or retrieve a conversation');
+select throws_ok(
+  $$select public.send_message(current_setting('qa.conversation_b')::uuid,'queued client')$$,
+  '42501',null,'queued actor cannot send');
+select throws_ok(
+  $$update public.message_receipts set read_at=read_at+interval '1 second'
+    where message_id=current_setting('qa.coach_message_b')::uuid$$,
+  '42501',null,'queued actor cannot mark a message read');
+select set_config('request.jwt.claim.sub','b4444444-4444-4444-8444-444444444444',true);
+select throws_ok(
+  $$select public.send_message(current_setting('qa.conversation_b')::uuid,'coach into queued client')$$,
+  '42501',null,'coach cannot send into a queued client conversation');
+reset role;
+select throws_ok(
+  $$update public.conversation_participants set left_at=now()
+    where conversation_id=current_setting('qa.conversation_b')::uuid
+      and user_id='b2222222-2222-4222-8222-222222222222'$$,
+  '42501',null,'privileged participant mutation cannot bypass deletion state');
+select throws_ok(
+  $$update public.conversation_ai_settings set consent_status='declined'
+    where conversation_id=current_setting('qa.conversation_b')::uuid$$,
+  '42501',null,'privileged AI-setting mutation cannot bypass deletion state');
+delete from private.account_deletions
+where user_id='b2222222-2222-4222-8222-222222222222';
+
 -- Paused and ended relationships fail closed for both reads and sends.
 update public.coach_client_relationships set status='paused' where id='ba111111-1111-4111-8111-111111111111';
 set local role authenticated;
@@ -197,6 +265,32 @@ select throws_ok($$select public.send_message(current_setting('qa.old_conversati
 select set_config('request.jwt.claim.sub','b3333333-3333-4333-8333-333333333333',true);
 select set_config('qa.new_conversation',(public.get_or_create_conversation('ba444444-4444-4444-8444-444444444444')).id::text,true);
 select isnt(current_setting('qa.new_conversation'),current_setting('qa.old_conversation'),'reassignment uses a distinct conversation');
+
+-- Relationship lookup errors are intentionally indistinguishable to callers.
+select set_config('request.jwt.claim.sub','b6666666-6666-4666-8666-666666666666',true);
+select throws_ok(
+  $$select public.get_or_create_conversation('ba111111-1111-4111-8111-111111111111')$$,
+  '42501','Relationship unavailable','inactive relationship is externally unavailable');
+select throws_ok(
+  $$select public.get_or_create_conversation('ba222222-2222-4222-8222-222222222222')$$,
+  '42501','Relationship unavailable','active unrelated relationship is externally unavailable');
+select throws_ok(
+  $$select public.get_or_create_conversation('ffffffff-ffff-4fff-8fff-ffffffffffff')$$,
+  '42501','Relationship unavailable','nonexistent relationship is externally unavailable');
+reset role;
+
+select lives_ok($replay$
+  do $$
+  begin
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname='supabase_realtime' and schemaname='public' and tablename='messages'
+    ) then
+      alter publication supabase_realtime add table public.messages;
+    end if;
+  end;
+  $$
+$replay$,'existing Realtime publication membership replays safely');
 
 select * from finish();
 rollback;
