@@ -279,18 +279,13 @@ select throws_ok(
   '42501','Relationship unavailable','nonexistent relationship is externally unavailable');
 reset role;
 
-select lives_ok($replay$
-  do $$
-  begin
-    if not exists (
-      select 1 from pg_publication_tables
-      where pubname='supabase_realtime' and schemaname='public' and tablename='messages'
-    ) then
-      alter publication supabase_realtime add table public.messages;
-    end if;
-  end;
-  $$
-$replay$,'existing Realtime publication membership replays safely');
+select is((
+  select count(*)::int
+  from pg_publication_tables
+  where pubname='supabase_realtime'
+    and schemaname='public'
+    and tablename='messages'
+),1,'messages is already present exactly once in the Realtime publication');
 
 select * from finish();
 rollback;
