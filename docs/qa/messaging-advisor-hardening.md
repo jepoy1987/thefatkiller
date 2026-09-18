@@ -6,27 +6,32 @@ perform a remote migration.
 
 ## Foreign-key advisor review
 
-Supabase performance lint `0001_unindexed_foreign_keys` reported four
-composite foreign keys. Catalog inspection found each parent-side lookup is
-already supported by a valid, ready, non-partial B-tree whose leading column
-is selective; the second column is determined by the globally unique message
-or generation identifier. Adding the advisor's exact composite shape would
-duplicate the lookup path and add write cost.
+Supabase performance advisor `0001_unindexed_foreign_keys` reports the same
+four INFO findings both locally and on staging. An earlier local-versus-staging
+discrepancy was caused by running the advisor with a severity filter that
+excluded INFO; it was not evidence that the findings had been remediated.
+
+Catalog inspection found each parent-side lookup already supported by a valid,
+ready, non-partial B-tree. The leading identifier is globally unique, or leads
+a key whose remaining column provides per-parent cardinality. Adding the exact
+composite shape suggested by this syntactic advisor would duplicate the lookup
+path and increase write cost.
 
 | Constraint | Referencing columns | Referenced columns | Existing usable index | Classification |
 | --- | --- | --- | --- | --- |
-| `ai_generation_audits_generated_message_id_conversation_id_fkey` | `private.ai_generation_audits(generated_message_id, conversation_id)` | `public.messages(id, conversation_id)` | unique `ai_generation_audits_generated_message_id_key(generated_message_id)` | Advisor limitation; `messages.id` and `generated_message_id` are globally unique. |
-| `ai_generation_inputs_generation_id_conversation_id_fkey` | `private.ai_generation_inputs(generation_id, conversation_id)` | `private.ai_generation_audits(id, conversation_id)` | primary key `ai_generation_inputs_pkey(generation_id, message_id)` and unique `ai_generation_inputs_generation_id_input_order_key(generation_id, input_order)` | Advisor limitation; both lead with generation ID, which identifies one audit/conversation. |
-| `ai_generation_inputs_message_id_conversation_id_fkey` | `private.ai_generation_inputs(message_id, conversation_id)` | `public.messages(id, conversation_id)` | `ai_generation_inputs_message_idx(message_id)` | Advisor limitation; `messages.id` globally identifies the conversation. |
-| `message_receipts_message_id_conversation_id_fkey` | `public.message_receipts(message_id, conversation_id)` | `public.messages(id, conversation_id)` | primary key `message_receipts_pkey(message_id, user_id)` | Advisor limitation; the primary-key prefix finds all receipts for the globally unique message. |
+| `ai_generation_audits_generated_message_id_conversation_id_fkey` | `private.ai_generation_audits(generated_message_id, conversation_id)` | `public.messages(id, conversation_id)` | unique `ai_generation_audits_generated_message_id_key(generated_message_id)` | Advisor limitation: a generated message belongs to one conversation. |
+| `ai_generation_inputs_generation_id_conversation_id_fkey` | `private.ai_generation_inputs(generation_id, conversation_id)` | `private.ai_generation_audits(id, conversation_id)` | primary key `ai_generation_inputs_pkey(generation_id, message_id)` and unique `ai_generation_inputs_generation_id_input_order_key(generation_id, input_order)` | Advisor limitation: generation ID identifies one audit/conversation and both indexes support generation-scoped scans. |
+| `ai_generation_inputs_message_id_conversation_id_fkey` | `private.ai_generation_inputs(message_id, conversation_id)` | `public.messages(id, conversation_id)` | `ai_generation_inputs_message_idx(message_id)` | Advisor limitation: message ID globally identifies its conversation. |
+| `message_receipts_message_id_conversation_id_fkey` | `public.message_receipts(message_id, conversation_id)` | `public.messages(id, conversation_id)` | primary key `message_receipts_pkey(message_id, user_id)` | Advisor limitation: the primary-key prefix finds every receipt for one globally unique message. |
 
 All four constraints use `ON UPDATE NO ACTION`. Delete actions are respectively
 `SET NULL (generated_message_id)`, `CASCADE`, `RESTRICT`, and `CASCADE`. No
-index is added. The targeted database test asserts the supporting indexes and
-that no exact advisor-only duplicates appear.
+index is added. The targeted catalog test verifies index method, ordered key
+columns, uniqueness/primary status, validity, readiness, predicates and
+expressions. It also rejects structurally duplicate indexes regardless of
+their names and rejects the four advisor-shaped composites under any name.
 
-For completeness, catalog inspection found these indexes on the three
-referencing tables (columns are in index order):
+The complete relevant index inventory is:
 
 - `private.ai_generation_audits`: primary key `(id)`; unique
   `(generated_message_id)`; unique `(id, conversation_id)`; B-tree
@@ -38,11 +43,13 @@ referencing tables (columns are in index order):
 - `public.message_receipts`: primary key `(message_id, user_id)`; B-tree
   `(conversation_id, user_id)`; B-tree `(user_id, read_at DESC)`.
 
-The supporting indexes identified in the table are valid, ready, non-partial
-B-trees. Their leading globally unique identifier supports the child-row scan
-needed for parent delete/update checks; the partial reviewer index is unrelated.
+This conclusion must be revisited if identifier uniqueness is removed, FK
+column order or actions change, an index becomes invalid/not-ready/partial or
+expression-based, generation/message cardinality changes, representative
+`EXPLAIN` plans regress as data grows, or the advisor begins using semantic
+rather than exact-column matching.
 
-## Reviewed security-advisor exceptions
+## Security posture
 
 `0008_rls_enabled_no_policy` remains expected for these deny-by-default tables:
 
@@ -51,17 +58,26 @@ needed for parent delete/update checks; the partial reviewer index is unrelated.
 - `private.conversation_ai_setting_events`
 - `private.messaging_account_deletion_context`
 
-They remain RLS-enabled without artificial policies. The follow-up migration
-reasserts that `PUBLIC`, `anon`, and `authenticated` have no AI table or
-identity-sequence privileges and cannot create private objects. `authenticated`
-retains `USAGE` on the namespace because pre-existing public invoker functions
-and RLS policies resolve established private authorization/training helpers;
-the full database suite proves removing that lookup privilege breaks those
-paths. Schema `USAGE` grants no table, sequence, or function privilege by
-itself, and `private` is not an exposed Data API schema. No public RPC exposes
-unrestricted AI storage. This exception becomes invalid if `private` is added
-to the Data API exposed schemas, a client role receives AI object privileges,
-a public RPC returns unrestricted rows, or RLS is disabled.
+They remain RLS-enabled and policy-free. `PUBLIC`, `anon`, `authenticated`, and
+`authenticator` have no privileges on the four tables or the identity sequence.
+`authenticated` retains schema `USAGE`, but not `CREATE`, because established
+invoker/RLS paths resolve private authorization helpers; schema lookup alone
+does not grant object access. `anon`, `authenticator`, and `service_role` have
+neither `USAGE` nor `CREATE` on `private`. The foundation's six direct
+`service_role` table privileges therefore remain deliberately dormant. A later
+AI rollout must explicitly grant only the schema access it needs in a separate
+migration. PostgreSQL owner `postgres` retains owner rights.
+
+The public messaging RPC boundary is explicit and environment-independent:
+only `authenticated` and owner `postgres` can execute
+`get_or_create_conversation(uuid)` and `send_message(uuid,text)`. Account
+deletion remains callable by `service_role` and owner only. Private helper
+execution is also asserted role by role.
+
+This exception becomes invalid if `private` is exposed through the Data API, a
+client role gains AI object privileges, `service_role` gains schema `USAGE`
+without a separately reviewed AI migration, an unrestricted public RPC exposes
+private rows, table RLS is disabled, or an unexpected policy is added.
 
 `0029_authenticated_security_definer_function_executable` remains a reviewed
 architectural exception for exactly:
@@ -70,19 +86,42 @@ architectural exception for exactly:
 - `public.send_message(p_conversation_id uuid, p_body text)`
 
 Definer rights are necessary because authenticated callers have no direct
-conversation/message write privileges. Both functions have an empty fixed
-search path, revoke `PUBLIC` and `anon`, accept no caller-supplied identity,
-origin, participant, or role, derive the actor from `auth.uid()`, validate live
-relationship/participant state, check queued account deletion, and hold a
-relationship row lock across the write. Existing and targeted tests cover null
-identity, outsiders, unrelated/previous coaches, administrators, paused/ended/
-reassigned relationships, deletion queues, spoofed origins, direct writes,
-and two-session state-change races.
+conversation/message write privileges. Both functions are owned by `postgres`,
+are volatile PL/pgSQL `SECURITY DEFINER` functions with an empty fixed search
+path, accept no caller-supplied identity/origin/participant/role, derive the
+actor from `auth.uid()`, validate current relationship/participant and deletion
+state, and hold the required relationship lock across writes. Tests cover null
+identity, outsiders, stale roles, deletion queues, direct writes, forbidden
+AI/system origins, and committed two-session state-change races.
 
-The RPC exception becomes invalid if either signature expands to accept caller
-identity/role/origin, its search path is no longer empty, execution broadens,
-direct table writes are granted, authoritative state checks or relationship
-locking are removed, or AI/system origins become insertable.
+This exception becomes invalid if a signature, owner, language, volatility,
+security mode, search path, return type, or EXECUTE grant changes; caller
+identity/role/origin becomes accepted; authoritative state checks or locking
+are removed; direct table writes broaden; or AI/system origins become
+insertable.
 
 The foundation migration SHA-256 remains
 `2349113619728daf2ac089decedbbe89b9b4162c91efa0d7112ab0f9e4e8d6da`.
+
+## Verification
+
+- Clean local migration replay succeeded through this hardening migration.
+- Focused messaging/foundation/deletion suites: 127 assertions passed; the
+  hardening file contributes 29 exact catalog and behavior assertions.
+- Full database suite: 27 files and 718 assertions passed.
+- Committed-fixture concurrency test: all three two-session relationship-lock
+  scenarios passed; a subsequent clean reset removed the fixtures.
+- Schema lint reported no errors or warnings. Repository lint, typecheck, unit
+  tests, and production builds passed.
+- Source integrity passed under normal Python and `python -O`. Linked staging
+  type generation differed from the tracked public types only by the generator's
+  `__InternalSupabase.PostgrestVersion` metadata block.
+
+The read-only staging advisor baseline remains unchanged because this migration
+has not been applied there: security reports 11 INFO policy-free RLS tables,
+one pre-existing anonymous definer warning, and 25 authenticated-definer
+warnings (including the two reviewed messaging RPCs). Performance reports 11
+INFO unindexed-FK findings (including all four reviewed messaging FKs), seven
+pre-existing RLS init-plan warnings, 12 unused-index INFO findings, and one Auth
+connection-strategy INFO finding. No claim is made that this PR removes those
+reviewed or pre-existing notices.

@@ -11,14 +11,16 @@ HARDENING = ROOT / "supabase/migrations/20260917190806_messaging_advisor_hardeni
 EXPECTED_FOUNDATION_SHA256 = "2349113619728daf2ac089decedbbe89b9b4162c91efa0d7112ab0f9e4e8d6da"
 
 
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise SystemExit(message)
+
+
 foundation_hash = sha256(FOUNDATION.read_bytes()).hexdigest()
-assert foundation_hash == EXPECTED_FOUNDATION_SHA256, (
-    f"messaging foundation migration changed: {foundation_hash}"
+require(
+    foundation_hash == EXPECTED_FOUNDATION_SHA256,
+    f"messaging foundation migration changed: {foundation_hash}",
 )
+require(HARDENING.is_file(), f"hardening migration missing: {HARDENING}")
 
-hardening_sql = HARDENING.read_text(encoding="utf-8").lower()
-assert "create index" not in hardening_sql, "redundant FK indexes must not be added"
-assert "revoke all on schema private from public, anon" in hardening_sql
-assert "grant usage on schema private to authenticated, service_role" in hardening_sql
-
-print("Messaging advisor source integrity: 3/3 checks passed")
+print("Messaging advisor source integrity: foundation SHA-256 verified")
